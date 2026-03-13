@@ -1,0 +1,39 @@
+:root {
+
+/* BACKGROUND */
+
+--bg-main: #04060B;
+--bg-card: #0A0D14;
+--bg-sidebar: #04060B;
+
+
+/* BORDER */
+
+--border-color: #1A1D26;
+
+
+/* FUEL COLORS */
+
+--petrol: #FF3B3B;
+--diesel: #22C1F1;
+--premium: #22C55E;
+
+
+/* TEXT */
+
+--text-primary: #E5E7EB;
+--text-secondary: #9CA3AF;
+--text-muted: #6B7280;
+
+
+/* RADIUS */
+
+--radius-card: 12px;
+--radius-button: 8px;
+
+
+/* LAYOUT */
+
+--sidebar-width: 240px;
+
+}

@@ -1,0 +1,68 @@
+@import "./styles/main.css";
+
+body{
+  margin:0;
+  padding:0;
+  background:var(--bg-main);
+  color:var(--text-primary);
+  font-family:"Inter",sans-serif;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+.input{
+background:#0B0F17;
+border:1px solid #1F2937;
+padding:8px 10px;
+border-radius:6px;
+width:100%;
+color:#fff;
+outline:none;
+}
+
+.input:focus{
+border-color:#3B82F6;
+}
+
+.table{
+width:100%;
+border-collapse:collapse;
+}
+
+.table th{
+text-align:left;
+padding:12px;
+font-size:14px;
+color:#9CA3AF;
+border-bottom:1px solid #1F2937;
+}
+
+.table td{
+padding:12px;
+border-bottom:1px solid #1F2937;
+}
+
+.table tr:hover{
+background:#111827;
+}
+
+.card{
+background:#0B0F17;
+border:1px solid #1F2937;
+padding:12px;
+border-radius:8px;
+}
+
+.btn{
+padding:6px 12px;
+border-radius:6px;
+font-size:14px;
+}
+
+.btn-blue{background:#3B82F6}
+.btn-green{background:#22C55E}
+.btn-red{background:#EF4444}
+.btn-purple{background:#A855F7}
+.btn-gray{background:#6B7280}
