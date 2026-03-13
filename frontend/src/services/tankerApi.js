@@ -1,4 +1,4 @@
-const API = "http://localhost:5000/api/tanker-deliveries"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/tanker-deliveries"
 
 export const getDeliveries = async()=>{
 

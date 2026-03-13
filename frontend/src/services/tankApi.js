@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API = "http://localhost:5000/api/tank"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/tank"
 
 export const getTankLevels = async()=>{
 

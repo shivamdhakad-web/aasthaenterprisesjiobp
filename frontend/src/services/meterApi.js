@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API = "http://localhost:5000/api/meter"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/meter"
 
 export const getMeterReadings = async()=>{
 

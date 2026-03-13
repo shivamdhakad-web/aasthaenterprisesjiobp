@@ -229,7 +229,7 @@ Fuel Management ERP
 OPERATIONS
 </p>
 
-<Link to="/">
+<Link to="/dashboard">
 <SidebarItem
 icon={<LayoutDashboard size={18}/>}
 text="Dashboard"

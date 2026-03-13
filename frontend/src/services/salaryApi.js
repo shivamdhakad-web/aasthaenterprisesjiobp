@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API = "http://localhost:5000/api/salary"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/salary"
 
 
 

@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API = "http://localhost:5000/api/employees"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/employees"
 
 
 export const getEmployees = async () => {

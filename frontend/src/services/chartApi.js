@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API = "http://localhost:5000/api/charts"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/charts"
 
 export const getSalesTrend = async()=>{
 
@@ -19,7 +19,7 @@ export const getFuelMix = async()=>{
 export const getFuelRevenueChart = async()=>{
 
 const res = await axios.get(
-"http://localhost:5000/api/dashboard/fuel-revenue-chart"
+"https://aasthaenterprisesjiobp.onrender.com/api/dashboard/fuel-revenue-chart"
 )
 
 return res.data

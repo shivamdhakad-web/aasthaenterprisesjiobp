@@ -18,7 +18,7 @@ const [phone,setPhone] = useState("")
 
 const loadSettings = async()=>{
 
- const res = await axios.get("http://localhost:5000/api/settings")
+ const res = await axios.get("https://aasthaenterprisesjiobp.onrender.com/api/settings")
 
  if(res.data){
   setSettings(res.data)
@@ -70,7 +70,7 @@ const deleteContact = (index)=>{
 const saveSettings = async()=>{
 
  await axios.put(
-  "http://localhost:5000/api/settings",
+  "https://aasthaenterprisesjiobp.onrender.com/api/settings",
   settings
  )
 

@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API = "http://localhost:5000/api/petrol"
+const API = "https://aasthaenterprisesjiobp.onrender.com/api/petrol"
 
 export const getTodayPetrolStats = () =>
  axios.get(`${API}/stats/today`)
