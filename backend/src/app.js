@@ -17,6 +17,8 @@ const employeeRoutes = require("./routes/employeeRoutes")
 const attendanceRoutes = require("./routes/employeeAttendanceRoutes")
 const mobileDispenserRoutes = require("./routes/mobileDispenserRoutes")
 const cardSwipeRoutes = require("./routes/cardSwipeRoutes")
+const ttDriverRoutes = require("./routes/ttDriverRoutes")
+const customerDriverRoutes = require("./routes/customerDriverRoutes")
 
 const app = express()
 
@@ -51,5 +53,9 @@ app.use("/api/attendance",attendanceRoutes)
 app.use("/api/mobile-dispenser",mobileDispenserRoutes)
 
 app.use("/api/card-swipe",cardSwipeRoutes)
+
+app.use("/api/ttdrivers",ttDriverRoutes)
+
+app.use("/api/customerdrivers",customerDriverRoutes)
 
 module.exports = app

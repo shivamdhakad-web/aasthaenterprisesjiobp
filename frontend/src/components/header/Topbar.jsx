@@ -36,13 +36,13 @@ className="bg-[#0A0D14] border border-[#1A1D26] rounded-lg pl-8 pr-4 py-2 text-s
 
 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
 
-<span className="text-sm font-bold">S</span>
+<span className="text-sm font-bold">bp</span>
 
 </div>
 
 <div className="text-sm">
 
-<p className="text-white">Station Owner</p>
+<p className="text-white">Owner</p>
 
 <p className="text-gray-400 text-xs">Admin</p>
 

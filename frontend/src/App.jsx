@@ -74,6 +74,8 @@ import Employees from "./pages/Employees"
 import MobileDispenser from "./pages/MobileDispenser"
 import CardSwipe from "./pages/CardSwipe"
 import Login from "./pages/Login"
+import TTDrivers from "./pages/TTDrivers"
+import CustomerDrivers from "./pages/CustomerDrivers"
 
 export default function App(){
 
@@ -115,6 +117,10 @@ return(
 <Route path="/mobileDispenser" element={<MobileDispenser />} />
 
 <Route path="/cardSwipe" element={<CardSwipe />} />
+
+<Route path="/ttdrivers" element={<TTDrivers/>}/>
+
+<Route path="/customerdrivers" element={<CustomerDrivers/>}/>
 
 </Route>
 

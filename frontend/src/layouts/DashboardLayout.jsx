@@ -1,31 +1,3 @@
-// import Sidebar from "../components/sidebar/Sidebar"
-// import Topbar from "../components/header/Topbar"
-
-// export default function DashboardLayout({children}){
-
-//   return(
-
-//     <div className="flex h-screen bg-[#04060B] text-white">
-
-//       <Sidebar/>
-
-//       <div className="flex-1 flex flex-col">
-
-//         <Topbar/>
-
-//         <main className="flex-1 overflow-y-auto p-6">
-
-//           {children}
-
-//         </main>
-
-//       </div>
-
-//     </div>
-
-//   )
-
-// }
 
 import { Outlet } from "react-router-dom"
 import Sidebar from "../components/sidebar/Sidebar"
