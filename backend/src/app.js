@@ -19,7 +19,7 @@ const mobileDispenserRoutes = require("./routes/mobileDispenserRoutes")
 const cardSwipeRoutes = require("./routes/cardSwipeRoutes")
 const ttDriverRoutes = require("./routes/ttDriverRoutes")
 const customerDriverRoutes = require("./routes/customerDriverRoutes")
-
+const secureNoteRoutes = require("./routes/secureNoteRoutes")
 const app = express()
 
 app.use(cors())
@@ -57,5 +57,7 @@ app.use("/api/card-swipe",cardSwipeRoutes)
 app.use("/api/ttdrivers",ttDriverRoutes)
 
 app.use("/api/customerdrivers",customerDriverRoutes)
+
+app.use("/api/secure-notes",secureNoteRoutes)
 
 module.exports = app

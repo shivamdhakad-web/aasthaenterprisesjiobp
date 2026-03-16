@@ -1,63 +1,3 @@
-// import { BrowserRouter, Routes, Route } from "react-router-dom"
-
-// import DashboardLayout from "./layouts/DashboardLayout"
-
-// import Dashboard from "./pages/dashboard/Dashboard"
-// import MeterReadings from "./pages/meter/MeterReadings"
-// import TankerDeliveries from "./pages/tanker/TankerDeliveries"
-// import CreditCustomers from "./pages/CreditCustomers"
-// import Expenses from "./pages/finance/Expenses"
-// import ReminderBox from "./components/dashboard/ReminderBox"
-// import Setting from "./pages/Settings"
-// import Lubricants from "./pages/Lubricants"
-// import Employees from "./pages/Employees"
-// import MobileDispenser from "./pages/MobileDispenser"
-// import CardSwipe from "./pages/CardSwipe"
-
-// export default function App(){
-
-// return(
-
-// <BrowserRouter>
-
-// <DashboardLayout>
-
-// <Routes>
-
-// <Route path="/" element={<Dashboard/>} />
-
-// <Route path="/meter-readings" element={<MeterReadings/>} />
-
-// <Route path="/tanker-deliveries" element={<TankerDeliveries/>} />
-
-// <Route path="/employees" element={<Employees/>}/>
-
-// <Route path="/credit-customers" element={<CreditCustomers />} />
-
-// <Route path="/expenses" element={<Expenses />} />
-
-// <Route path="/reminder" element={<ReminderBox />} />
-
-// <Route path="/setting" element={<Setting />} />
-
-// <Route path="/lubricants" element={<Lubricants />} />
-
-// <Route path="/mobileDispenser" element={<MobileDispenser />} />
-
-// <Route path="/cardSwipe" element={<CardSwipe />} />
-
-
-// </Routes>
-
-// </DashboardLayout>
-
-// </BrowserRouter>
-
-// )
-
-// }
-
-
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 
 import DashboardLayout from "./layouts/DashboardLayout"
@@ -76,6 +16,7 @@ import CardSwipe from "./pages/CardSwipe"
 import Login from "./pages/Login"
 import TTDrivers from "./pages/TTDrivers"
 import CustomerDrivers from "./pages/CustomerDrivers"
+import SecureNotes from "./pages/SecureNotes"
 
 export default function App(){
 
@@ -121,6 +62,8 @@ return(
 <Route path="/ttdrivers" element={<TTDrivers/>}/>
 
 <Route path="/customerdrivers" element={<CustomerDrivers/>}/>
+
+<Route path="/secure-notes" element={<SecureNotes/>}/>
 
 </Route>
 
