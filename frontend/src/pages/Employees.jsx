@@ -33,6 +33,26 @@ const [editAttendance,setEditAttendance] = useState(null)
 
 const [selectedMonth,setSelectedMonth] = useState("")
 
+const [openCard,setOpenCard] = useState(null)
+
+const [view,setView] = useState(
+window.innerWidth < 640 ? "mobile" : "desktop"
+)
+
+useEffect(()=>{
+const handleResize = ()=>{
+if(window.innerWidth < 640){
+setView("mobile")
+}else{
+setView("desktop")
+}
+}
+
+handleResize()
+window.addEventListener("resize",handleResize)
+return ()=>window.removeEventListener("resize",handleResize)
+},[])
+
 const fetchEmployees = async()=>{
 
 const data = await getEmployees()
@@ -260,6 +280,9 @@ setModalOpen(true)
 </div>
 
 
+
+
+<div className="hidden sm:block overflow-x-auto">
 <table className="table">
 
 <thead>
@@ -332,13 +355,120 @@ Delete
 ))}
 </tbody>
 </table>
+</div>
 
+<div className="lg:hidden grid gap-4">
+{employees
+.filter(e=>e.name.toLowerCase().includes(search.toLowerCase()))
+.map(emp=>{
 
-{selectedEmployee &&(
+const isOpen = openCard === emp._id
+
+return(
+
+<div
+key={emp._id}
+onClick={()=>{
+if(isOpen){
+setOpenCard(null)
+setSelectedEmployee(null)
+}else{
+setOpenCard(emp._id)
+}
+}}
+className="bg-[#0B0F17] border border-[#1F2937] rounded-2xl p-4 shadow-lg active:scale-95 transition"
+>
+
+{/* HEADER */}
+<div className="flex justify-between items-center">
+
+<div>
+<p className="text-white font-semibold text-lg">
+{emp.name}
+</p>
+
+<p className="text-gray-400 text-sm">
+{emp.role} • Shift {emp.shift}
+</p>
+</div>
+
+<p className="text-green-400 font-semibold">
+₹{emp.salary}
+</p>
+
+</div>
+
+{/* PHONE */}
+<p className="text-gray-400 text-sm mt-2">
+📞 {emp.phone}
+</p>
+
+{/* EXPAND */}
+<div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-[400px] mt-4" : "max-h-0"}`}>
+
+<div className="border-t border-[#1F2937] pt-3 space-y-3">
+
+<p className="text-sm text-gray-400">
+👕 Tshirt: {emp.tshirt} | 👖 Pant: {emp.pant} | 👟 Shoes: {emp.shoes}
+</p>
+
+<div className="flex gap-3">
+
+<button
+onClick={(e)=>{
+e.stopPropagation()
+setEditEmployee(emp)
+setModalOpen(true)
+}}
+className="flex-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 py-2 rounded-lg text-sm"
+>
+Edit
+</button>
+
+<button
+onClick={(e)=>{
+e.stopPropagation()
+removeEmployee(emp._id)
+}}
+className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 py-2 rounded-lg text-sm"
+>
+Delete
+</button>
+
+</div>
+
+{/* OPEN ATTENDANCE */}
+<button
+onClick={(e)=>{
+e.stopPropagation()
+
+if(selectedEmployee?._id === emp._id){
+setSelectedEmployee(null) 
+}else{
+openLedger(emp)
+}
+
+}}
+className="w-full bg-green-500/10 border border-green-500/30 text-green-400 py-2 rounded-lg text-sm"
+>
+View Attendance
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)
+
+})}
+</div>
+
+{view === "desktop" && selectedEmployee &&(
 
 <div className="mt-6 bg-[#0B0F17] border border-[#1F2937] p-4 rounded">
 
-{/* add */}
 <div className="flex justify-between items-center mb-3">
 
 <h2 className="text-lg">
@@ -395,7 +525,6 @@ Delete Month
 </div>
 
 
-{/* SUMMARY */}
 
 <div className="grid grid-cols-3 gap-4 mb-4">
 
@@ -510,6 +639,125 @@ Delete
 </div>
 
 )}
+
+{view === "mobile" && selectedEmployee && (
+
+<div className="mt-6 space-y-4">
+
+<div className="bg-[#0B0F17] p-4 rounded-xl border border-[#1F2937]">
+
+<p className="text-white font-semibold text-lg">
+👤 {selectedEmployee.name}
+</p>
+
+<p className="text-gray-400 text-sm">
+Attendance Summary
+</p>
+
+</div>
+
+
+<div className="grid grid-cols-2 gap-3">
+
+<div className="card">Present: {summary.present}</div>
+<div className="card">Absent: {summary.absent}</div>
+<div className="card">Double: {summary.dbl}</div>
+<div className="card">Earned: ₹{summary.earned}</div>
+<div className="card text-red-400">Short: ₹{summary.shortage}</div>
+<div className="card text-yellow-400">Advance: ₹{summary.advance}</div>
+
+<div className="col-span-2 bg-green-500/10 border border-green-500/30 p-4 rounded-xl text-center text-lg font-semibold">
+Final Balance: ₹{summary.final}
+</div>
+
+</div>
+
+<div className="flex gap-2">
+
+<input
+type="month"
+value={selectedMonth}
+onChange={(e)=>setSelectedMonth(e.target.value)}
+className="input flex-1"
+/>
+
+<button
+onClick={()=>setAttendanceModal(true)}
+className="btn btn-green"
+>
++ Add
+</button>
+
+<button
+onClick={()=>window.print()}
+className="btn btn-purple"
+>
+PDF
+</button>
+
+</div>
+
+<div className="space-y-3">
+
+{filteredAttendance.map(a=>(
+
+<div
+key={a._id}
+className="bg-[#0B0F17] border border-[#1F2937] rounded-xl p-3"
+>
+
+<p className="text-gray-400 text-sm">
+📅 {a.date?.slice(0,10)}
+</p>
+
+<p className="text-white text-sm">
+Status: {a.status}
+</p>
+
+<p className={Number(a.shortage)>=0 ? "text-green-400":"text-red-400"}>
+Short: {a.shortage}
+</p>
+
+<p className="text-sm text-gray-400">
+Cash: {a.advanceCash} | Petrol: {a.advancePetrol}
+</p>
+
+<div className="flex gap-3 mt-2">
+
+<button
+onClick={()=>{
+setEditAttendance(a)
+setAttendanceModal(true)
+}}
+className="flex-1 bg-blue-500/10 text-blue-400 py-1 rounded"
+>
+Edit
+</button>
+
+<button
+onClick={()=>removeAttendance(a._id)}
+className="flex-1 bg-red-500/10 text-red-400 py-1 rounded"
+>
+Delete
+</button>
+
+</div>
+
+</div>
+
+))}
+
+</div>
+
+</div>
+
+)}
+
+
+
+
+
+
 
 
 <EmployeeModal

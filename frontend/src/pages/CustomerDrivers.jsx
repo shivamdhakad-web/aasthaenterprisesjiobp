@@ -292,11 +292,7 @@ return(
 <div
 key={d._id}
 onClick={()=>setOpenCard(isOpen ? null : d._id)}
-className={`p-4 rounded-2xl border backdrop-blur-lg transition-all duration-300 cursor-pointer
-${d.remark?.includes("-")
-? "bg-red-500/10 border-red-500/40"
-: "bg-green-500/10 border-green-500/40"}
-active:scale-95 shadow-lg`}
+className="p-4 rounded-2xl border border-[#1A1F2E] bg-[#0B0F17] shadow-lg active:scale-95 transition-all duration-300"
 >
 
 {/* HEADER */}

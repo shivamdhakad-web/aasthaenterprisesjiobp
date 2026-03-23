@@ -16,6 +16,7 @@ const [editId,setEditId] = useState(null)
 const [search,setSearch] = useState("")
 const [category,setCategory] = useState("")
 const [dateFilter,setDateFilter] = useState("")
+const [openCard,setOpenCard] = useState(null)
 
 const [form,setForm] = useState({
 
@@ -140,43 +141,8 @@ className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
 
 </div>
 
-{/* SUMMARY CARDS */}
 
-{/* <div className="grid grid-cols-4 gap-4 mb-6">
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4">
-<p className="text-gray-400 text-sm">Today</p>
-<p className="text-white text-xl font-semibold">
-₹{data
-.filter(e=>new Date(e.date).toDateString() === new Date().toDateString())
-.reduce((a,b)=>a + Number(b.amount || 0),0)}
-</p>
-</div>
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4">
-<p className="text-gray-400 text-sm">Week</p>
-<p className="text-white text-xl font-semibold">
-₹{data.reduce((a,b)=>a + Number(b.amount || 0),0)}
-</p>
-</div>
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4">
-<p className="text-gray-400 text-sm">Month</p>
-<p className="text-white text-xl font-semibold">
-₹{data.reduce((a,b)=>a + Number(b.amount || 0),0)}
-</p>
-</div>
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4">
-<p className="text-gray-400 text-sm">Total</p>
-<p className="text-white text-xl font-semibold">
-₹{data.reduce((a,b)=>a + Number(b.amount || 0),0)}
-</p>
-</div>
-
-</div> */}
-
-<div className="grid grid-cols-4 gap-4 mb-6">
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
 
 <div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4">
 <p className="text-gray-400 text-sm font-bold">Today</p>
@@ -202,8 +168,8 @@ className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
 
 {/* FILTERS */}
 
-<div className="flex gap-4 mb-4">
 
+<div className="flex flex-col sm:flex-row gap-3 mb-4">
 <input
 placeholder="Search..."
 value={search}
@@ -235,7 +201,7 @@ className="bg-[#111827] border border-[#1F2937] px-4 py-2 rounded text-white [&:
 
 </div>
 
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded">
+<div className=" hidden sm:block bg-[#0B0F17] border border-[#1A1F2E] rounded">
 
 <table className="w-full text-gray-300">
 
@@ -317,7 +283,109 @@ Edit
 
 </div>
 
+<div className="grid grid-cols-1 gap-4 sm:hidden">
 
+{filteredData.map((e)=>{
+
+const isOpen = openCard === e._id
+
+return(
+
+<div
+key={e._id}
+onClick={()=>setOpenCard(isOpen ? null : e._id)}
+className="p-4 rounded-2xl border border-[#1A1F2E] bg-[#0B0F17] shadow-lg active:scale-95 transition-all duration-300"
+>
+
+{/* HEADER */}
+<div className="flex justify-between items-center">
+
+<div>
+<p className="text-white font-semibold">
+{e.category}
+</p>
+
+<p className="text-gray-400 text-xs">
+{e.date}
+</p>
+</div>
+
+<p className="text-red-400 font-semibold">
+₹{e.amount}
+</p>
+
+</div>
+
+
+{/* DESCRIPTION */}
+<p className="text-gray-300 text-sm mt-2">
+{e.description}
+</p>
+
+
+{/* EXPAND */}
+<div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-40 mt-3" : "max-h-0"}`}>
+
+<div className="border-t border-[#1F2937] pt-3 space-y-2">
+
+<p className="text-sm">
+<span className="text-gray-400">💳 Mode:</span>{" "}
+<span className="text-white">{e.paymentMode}</span>
+</p>
+
+<p className="text-sm">
+<span className="text-gray-400">👤 Added By:</span>{" "}
+<span className="text-white">{e.addedBy}</span>
+</p>
+
+{/* ACTIONS */}
+<div className="flex gap-3 mt-3">
+
+<button
+onClick={(ev)=>{
+ev.stopPropagation()
+
+setForm({
+date:e.date,
+category:e.category,
+description:e.description,
+amount:e.amount,
+paymentMode:e.paymentMode,
+addedBy:e.addedBy
+})
+
+setEditId(e._id)
+setOpen(true)
+
+}}
+className="flex-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 py-2 rounded-lg text-sm active:scale-95 transition"
+>
+✏️ Edit
+</button>
+
+<button
+onClick={(ev)=>{
+ev.stopPropagation()
+remove(e._id)
+}}
+className="flex-1 bg-red-500/10 text-red-400 border border-red-500/30 py-2 rounded-lg text-sm active:scale-95 transition"
+>
+🗑 Delete
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+)
+
+})}
+
+</div>
 
 {open &&(
 
@@ -419,6 +487,7 @@ Save
 </div>
 
 )}
+
 
 </div>
 

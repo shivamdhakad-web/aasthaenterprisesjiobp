@@ -130,7 +130,7 @@ return(
 T.T Driver Details
 </h1>
 
-<div className="flex gap-3 mb-4">
+<div className="flex flex-col sm:flex-row gap-3 mb-4">
 
 <input
 placeholder="Search..."
@@ -160,68 +160,6 @@ Generate Report
 
 </div>
 
-
-{/* <table className="w-full border">
-
-<thead>
-
-<tr className="bg-gray-200">
-
-<th>ID</th>
-<th>Name</th>
-<th>Number</th>
-<th>T.T Number</th>
-<th>Transport Name</th>
-<th>Short</th>
-<th>Remark</th>
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{filtered.map((d,i)=>(
-<tr key={d._id} className="text-center">
-
-<td>{i+1}</td>
-<td>{d.name}</td>
-<td>{d.number}</td>
-<td>{d.ttNumber}</td>
-<td>{d.transportName}</td>
-<td>{d.short}</td>
-<td>{d.remark}</td>
-
-<td>
-
-<button
-className="text-blue-400"
-onClick={()=>{
-
-setEditData(d)
-setModalOpen(true)
-
-}}
->
-Edit
-</button>
-
-<button
-onClick={()=>handleDelete(d._id)}
-className="text-red-600 ml-2"
->
-Delete
-</button>
-
-</td>
-
-</tr>
-))}
-
-</tbody>
-
-</table> */}
 <div className="hidden sm:block overflow-x-auto">
 <table className="w-full text-sm text-gray-300">
 
@@ -298,7 +236,9 @@ Delete
 </table>
 </div>
 
-<div className="grid grid-cols-1 gap-4 sm:hidden">
+{/* MOBILE VIEW */}
+
+<div className="sm:hidden space-y-4">
 
 {filtered.map((d)=>{
 
@@ -309,72 +249,50 @@ return(
 <div
 key={d._id}
 onClick={()=>setOpenCard(isOpen ? null : d._id)}
-className={`p-4 rounded-xl border cursor-pointer transition-all duration-300
-${d.short.includes("-")
-? "bg-red-950/30 border-red-700"
-: "bg-green-950/30 border-green-700"}
-active:scale-95`}
+className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4 active:scale-95 transition"
 >
 
-{/* HEADER */}
+{/* TOP */}
+
 <div className="flex justify-between items-center">
 
 <div>
-<p className="text-sm">
-<span className="text-gray-400">👤 Name :</span>{" "}
-<span className="text-white font-semibold">{d.name}</span>
-</p>
+<p className="text-xs text-gray-400">Driver</p>
+<p className="text-white font-semibold text-lg">{d.name}</p>
+</div>
 
-<p className="text-sm">
-<span className="text-gray-400">📞 Number :</span>{" "}
-<span className="text-white">{d.number}</span>
+<p className={`text-sm font-bold ${d.short.includes("-") ? "text-red-400" : "text-green-400"}`}>
+{d.short}
 </p>
 
 </div>
-
-<button
-onClick={(e)=>{
-e.stopPropagation()
-copyText(d.number)
-}}
-className="bg-white/10 px-2 py-1 rounded text-xs hover:bg-white/20"
-> 
-📋
-</button>
-
-</div>
-
 
 {/* BASIC INFO */}
-<div className="mt-1 space-y-1">
 
-<p className="text-sm">
-<span className="text-gray-400">🚛 TT Number :</span>{" "}
-<span className="text-white">{d.ttNumber}</span>
-</p>
+<div className="mt-3 text-sm text-gray-300 space-y-1">
 
-<p className="text-sm">
-<span className="text-gray-400">🏢 Transport :</span>{" "}
-<span className="text-white">{d.transportName}</span>
-</p>
+<p>📞 {d.number}</p>
+<p>🚛 {d.ttNumber}</p>
 
 </div>
 
+{/* EXPAND */}
 
-{/* EXPAND AREA */}
 {isOpen && (
 
-<div className="mt-3 border-t border-gray-700 pt-3 space-y-2 text-sm">
+<div className="mt-4 border-t border-[#1A1F2E] pt-3 space-y-2">
 
-<p className={`${d.short.includes("-") ? "text-red-400" : "text-green-400"}`}>
-📉 Short : {d.short}
+<p className="text-sm text-gray-400">
+Transport : <span className="text-white">{d.transportName}</span>
 </p>
 
-<p className="text-gray-400">
-📝 {d.remark}
+<p className="text-sm text-gray-400">
+Remark : <span className="text-white">{d.remark || "-"}</span>
 </p>
 
-<div className="flex gap-3 mt-3">
+{/* ACTION BUTTONS */}
+
+<div className="flex gap-2 mt-3">
 
 <button
 onClick={(e)=>{
@@ -382,9 +300,9 @@ e.stopPropagation()
 setEditData(d)
 setModalOpen(true)
 }}
-className="flex-1 flex items-center justify-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 py-2 rounded-lg text-sm hover:bg-blue-500/20 active:scale-95 transition"
+className="flex-1 bg-blue-500/20 text-blue-400 py-2 rounded-lg text-sm"
 >
-✏️ Edit
+Edit
 </button>
 
 <button
@@ -392,9 +310,9 @@ onClick={(e)=>{
 e.stopPropagation()
 handleDelete(d._id)
 }}
-className="flex-1 flex items-center justify-center gap-1 bg-red-500/10 text-red-400 border border-red-500/30 py-2 rounded-lg text-sm hover:bg-red-500/20 active:scale-95 transition"
+className="flex-1 bg-red-500/20 text-red-400 py-2 rounded-lg text-sm"
 >
-🗑 Delete
+Delete
 </button>
 
 </div>
@@ -410,7 +328,6 @@ className="flex-1 flex items-center justify-center gap-1 bg-red-500/10 text-red-
 })}
 
 </div>
-
 
 <AddTTDriverModal
 open={modalOpen}
