@@ -389,7 +389,7 @@ Delete
 {/* STATS */}
 
 
-<div className="flex sm:grid sm:grid-cols-4 gap-4 mb-6 overflow-x-auto">
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 font-bold">
 <div className="bg-[#0B0F17] border border-[#1A1F2E] p-4 rounded-xl font-bold">
 
 Today

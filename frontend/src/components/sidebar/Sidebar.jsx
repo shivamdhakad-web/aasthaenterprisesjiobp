@@ -89,7 +89,7 @@ Jio-bp Station
 OPERATIONS
 </p>
 
-<Link to="/dashboard">
+<Link to="/dashboard" onClick={()=>setOpen(false)}>
 <SidebarItem
 icon={<LayoutDashboard size={18}/>}
 text="Dashboard"
@@ -97,7 +97,7 @@ active={location.pathname === "/dashboard"}
 />
 </Link>
 
-<Link to="/meter-readings">
+<Link to="/meter-readings" onClick={()=>setOpen(false)}>
 <SidebarItem
 icon={<Activity size={18}/>}
 text="Meter Readings"
@@ -105,7 +105,7 @@ active={location.pathname === "/meter-readings"}
 />
 </Link>
 
-<Link to="/tanker-deliveries">
+<Link to="/tanker-deliveries" onClick={()=>setOpen(false)}>
 <SidebarItem
 icon={<Truck size={18}/>}
 text="Tanker Deliveries"
@@ -117,39 +117,39 @@ active={location.pathname === "/tanker-deliveries"}
 MANAGEMENT
 </p>
 
-<Link to="/employees">
+<Link to="/employees" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<Users size={18}/>} text="Employees" active={location.pathname === "/employees"}/>
 </Link>
 
-<Link to="/credit-customers">
+<Link to="/credit-customers" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<CreditCard size={18}/>} text="Credit Customers" active={location.pathname === "/credit-customers"}/>
 </Link>
 
-<Link to="/expenses">
+<Link to="/expenses" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<FileText size={18}/>} text="Expenses" active={location.pathname === "/expenses"}/>
 </Link>
 
-<Link to="/lubricants">
+<Link to="/lubricants" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<FileText size={18}/>} text="Lubricants" active={location.pathname === "/lubricants"}/>
 </Link>
 
-<Link to="/mobileDispenser">
+<Link to="/mobileDispenser" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<FileText size={18}/>} text="Mobile Dispenser" active={location.pathname === "/mobileDispenser"}/>
 </Link>
 
-<Link to="/cardSwipe">
+<Link to="/cardSwipe" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<FileText size={18}/>} text="Card Swipe" active={location.pathname === "/cardSwipe"}/>
 </Link>
 
-<Link to="/ttdrivers">
+<Link to="/ttdrivers" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<Truck size={18}/>} text="T.T Drivers" active={location.pathname === "/ttdrivers"}/>
 </Link>
 
-<Link to="/customerdrivers">
+<Link to="/customerdrivers" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<Truck size={18}/>} text="Customer Drivers" active={location.pathname === "/customerdrivers"}/>
 </Link>
 
-<Link to="/secure-notes">
+<Link to="/secure-notes" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<Lock size={18}/>} text="Secure Notes" active={location.pathname === "/secure-notes"}/>
 </Link>
 
@@ -157,11 +157,11 @@ MANAGEMENT
 SYSTEM
 </p>
 
-<Link to="/reminder">
+<Link to="/reminder" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<Bell size={18}/>} text="Reminder" active={location.pathname === "/reminder"}/>
 </Link>
 
-<Link to="/setting">
+<Link to="/setting" onClick={()=>setOpen(false)}>
 <SidebarItem icon={<Settings size={18}/>} text="Settings" active={location.pathname === "/setting"}/>
 </Link>
 

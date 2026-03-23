@@ -21,6 +21,8 @@ const [machine,setMachine] = useState("")
 const [paymentMethod,setPaymentMethod] = useState("")
 const [modalOpen,setModalOpen] = useState(false)
 const [editData,setEditData] = useState(null)
+const [openCard,setOpenCard] = useState(null)
+const [showFilter,setShowFilter] = useState(false)
 
 const fetchEntries = async()=>{
 
@@ -138,9 +140,11 @@ Card Swipe Register
 
 
 
+
+
 {/* FILTERS */}
 
-<div className="flex items-end gap-3 mb-6 overflow-x-auto">
+<div className="hidden sm:flex items-end gap-3 mb-6 overflow-x-auto">
 
 
 <input
@@ -230,10 +234,74 @@ Delete Month
 </div>
 
 
+<div className="sm:hidden flex flex-col gap-3 mb-6 ">
+
+<button
+onClick={()=>setShowFilter(!showFilter)}
+className="bg-[#1A1F2E] px-3 py-2 rounded text-sm"
+>
+Filters
+</button>
+
+{showFilter && (
+
+<div className="flex flex-col gap-3 bg-[#0B0F17] p-3 rounded">
+
+<input
+type="datetime-local"
+value={startDate}
+onChange={(e)=>setStartDate(e.target.value)}
+className="input text-white"
+/>
+
+<input
+type="datetime-local"
+value={endDate}
+onChange={(e)=>setEndDate(e.target.value)}
+className="input text-white"
+/>
+
+<select
+value={machine}
+onChange={(e)=>setMachine(e.target.value)}
+className="input"
+>
+<option value="">Both Machine</option>
+<option value="Self">Self</option>
+<option value="DSM">DSM</option>
+</select>
+
+<select
+value={paymentMethod}
+onChange={(e)=>setPaymentMethod(e.target.value)}
+className="input"
+>
+<option value="">Both Payment</option>
+<option value="Cash">Cash</option>
+<option value="Online">Online</option>
+</select>
+
+<button
+className="bg-green-500 px-4 py-2 rounded"
+onClick={handleSearch}
+>
+Apply
+</button>
+
+</div>
+
+)}
+
+</div>
+
+
+
+
+
 
 {/* SUMMARY CARDS */}
 
-<div className="grid grid-cols-4 gap-4 mb-6 font-bold">
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 font-bold">
 
 <div className="bg-[#0B0F17] border border-[#1F2937] p-4 rounded">
 
@@ -261,26 +329,13 @@ Delete Month
 </div>
 
 
-<div className="bg-[#0B0F17] border border-[#1F2937] p-4 rounded">
+<div className="col-span-2 bg-[#0B0F17] border border-[#1F2937] p-4 rounded">
 
-<p className="text-gray-400">Net Amount</p>
-
-<p className="text-lg text-green-400">
-
-₹{netAmount}
-
-</p>
-
-</div>
-
-
-<div className="bg-[#0B0F17] border border-[#1F2937] p-4 rounded">
-
-<p className="text-gray-400">Transactions</p>
+<p className="text-gray-400">Transactions:  {entries.length}</p>
 
 <p className="text-lg">
 
-{entries.length}
+
 
 </p>
 
@@ -288,12 +343,12 @@ Delete Month
 
 </div>
 
-
+<div className="mt-[-15px] mb-2 h-[1px] bg-gradient-to-r from-transparent via-[#20273a] to-transparent"></div>
 
 
 {/* EXTRA SUMMARY */}
 
-<div className="grid grid-cols-4 gap-4 mb-6 font-bold">
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 font-bold">
 
 <div className="bg-[#0B0F17] border border-[#1F2937] p-4 rounded">
 
@@ -337,7 +392,7 @@ onClick={()=>setModalOpen(true)}
 
 {/* TABLE */}
 
-<div className="bg-[#0B0F17] border border-[#1F2937] rounded">
+<div className="hidden sm:block bg-[#0B0F17] border border-[#1F2937] rounded">
 
 <table className="w-full">
 
@@ -444,6 +499,100 @@ Delete
 </tbody>
 
 </table>
+
+</div>
+
+<div className="sm:hidden space-y-4">
+
+{entries.map(e=>{
+
+const isOpen = openCard === e._id
+
+return(
+
+<div
+key={e._id}
+onClick={()=>setOpenCard(isOpen ? null : e._id)}
+className="bg-[#0B0F17] border border-[#1F2937] rounded-xl p-4 active:scale-[0.98] transition"
+>
+
+{/* TOP */}
+<div className="flex justify-between items-center">
+
+<div>
+<p className="text-white font-semibold text-lg">
+₹{e.amount}
+</p>
+
+<p className="text-xs text-gray-400">
+{new Date(e.date).toLocaleDateString()} • {e.time}
+</p>
+</div>
+
+<p className={`text-xs px-3 py-1 rounded-full 
+${e.paymentMethod==="Cash"
+? "bg-green-500/10 text-green-400"
+: "bg-blue-500/10 text-blue-400"
+}`}>
+{e.paymentMethod}
+</p>
+
+</div>
+
+{/* BASIC */}
+<div className="mt-2 text-sm text-gray-300">
+
+<p>Machine: {e.machine}</p>
+
+<p className="text-red-400">
+Charges: ₹{e.charges}
+</p>
+
+</div>
+
+{/* EXPAND */}
+{isOpen && (
+
+<div className="mt-3 border-t border-[#1F2937] pt-3 space-y-2">
+
+<p className="text-sm text-gray-400">
+Remark: {e.remark || "-"}
+</p>
+
+<div className="flex gap-2">
+
+<button
+onClick={(ev)=>{
+ev.stopPropagation()
+setEditData(e)
+setModalOpen(true)
+}}
+className="flex-1 bg-blue-500/20 text-blue-400 py-2 rounded"
+>
+Edit
+</button>
+
+<button
+onClick={(ev)=>{
+ev.stopPropagation()
+removeEntry(e._id)
+}}
+className="flex-1 bg-red-500/20 text-red-400 py-2 rounded"
+>
+Delete
+</button>
+
+</div>
+
+</div>
+
+)}
+
+</div>
+
+)
+
+})}
 
 </div>
 

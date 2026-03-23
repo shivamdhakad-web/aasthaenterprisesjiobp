@@ -16,7 +16,7 @@ return(
 
 {/* 4 CARDS */}
 
-<div className="grid grid-cols-3 gap-5">
+<div className="grid sm:grid-cols-3 grid-cols-1 gap-5">
 
 {/* <PetrolCard/> */}
 
@@ -31,7 +31,7 @@ return(
 
 {/* CHART SECTION */}
 
-<div className="grid grid-cols-3 gap-6">
+<div className="grid sm:grid-cols-3 grid-cols-1 gap-6">
 
 <div className="col-span-2">
 
