@@ -45,7 +45,9 @@ stock:""
 
 })
 
-
+const [openCard,setOpenCard] = useState(null)
+const [showFilter,setShowFilter] = useState(false)
+const [fabOpen,setFabOpen] = useState(false)
 
 /* LOAD SALES */
 
@@ -241,51 +243,6 @@ return (
 })
 
 
-
-/* STATS */
-
-// const today = new Date().toISOString().slice(0,10)
-
-// const todayTotal = data
-// .filter(e=>e.date===today)
-// .reduce((a,b)=>a+b.total,0)
-
-
-
-// const weekTotal = data
-// .filter(e=>{
-
-// const d = new Date(e.date)
-// const now = new Date()
-
-// const diff = (now-d)/(1000*60*60*24)
-
-// return diff<=7
-
-// })
-// .reduce((a,b)=>a+b.total,0)
-
-
-
-// const monthTotal = data
-// .filter(e=>{
-
-// const d = new Date(e.date)
-// const now = new Date()
-
-// return d.getMonth()===now.getMonth()
-
-// })
-// .reduce((a,b)=>a+b.total,0)
-
-
-
-// const totalAll = data.reduce((a,b)=>a+b.total,0)
-
-
-
-///////
-
 /* STATS */
 
 const today = new Date()
@@ -333,15 +290,14 @@ return(
 
 {/* HEADER */}
 
-<div className="flex justify-between items-center mb-6">
-
+<div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center mb-6">
 <h1 className="text-white text-3xl font-bold">
 
 Lubricant Sales
 
 </h1>
 
-<div className="flex gap-3">
+<div className="flex gap-3 hidden sm:block">
 
 <button
 onClick={()=>setProductModal(true)}
@@ -378,7 +334,7 @@ className="bg-red-600 px-5 py-2 rounded text-white"
 
 {/* PRODUCT STOCK TABLE */}
 
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden mb-6">
+<div className="hidden sm:block bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden mb-6">
 
 <table className="w-full text-sm">
 
@@ -432,8 +388,8 @@ Delete
 
 {/* STATS */}
 
-<div className="grid grid-cols-4 gap-4 mb-6">
 
+<div className="flex sm:grid sm:grid-cols-4 gap-4 mb-6 overflow-x-auto">
 <div className="bg-[#0B0F17] border border-[#1A1F2E] p-4 rounded-xl font-bold">
 
 Today
@@ -490,51 +446,105 @@ Total
 
 </div>
 
+<div className="sm:hidden space-y-4 mb-5">
 
+{products.map(p=>(
+
+<div
+key={p._id}
+className="bg-[#0B0F17] border border-[#1A1F2E] rounded-2xl p-4 shadow-md active:scale-[0.98] transition"
+>
+
+{/* TOP ROW */}
+<div className="flex justify-between items-start">
+
+{/* LEFT */}
+<div>
+<p className="text-white font-semibold text-lg">
+{p.name}
+</p>
+
+<p className="text-gray-400 text-sm mt-1">
+₹{p.price}
+</p>
+</div>
+
+{/* RIGHT */}
+<div className="flex flex-col items-end gap-2">
+
+<p className={`text-xs px-3 py-1 rounded-full font-semibold 
+${p.stock < 5 
+? "bg-red-500/10 text-red-400 border border-red-500/30" 
+: "bg-green-500/10 text-green-400 border border-green-500/30"
+}`}>
+Stock: {p.stock}
+</p>
+
+<button
+onClick={()=>removeProduct(p._id)}
+className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded-lg text-xs transition"
+>
+Delete
+</button>
+
+</div>
+
+</div>
+
+
+</div>
+
+))}
+
+</div>
 
 {/* FILTER */}
 
-<div className="flex gap-3 mb-6">
+<div className="flex flex-col sm:flex-row gap-3 mb-6">
 
 <input
 placeholder="Search..."
 value={search}
 onChange={(e)=>setSearch(e.target.value)}
-className="bg-[#111827] p-2 rounded w-60"
+className="bg-[#111827] p-2 rounded w-full sm:w-60"
 />
+
+<button
+onClick={()=>setShowFilter(!showFilter)}
+className="bg-[#1A1F2E] px-3 py-2 rounded text-sm"
+>
+Filters
+</button>
+
+{showFilter && (
+<div className="flex flex-col gap-3 bg-[#0B0F17] p-3 rounded">
 
 <select
 value={productFilter}
 onChange={(e)=>setProductFilter(e.target.value)}
 className="bg-[#111827] p-2 rounded"
 >
-
 <option value="">All Product</option>
-
 {products.map(p=>(
-
-<option key={p._id} value={p.name}>
-
-{p.name}
-
-</option>
-
+<option key={p._id} value={p.name}>{p.name}</option>
 ))}
-
 </select>
 
 <input
 type="date"
 value={dateFilter}
 onChange={(e)=>setDateFilter(e.target.value)}
-className="bg-[#111827] p-2 rounded text-white [&::-webkit-calendar-picker-indicator]:invert"
+className="bg-[#111827] p-2 rounded text-white"
 />
+
+</div>
+)}
 
 </div>
 
 {/* SALES TABLE */}
 
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden">
+<div className="hidden sm:block bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden">
 
 <table className="w-full text-sm">
 
@@ -604,6 +614,89 @@ Delete
 </tbody>
 
 </table>
+
+</div>
+
+
+
+<div className="sm:hidden space-y-4">
+<p className="text-white font-semibold ml-3">Sales</p>
+
+{filtered.map(e=>{
+
+const isOpen = openCard === e._id
+
+return(
+
+    
+
+<div
+key={e._id}
+onClick={()=>setOpenCard(isOpen ? null : e._id)}
+className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4 active:scale-95 transition"
+>
+   
+
+{/* TOP */}
+<div className="flex justify-between items-center">
+
+<div>
+<p className="text-white font-semibold">{e.product}</p>
+<p className="text-xs text-gray-400">{e.date}</p>
+</div>
+
+<p className="text-red-400 font-bold">₹{e.total}</p>
+
+</div>
+
+{/* BASIC */}
+<div className="text-sm text-gray-300 mt-2">
+Qty: {e.quantity}
+</div>
+
+{/* EXPAND */}
+{isOpen && (
+
+<div className="mt-3 border-t border-[#1A1F2E] pt-3 space-y-2">
+
+<p className="text-sm">Price: ₹{e.price}</p>
+<p className="text-sm">Sold by: {e.soldBy}</p>
+
+<div className="flex gap-2">
+
+<button
+onClick={(ev)=>{
+ev.stopPropagation()
+setEdit(e)
+setForm(e)
+setOpen(true)
+}}
+className="flex-1 bg-blue-500/20 text-blue-400 py-2 rounded"
+>
+Edit
+</button>
+
+<button
+onClick={(ev)=>{
+ev.stopPropagation()
+remove(e._id)
+}}
+className="flex-1 bg-red-500/20 text-red-400 py-2 rounded"
+>
+Delete
+</button>
+
+</div>
+
+</div>
+
+)}
+
+</div>
+
+)
+
+})}
 
 </div>
 
@@ -797,6 +890,42 @@ Save
 </div>
 
 )}
+
+
+{/* FLOATING BUTTON */}
+
+<div className="fixed bottom-6 right-6 sm:hidden">
+
+<button
+onClick={()=>setFabOpen(!fabOpen)}
+className="bg-blue-600 w-14 h-14 rounded-full text-white text-2xl shadow-lg"
+>
++
+</button>
+
+{fabOpen && (
+
+<div className="flex flex-col gap-2 mt-3">
+
+<button
+onClick={()=>setOpen(true)}
+className="bg-red-600 px-4 py-2 rounded text-white text-sm"
+>
++ Sale
+</button>
+
+<button
+onClick={()=>setProductModal(true)}
+className="bg-blue-600 px-4 py-2 rounded text-white text-sm"
+>
++ Product
+</button>
+
+</div>
+
+)}
+
+</div>
 
 </div>
 
