@@ -1,4 +1,4 @@
-import PetrolCard from "../../components/cards/PetrolCard"
+
 import DieselCard from "../../components/cards/DieselCard"
 import RevenueCard from "../../components/cards/RevenueCard"
 import TankLevelCard from "../../components/cards/TankLevelCard"

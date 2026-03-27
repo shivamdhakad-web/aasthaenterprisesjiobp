@@ -1,5 +1,6 @@
 import { useEffect,useState } from "react"
-
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import {
 
 getEntries,
@@ -23,6 +24,189 @@ const [modalOpen,setModalOpen] = useState(false)
 const [editData,setEditData] = useState(null)
 const [openCard,setOpenCard] = useState(null)
 const [showFilter,setShowFilter] = useState(false)
+const [reportOpen,setReportOpen] = useState(false)
+
+const [fromDateTime,setFromDateTime] = useState("")
+const [toDateTime,setToDateTime] = useState("")
+
+const [reportMachine,setReportMachine] = useState("")
+const [reportPayment,setReportPayment] = useState("")
+
+const [format,setFormat] = useState("pdf")
+
+const getReportData = () => {
+
+return entries.filter(e => {
+
+const entryDateTime = new Date(e.date)
+
+if(e.time){
+  const [hours, minutes] = e.time.split(":")
+  entryDateTime.setHours(hours)
+  entryDateTime.setMinutes(minutes)
+}
+
+const from = fromDateTime ? new Date(fromDateTime) : null
+const to = toDateTime ? new Date(toDateTime) : null
+
+if(to) to.setSeconds(59)
+
+// DEBUG (optional)
+console.log("ENTRY FIXED:", entryDateTime)
+
+return (
+
+(!from || entryDateTime >= from) &&
+(!to || entryDateTime <= to) &&
+(!reportMachine || e.machine === reportMachine) &&
+(!reportPayment || e.paymentMethod === reportPayment)
+
+)
+
+})
+
+}
+
+
+const getSummary = (data)=>{
+
+let totalAmount = 0
+let totalCharges = 0
+
+let cash = 0
+let online = 0
+
+let self = 0
+let dsm = 0
+
+data.forEach(e=>{
+
+totalAmount += Number(e.amount || 0)
+totalCharges += Number(e.charges || 0)
+
+if(e.paymentMethod === "Cash") cash += e.amount
+if(e.paymentMethod === "Online") online += e.amount
+
+if(e.machine === "Self") self += e.amount
+if(e.machine === "DSM") dsm += e.amount
+
+})
+
+return {
+totalAmount,
+totalCharges,
+net: totalAmount - totalCharges,
+cash,
+online,
+self,
+dsm,
+count: data.length
+}
+
+}
+
+
+const handleGenerate = ()=>{
+
+const filteredData = getReportData()
+
+if(filteredData.length === 0){
+alert("No data found")
+return
+}
+
+if(format === "pdf"){
+generatePDF(filteredData)
+}else{
+generateExcel(filteredData)
+}
+
+setReportOpen(false)
+
+}
+
+const generatePDF = (data)=>{
+
+const summary = getSummary(data)
+
+const doc = new jsPDF()
+
+doc.setFontSize(16)
+doc.text("Card Swipe Report",14,15)
+
+doc.setFontSize(10)
+doc.text(`From: ${fromDateTime || "All"}`,14,22)
+doc.text(`To: ${toDateTime || "All"}`,14,28)
+
+doc.text(`Machine: ${reportMachine || "All"}`,120,22)
+doc.text(`Payment: ${reportPayment || "All"}`,120,28)
+
+// 🔹 SUMMARY
+doc.setFontSize(12)
+doc.text("Summary",14,40)
+
+doc.setFontSize(10)
+
+doc.text(`Total Swipe: Rs.${summary.totalAmount}`,14,48)
+doc.text(`Total Charges: Rs.${summary.totalCharges}`,14,54) 
+
+doc.text(`Cash: Rs.${summary.cash}`,120,48)
+doc.text(`Online: Rs.${summary.online}`,120,54)
+
+doc.text(`Self: Rs.${summary.self}`,120,60)
+doc.text(`DSM: Rs.${summary.dsm}`,120,66)
+
+doc.text(`Transactions: ${summary.count}`,14,68)
+
+// 🔹 TABLE
+autoTable(doc,{
+startY:75,
+head:[["Date","Time","Amount","Charges","Machine","Payment"]],
+body:data.map(e=>[
+new Date(e.date).toLocaleDateString(),
+e.time,
+e.amount,
+e.charges,
+e.machine,
+e.paymentMethod
+]),
+styles:{fontSize:8},
+headStyles:{fillColor:[22,163,74]}
+})
+
+doc.save("CardSwipe_Report.pdf")
+
+}
+
+const generateExcel = (data)=>{
+
+const summary = getSummary(data)
+
+const formatted = data.map((e,i)=>({
+ID:i+1,
+Date:new Date(e.date).toLocaleDateString(),
+Time:e.time,
+Amount:e.amount,
+Charges:e.charges,
+Machine:e.machine,
+Payment:e.paymentMethod
+}))
+
+const ws = XLSX.utils.json_to_sheet(formatted)
+
+const wb = XLSX.utils.book_new()
+
+// DATA SHEET
+XLSX.utils.book_append_sheet(wb,ws,"Data")
+
+// SUMMARY SHEET
+const summarySheet = XLSX.utils.json_to_sheet([summary])
+XLSX.utils.book_append_sheet(wb,summarySheet,"Summary")
+
+XLSX.writeFile(wb,"CardSwipe_Report.xlsx")
+
+}
+
 
 const fetchEntries = async()=>{
 
@@ -379,7 +563,13 @@ DSM : ₹{dsmTotal}
 
 </div>
 
-<div className="flex justify-end mb-2">
+<div className="flex justify-end mb-2 gap-1">
+<button
+onClick={()=>setReportOpen(true)}
+className="bg-purple-600 text-white px-4 py-2 rounded"
+>
+Generate Report
+</button>
 
 <button
 className="bg-blue-500 px-4 py-2 rounded"
@@ -595,7 +785,88 @@ Delete
 })}
 
 </div>
+<div>
+    {reportOpen && (
 
+<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+<div className="bg-[#0B0F17] p-6 rounded-xl w-[350px] text-white">
+
+<h2 className="text-lg font-semibold mb-4">
+Generate Report
+</h2>
+
+<div className="flex flex-col gap-3">
+
+<input
+type="datetime-local"
+value={fromDateTime}
+onChange={(e)=>setFromDateTime(e.target.value)}
+className="border p-2 bg-transparent rounded text-white [&::-webkit-calendar-picker-indicator]:invert"
+/>
+
+<input
+type="datetime-local"
+value={toDateTime}
+onChange={(e)=>setToDateTime(e.target.value)}
+className="border p-2 bg-transparent rounded text-white [&::-webkit-calendar-picker-indicator]:invert"
+/>
+
+<select
+value={reportMachine}
+onChange={(e)=>setReportMachine(e.target.value)}
+className="border p-2 bg-transparent rounded"
+>
+<option value="">All Machine</option>
+<option value="Self">Self</option>
+<option value="DSM">DSM</option>
+</select>
+
+<select
+value={reportPayment}
+onChange={(e)=>setReportPayment(e.target.value)}
+className="border p-2 bg-transparent rounded"
+>
+<option value="">All Payment</option>
+<option value="Cash">Cash</option>
+<option value="Online">Online</option>
+</select>
+
+<select
+value={format}
+onChange={(e)=>setFormat(e.target.value)}
+className="border p-2 bg-transparent rounded"
+>
+<option value="pdf">PDF</option>
+<option value="excel">Excel</option>
+</select>
+
+</div>
+
+<div className="flex justify-end gap-3 mt-4">
+
+<button
+onClick={()=>setReportOpen(false)}
+className="bg-gray-600 px-3 py-1 rounded"
+>
+Cancel
+</button>
+
+<button
+onClick={handleGenerate}
+className="bg-green-600 px-3 py-1 rounded"
+>
+Download
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)}
+</div>
 <AddCardSwipeModal
 open={modalOpen}
 onClose={()=>{

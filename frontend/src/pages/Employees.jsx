@@ -16,6 +16,8 @@ deleteAttendance
 
 import EmployeeModal from "../components/EmployeeModal"
 import AttendanceModal from "../components/AttendanceModal"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 export default function Employees(){
 
@@ -34,10 +36,29 @@ const [editAttendance,setEditAttendance] = useState(null)
 const [selectedMonth,setSelectedMonth] = useState("")
 
 const [openCard,setOpenCard] = useState(null)
+const [reportOpen,setReportOpen] = useState(false)
+const [fromDate,setFromDate] = useState("")
+const [toDate,setToDate] = useState("")
 
 const [view,setView] = useState(
 window.innerWidth < 640 ? "mobile" : "desktop"
 )
+
+
+const getFilteredByDate = () => {
+
+return filteredAttendance.filter(a => {
+
+const d = new Date(a.date)
+
+return (
+(!fromDate || d >= new Date(fromDate)) &&
+(!toDate || d <= new Date(toDate))
+)
+
+})
+
+}
 
 useEffect(()=>{
 const handleResize = ()=>{
@@ -208,12 +229,6 @@ return
 
 }
 
-const printPDF = ()=>{
-
-window.print()
-
-}
-
 const confirmDelete =
 window.confirm("Delete this month attendance?")
 
@@ -245,6 +260,136 @@ filteredAttendance.forEach(a=>{
 totalShortage += Number(a.shortage || 0)
 
 })
+
+const generateEmployeePDF = () => {
+
+const filteredData = getFilteredByDate()
+
+// =====================
+// 🔹 SUMMARY CALCULATION
+// =====================
+let present=0, absent=0, dbl=0, shortage=0, advance=0
+
+filteredData.forEach(a=>{
+if(a.status==="present") present++
+if(a.status==="absent") absent++
+if(a.status==="double") dbl++
+
+shortage += Number(a.shortage || 0)
+advance += Number(a.advanceCash || 0)
+advance += Number(a.advancePetrol || 0)
+})
+
+// =====================
+// 🔹 DATE BASED SALARY
+// =====================
+const salary = selectedEmployee.salary || 0
+
+const totalDays = filteredData.length || 1
+const perDay = salary / totalDays
+const doublePay = perDay * 2
+
+const earned =
+Math.round(present * perDay) +
+Math.round(dbl * doublePay)
+
+const final = earned + shortage - advance
+
+
+// =====================
+// 🔹 PDF START
+// =====================
+const doc = new jsPDF()
+
+// HEADER
+doc.setFont("helvetica","bold")
+doc.setFontSize(18)
+doc.text("Aastha Enterprises", 14, 18)
+
+doc.setFontSize(12)
+doc.setFont("helvetica","bold")
+doc.text("Employee Attendance Report", 14, 26)
+
+
+// EMPLOYEE INFO
+doc.setFontSize(10)
+doc.text(`Name: ${selectedEmployee.name}`, 14, 36)
+doc.text(`Role: ${selectedEmployee.role}`, 14, 42)
+doc.text(`From: ${fromDate || "All"}  To: ${toDate || "All"}`, 14, 48)
+
+
+// LINE
+doc.setDrawColor(200)
+doc.line(14, 52, 196, 52)
+
+
+// SUMMARY TITLE
+doc.setFont("helvetica","bold")
+doc.setFontSize(13)
+doc.text("Summary", 14, 60)
+
+// RESET FONT (IMPORTANT FIX)
+doc.setFont("helvetica","normal")
+doc.setFontSize(10)
+doc.setCharSpace(0)
+
+// ROW 1
+doc.text("Present: " + present, 14, 70)
+doc.text("Absent: " + absent, 80, 70)
+doc.text("Double: " + dbl, 150, 70)
+
+// ROW 2 (NO SPACE BUG NOW)
+doc.text("Earned: Rs." + earned, 14, 75)
+doc.text("Shortage: Rs." + shortage, 80, 75)
+doc.text("Advance: Rs." + advance, 150, 75)
+
+// FINAL
+doc.setFont("helvetica","bold")
+doc.setTextColor(0,150,0)
+doc.text("Final Balance: Rs." + final, 14, 80)
+
+doc.setTextColor(0,0,0)
+
+
+// =====================
+// 🔹 TABLE
+// =====================
+autoTable(doc,{
+startY: 85,
+
+head:[["Date","Status","Short","Cash","Petrol"]],
+
+body: filteredData.map(a=>[
+a.date?.slice(0,10),
+a.status,
+a.shortage,
+a.advanceCash,
+a.advancePetrol
+]),
+
+styles:{
+fontSize:9,
+cellPadding:4
+},
+
+headStyles:{
+fillColor:[0,102,204],
+textColor:255,
+fontStyle:"bold"
+},
+
+alternateRowStyles:{
+fillColor:[245,245,245]
+}
+
+})
+
+
+// =====================
+// 🔹 SAVE
+// =====================
+doc.save(`${selectedEmployee.name}_Report.pdf`)
+}
 
 
 
@@ -508,7 +653,7 @@ setAttendanceModal(true)
 
 <button
 className="btn btn-purple"
-onClick={()=>window.print()}
+onClick={()=>setReportOpen(true)}
 >
 PDF
 </button>
@@ -541,7 +686,7 @@ Double : {summary.dbl}
 </div>
 
 <div className="card">
-Earned : ₹{summary.earned}
+Earned : ₹{Math.round(summary.earned)}
 </div>
 
 <div className="card">
@@ -553,7 +698,7 @@ Advance : ₹{summary.advance}
 </div>
 
 <div className="card col-span-3 text-lg">
-Final Balance : ₹{summary.final}
+Final Balance : ₹{Math.round(summary.final)}
 </div>
 
 </div>
@@ -755,7 +900,64 @@ Delete
 
 
 
+{reportOpen && (
 
+<div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+
+<div className="bg-[#0B0F17] border border-[#1F2937] p-6 rounded-xl w-[350px] text-white">
+
+<h2 className="text-lg font-semibold mb-4">
+Generate Report
+</h2>
+
+<p className="text-sm text-gray-400 mb-3">
+Select date range
+</p>
+
+<div className="flex flex-col gap-3">
+
+<input
+type="date"
+value={fromDate}
+onChange={(e)=>setFromDate(e.target.value)}
+className="bg-[#111827] border border-[#1F2937] p-2 rounded"
+/>
+
+<input
+type="date"
+value={toDate}
+onChange={(e)=>setToDate(e.target.value)}
+className="bg-[#111827] border border-[#1F2937] p-2 rounded"
+/>
+
+</div>
+
+<div className="flex justify-end gap-3 mt-5">
+
+<button
+onClick={()=>setReportOpen(false)}
+className="bg-gray-600 px-3 py-1 rounded"
+>
+Cancel
+</button>
+
+<button
+onClick={()=>{
+generateEmployeePDF()
+setReportOpen(false)
+}}
+className="bg-green-600 px-3 py-1 rounded"
+>
+Download
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)}
 
 
 

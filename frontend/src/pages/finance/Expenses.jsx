@@ -1,5 +1,6 @@
 import {useState,useEffect} from "react"
-
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import {
 getExpenses,
 addExpense,
@@ -17,6 +18,9 @@ const [search,setSearch] = useState("")
 const [category,setCategory] = useState("")
 const [dateFilter,setDateFilter] = useState("")
 const [openCard,setOpenCard] = useState(null)
+const [reportOpen,setReportOpen] = useState(false)
+const [fromDate,setFromDate] = useState("")
+const [toDate,setToDate] = useState("")
 
 const [form,setForm] = useState({
 
@@ -28,6 +32,97 @@ paymentMode:"Cash",
 addedBy:"Admin"
 
 })
+
+
+const generateExpensePDF = () => {
+
+const filteredData = data.filter(e=>{
+
+const d = new Date(e.date)
+
+return (
+(!fromDate || d >= new Date(fromDate)) &&
+(!toDate || d <= new Date(toDate)) &&
+(!category || e.category === category)
+)
+
+})
+
+// 🔹 TOTAL
+let total = 0
+filteredData.forEach(e=>{
+total += Number(e.amount || 0)
+})
+
+const doc = new jsPDF()
+
+// 🔹 HEADER
+doc.setFont("helvetica","bold")
+doc.setFontSize(18)
+doc.text("Aastha Enterprises", 14, 18)
+
+doc.setFontSize(12)
+doc.setFont("helvetica","normal")
+doc.text("Expense Report", 14, 26)
+
+
+// 🔹 DATE RANGE (IMPORTANT)
+doc.setFontSize(10)
+doc.text(
+"From: " + (fromDate || "All") + 
+"   To: " + (toDate || "All"),
+14, 36
+)
+
+doc.text("Total Records: " + filteredData.length, 14, 42)
+
+
+// 🔹 LINE
+doc.setDrawColor(200)
+doc.line(14, 46, 196, 46)
+
+
+// 🔹 SUMMARY
+doc.setFont("helvetica","bold")
+doc.text("Summary", 14, 54)
+
+doc.setFont("helvetica","normal")
+doc.text("Total Expense: Rs. " + total, 14, 62)
+
+
+// 🔹 TABLE
+autoTable(doc,{
+startY: 70,
+
+head:[["Date","Category","Description","Amount","Mode","Added By"]],
+
+body: filteredData.map(e=>[
+e.date,
+e.category,
+e.description,
+"Rs. " + e.amount,
+e.mode,
+e.addedBy
+]),
+
+styles:{
+fontSize:9,
+cellPadding:4
+},
+
+headStyles:{
+fillColor:[0,102,204],
+textColor:255
+},
+
+alternateRowStyles:{
+fillColor:[245,245,245]
+}
+
+})
+
+doc.save("Expense_Report.pdf")
+}
 
 
 
@@ -198,6 +293,13 @@ value={dateFilter}
 onChange={(e)=>setDateFilter(e.target.value)}
 className="bg-[#111827] border border-[#1F2937] px-4 py-2 rounded text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
+
+<button
+onClick={()=>setReportOpen(true)}
+className="bg-purple-600 text-white px-4 py-2 rounded"
+>
+Generate Report
+</button>
 
 </div>
 
@@ -478,6 +580,61 @@ onClick={saveExpense}
 className="bg-red-600 px-4 py-2"
 >
 Save
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)}
+
+{reportOpen && (
+
+<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+<div className="bg-[#0B0F17] p-6 rounded-xl w-[320px] text-white">
+
+<h2 className="text-lg mb-4 font-semibold">
+Generate Expense Report
+</h2>
+
+<div className="flex flex-col gap-3">
+
+<input
+type="date"
+value={fromDate}
+onChange={(e)=>setFromDate(e.target.value)}
+className="border p-2 bg-transparent rounded"
+/>
+
+<input
+type="date"
+value={toDate}
+onChange={(e)=>setToDate(e.target.value)}
+className="border p-2 bg-transparent rounded"
+/>
+
+</div>
+
+<div className="flex justify-end gap-3 mt-4">
+
+<button
+onClick={()=>setReportOpen(false)}
+className="bg-gray-600 px-3 py-1 rounded"
+>
+Cancel
+</button>
+
+<button
+onClick={()=>{
+generateExpensePDF()
+setReportOpen(false)
+}}
+className="bg-green-600 px-3 py-1 rounded"
+>
+Download
 </button>
 
 </div>

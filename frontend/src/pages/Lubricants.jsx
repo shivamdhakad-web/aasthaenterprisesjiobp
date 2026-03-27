@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import {
 getLubricants,
 getProducts,
@@ -26,6 +27,11 @@ const [open,setOpen] = useState(false)
 const [productModal,setProductModal] = useState(false)
 
 const [edit,setEdit] = useState(null)
+const [reportOpen,setReportOpen] = useState(false)
+const [fromDate,setFromDate] = useState("")
+const [toDate,setToDate] = useState("")
+const [reportProduct,setReportProduct] = useState("")
+const [format,setFormat] = useState("pdf")
 
 const [form,setForm] = useState({
 
@@ -48,6 +54,100 @@ stock:""
 const [openCard,setOpenCard] = useState(null)
 const [showFilter,setShowFilter] = useState(false)
 const [fabOpen,setFabOpen] = useState(false)
+
+
+
+
+const getReportData = ()=>{
+
+return data.filter(e=>{
+
+const d = new Date(e.date)
+
+return (
+
+(!fromDate || d >= new Date(fromDate)) &&
+(!toDate || d <= new Date(toDate)) &&
+(!reportProduct || e.product === reportProduct)
+
+)
+
+})
+
+}
+
+const handleGenerate = ()=>{
+
+const filteredData = getReportData()
+
+if(filteredData.length === 0){
+alert("No data found")
+return
+}
+
+if(format === "pdf"){
+generatePDF(filteredData)
+}else{
+generateExcel(filteredData)
+}
+
+setReportOpen(false)
+
+}
+
+const generatePDF = (filteredData)=>{
+
+const doc = new jsPDF()
+
+doc.setFontSize(16)
+doc.text("Lubricant Sales Report",14,15)
+
+doc.setFontSize(10)
+doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`,14,22)
+
+doc.text(`Product: ${reportProduct || "All"}`,14,28)
+
+doc.text(`Total Records: ${filteredData.length}`,14,34)
+
+autoTable(doc,{
+startY:40,
+head:[["Date","Product","Qty","Price","Total","Sold By"]],
+body:filteredData.map(e=>[
+e.date,
+e.product,
+e.quantity,
+e.price,
+e.total,
+e.soldBy
+]),
+styles:{fontSize:8},
+headStyles:{fillColor:[22,163,74]}
+})
+
+doc.save("Lubricant_Report.pdf")
+
+}
+
+const generateExcel = (filteredData)=>{
+
+const formatted = filteredData.map((e,i)=>({
+ID:i+1,
+Date:e.date,
+Product:e.product,
+Qty:e.quantity,
+Price:e.price,
+Total:e.total,
+Sold_By:e.soldBy
+}))
+
+const ws = XLSX.utils.json_to_sheet(formatted)
+
+const wb = XLSX.utils.book_new()
+XLSX.utils.book_append_sheet(wb,ws,"Report")
+
+XLSX.writeFile(wb,"Lubricant_Report.xlsx")
+
+}
 
 /* LOAD SALES */
 
@@ -540,7 +640,16 @@ className="bg-[#111827] p-2 rounded text-white"
 </div>
 )}
 
+<button
+onClick={()=>setReportOpen(true)}
+className="bg-purple-600 text-white px-4 py-2 rounded"
+>
+Generate Report
+</button>
+
 </div>
+
+
 
 {/* SALES TABLE */}
 
@@ -926,6 +1035,85 @@ className="bg-blue-600 px-4 py-2 rounded text-white text-sm"
 )}
 
 </div>
+{reportOpen && (
+
+<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+<div className="bg-[#0B0F17] p-6 rounded-xl w-[340px] text-white">
+
+<h2 className="text-lg font-semibold mb-4">
+Generate Report
+</h2>
+
+<div className="flex flex-col gap-3">
+
+{/* FROM */}
+<input
+type="date"
+value={fromDate}
+onChange={(e)=>setFromDate(e.target.value)}
+className="border p-2 bg-transparent rounded"
+/>
+
+{/* TO */}
+<input
+type="date"
+value={toDate}
+onChange={(e)=>setToDate(e.target.value)}
+className="border p-2 bg-transparent rounded"
+/>
+
+{/* PRODUCT FILTER */}
+<select
+value={reportProduct}
+onChange={(e)=>setReportProduct(e.target.value)}
+className="border p-2 bg-transparent rounded"
+>
+<option value="">All Products</option>
+
+{products.map(p=>(
+<option key={p._id} value={p.name}>
+{p.name}
+</option>
+))}
+
+</select>
+
+{/* FORMAT */}
+<select
+value={format}
+onChange={(e)=>setFormat(e.target.value)}
+className="border p-2 bg-transparent rounded"
+>
+<option value="pdf">PDF</option>
+<option value="excel">Excel</option>
+</select>
+
+</div>
+
+<div className="flex justify-end gap-3 mt-4">
+
+<button
+onClick={()=>setReportOpen(false)}
+className="bg-gray-600 px-3 py-1 rounded"
+>
+Cancel
+</button>
+
+<button
+onClick={handleGenerate}
+className="bg-green-600 px-3 py-1 rounded"
+>
+Download
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)}
 
 </div>
 
