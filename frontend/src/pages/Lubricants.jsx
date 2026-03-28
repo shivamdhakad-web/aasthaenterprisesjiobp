@@ -397,11 +397,11 @@ Lubricant Sales
 
 </h1>
 
-<div className="flex gap-3 hidden sm:block">
+<div className="hidden gap-3 sm:block">
 
 <button
 onClick={()=>setProductModal(true)}
-className="bg-blue-600 px-4 py-2 rounded text-white"
+className="bg-blue-600 px-4 py-2 rounded text-white mr-2"
 >
 
 + Add Product
@@ -410,7 +410,7 @@ className="bg-blue-600 px-4 py-2 rounded text-white"
 
 <button
 onClick={deleteMonthData}
-className="bg-yellow-600 px-4 py-2 rounded text-white"
+className="bg-yellow-600 px-4 py-2 rounded text-white mr-2"
 >
 
 Delete Month
@@ -600,52 +600,76 @@ Delete
 
 {/* FILTER */}
 
-<div className="flex flex-col sm:flex-row gap-3 mb-6">
+<div className="flex flex-col gap-3 mb-6">
 
-<input
-placeholder="Search..."
-value={search}
-onChange={(e)=>setSearch(e.target.value)}
-className="bg-[#111827] p-2 rounded w-full sm:w-60"
-/>
+  {/* 🔹 TOP ROW */}
+  <div className="flex flex-col sm:flex-row gap-3">
 
-<button
-onClick={()=>setShowFilter(!showFilter)}
-className="bg-[#1A1F2E] px-3 py-2 rounded text-sm"
->
-Filters
-</button>
+    {/* SEARCH */}
+    <input
+      placeholder="Search..."
+      value={search}
+      onChange={(e)=>setSearch(e.target.value)}
+      className="bg-[#111827] p-2 rounded w-full sm:w-60 text-sm text-white"
+    />
 
-{showFilter && (
-<div className="flex flex-col gap-3 bg-[#0B0F17] p-3 rounded">
+    {/* FILTER BUTTON */}
+    <button
+      onClick={()=>setShowFilter(!showFilter)}
+      className="bg-[#1A1F2E] px-3 py-2 rounded text-sm w-full sm:w-auto"
+    >
+      Filters
+    </button>
 
-<select
-value={productFilter}
-onChange={(e)=>setProductFilter(e.target.value)}
-className="bg-[#111827] p-2 rounded"
->
-<option value="">All Product</option>
-{products.map(p=>(
-<option key={p._id} value={p.name}>{p.name}</option>
-))}
-</select>
+    {/* REPORT BUTTON */}
+    <button
+      onClick={()=>setReportOpen(true)}
+      className="bg-purple-600 text-white px-4 py-2 rounded text-sm w-full sm:w-auto"
+    >
+      Generate Report
+    </button>
 
-<input
-type="date"
-value={dateFilter}
-onChange={(e)=>setDateFilter(e.target.value)}
-className="bg-[#111827] p-2 rounded text-white"
-/>
+  </div>
 
-</div>
-)}
 
-<button
-onClick={()=>setReportOpen(true)}
-className="bg-purple-600 text-white px-4 py-2 rounded"
->
-Generate Report
-</button>
+  {/* 🔹 FILTER BOX */}
+  {showFilter && (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0B0F17] p-3 rounded border border-[#1F2937]">
+
+      {/* PRODUCT */}
+      <select
+        value={productFilter}
+        onChange={(e)=>setProductFilter(e.target.value)}
+        className="bg-[#111827] p-2 rounded text-sm text-white"
+      >
+        <option value="">All Product</option>
+        {products.map(p=>(
+          <option key={p._id} value={p.name}>{p.name}</option>
+        ))}
+      </select>
+
+      {/* DATE */}
+      <input
+        type="date"
+        value={dateFilter}
+        onChange={(e)=>setDateFilter(e.target.value)}
+        className="bg-[#111827] p-2 rounded text-sm text-white 
+        [&::-webkit-calendar-picker-indicator]:invert"
+      />
+
+      {/* CLEAR BUTTON (NEW 🔥) */}
+      <button
+        onClick={()=>{
+          setProductFilter("")
+          setDateFilter("")
+        }}
+        className="bg-red-500/10 border border-red-500/30 text-red-400 rounded text-sm"
+      >
+        Clear
+      </button>
+
+    </div>
+  )}
 
 </div>
 
@@ -1035,6 +1059,7 @@ className="bg-blue-600 px-4 py-2 rounded text-white text-sm"
 )}
 
 </div>
+
 {reportOpen && (
 
 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1052,7 +1077,7 @@ Generate Report
 type="date"
 value={fromDate}
 onChange={(e)=>setFromDate(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-transparent rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 {/* TO */}
@@ -1060,14 +1085,14 @@ className="border p-2 bg-transparent rounded"
 type="date"
 value={toDate}
 onChange={(e)=>setToDate(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-transparent rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 {/* PRODUCT FILTER */}
 <select
 value={reportProduct}
 onChange={(e)=>setReportProduct(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 rounded bg-[#0B0F17]"
 >
 <option value="">All Products</option>
 
@@ -1083,7 +1108,7 @@ className="border p-2 bg-transparent rounded"
 <select
 value={format}
 onChange={(e)=>setFormat(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-[#0B0F17] rounded"
 >
 <option value="pdf">PDF</option>
 <option value="excel">Excel</option>

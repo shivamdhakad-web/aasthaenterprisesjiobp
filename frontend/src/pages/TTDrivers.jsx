@@ -358,20 +358,20 @@ Generate Report
 type="date"
 value={fromDate}
 onChange={(e)=>setFromDate(e.target.value)}
-className="border p-2 bg-transparent"
+className="border p-2 bg-transparent  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <input
 type="date"
 value={toDate}
 onChange={(e)=>setToDate(e.target.value)}
-className="border p-2 bg-transparent"
+className="border p-2 bg-transparent  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <select
 value={format}
 onChange={(e)=>setFormat(e.target.value)}
-className="border p-2 bg-transparent"
+className="border p-2 bg-[#0B0F17]"
 >
 <option value="pdf">PDF</option>
 <option value="excel">Excel</option>

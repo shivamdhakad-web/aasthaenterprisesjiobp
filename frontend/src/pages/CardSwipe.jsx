@@ -405,7 +405,7 @@ Clear
 type="month"
 value={month}
 onChange={(e)=>setMonth(e.target.value)}
-className="input"
+className="input  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <button
@@ -815,7 +815,7 @@ className="border p-2 bg-transparent rounded text-white [&::-webkit-calendar-pic
 <select
 value={reportMachine}
 onChange={(e)=>setReportMachine(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-[#0B0F17] rounded"
 >
 <option value="">All Machine</option>
 <option value="Self">Self</option>
@@ -825,7 +825,7 @@ className="border p-2 bg-transparent rounded"
 <select
 value={reportPayment}
 onChange={(e)=>setReportPayment(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-[#0B0F17] rounded"
 >
 <option value="">All Payment</option>
 <option value="Cash">Cash</option>
@@ -835,7 +835,7 @@ className="border p-2 bg-transparent rounded"
 <select
 value={format}
 onChange={(e)=>setFormat(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-[#0B0F17] rounded"
 >
 <option value="pdf">PDF</option>
 <option value="excel">Excel</option>

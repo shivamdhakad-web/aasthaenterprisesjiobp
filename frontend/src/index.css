@@ -66,3 +66,34 @@ font-size:14px;
 .btn-red{background:#EF4444}
 .btn-purple{background:#A855F7}
 .btn-gray{background:#6B7280}
+
+
+/* DARK THEME SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #04060B; /* sidebar background */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1A1D26; /* dark thumb */
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2A2F3A; /* hover effect */
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1A1D26 #04060B;
+}
+
+@media (max-width: 640px){
+  html{
+    font-size: 14px;
+  }
+}

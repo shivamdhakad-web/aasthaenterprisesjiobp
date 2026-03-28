@@ -36,13 +36,14 @@ className="fixed inset-0 bg-black/50 z-40 lg:hidden"
 {/* SIDEBAR */}
 
 <div className={`
-fixed lg:static top-0 left-0 h-full w-[240px] bg-[#04060B]
+fixed lg:static top-0 left-0 h-screen w-[240px] bg-[#04060B]
 border-r border-[#1A1D26] z-50 transform transition-transform
+flex flex-col overflow-hidden
 ${open ? "translate-x-0" : "-translate-x-full"}
 lg:translate-x-0
 `}>
 
-<div className="pt-6 pl-6">
+<div className="pt-6 pl-6 shrink-0">
 
 <div className="flex items-center gap-3">
 
@@ -83,7 +84,7 @@ Jio-bp Station
 </div>
 
 
-<nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
+<nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
 
 <p className="text-xs text-gray-500 px-3">
 OPERATIONS
@@ -165,6 +166,10 @@ SYSTEM
 <SidebarItem icon={<Settings size={18}/>} text="Settings" active={location.pathname === "/setting"}/>
 </Link>
 
+
+
+</nav>
+
 <div className="mx-3 mb-4 pb-4 pr-4 pl-4 pt-3 rounded-2xl bg-gradient-to-br from-[#0B0F17] to-[#111827] border border-[#1A1D26] text-center shadow-lg">
 
   <p className="text-xs text-gray-400 mb-1">
@@ -176,9 +181,6 @@ SYSTEM
   </p>
 
 </div>
-
-</nav>
-
 
 
 </div>

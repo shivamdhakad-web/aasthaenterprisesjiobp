@@ -9,11 +9,18 @@ const [dateTime,setDateTime] = useState("")
 
 const save = async()=>{
 
+    if (!title || !dateTime) {
+    alert("Please fill required fields")
+    return
+  }
+
 await addReminder({
 title,
 description,
 dateTime
 })
+
+localStorage.setItem("reminderUpdated", Date.now())
 
 refresh()
 close()

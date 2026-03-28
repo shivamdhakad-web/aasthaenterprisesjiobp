@@ -12,7 +12,7 @@ type:String
 },
 
 dateTime:{
-type:Date,
+type:String,
 required:true
 },
 

@@ -397,13 +397,12 @@ const summary = calculateSalary()
 
 
 return(
-
-<div className="p-6 text-gray-300">
+<div className="p-4 sm:p-6 text-gray-300 max-w-full overflow-x-hidden">
 
 <h1 className="text-3xl mb-4 font-bold">Employees & Attendance</h1>
 
 
-<div className="flex gap-3 mb-4">
+<div className="flex flex-col sm:flex-row gap-3 mb-4">
 
 <input
 placeholder="Search employee"
@@ -413,7 +412,7 @@ className="input"
 />
 
 <button
-className="bg-blue-500 px-4 py-2 rounded"
+className="bg-blue-500 px-4 py-2 rounded w-full sm:w-auto"
 onClick={()=>{
 setEditEmployee(null)
 setModalOpen(true)
@@ -502,7 +501,7 @@ Delete
 </table>
 </div>
 
-<div className="lg:hidden grid gap-4">
+<div className="lg:hidden grid gap-4 w-full">
 {employees
 .filter(e=>e.name.toLowerCase().includes(search.toLowerCase()))
 .map(emp=>{
@@ -638,7 +637,7 @@ Total Shortage :
 type="month"
 value={selectedMonth}
 onChange={(e)=>setSelectedMonth(e.target.value)}
-className="input w-[180px]"
+className="input w-[180px]  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <button
@@ -823,7 +822,7 @@ Final Balance: ₹{summary.final}
 type="month"
 value={selectedMonth}
 onChange={(e)=>setSelectedMonth(e.target.value)}
-className="input flex-1"
+className="input flex-1 text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <button
@@ -834,8 +833,8 @@ className="btn btn-green"
 </button>
 
 <button
-onClick={()=>window.print()}
 className="btn btn-purple"
+onClick={()=>setReportOpen(true)}
 >
 PDF
 </button>
@@ -920,14 +919,14 @@ Select date range
 type="date"
 value={fromDate}
 onChange={(e)=>setFromDate(e.target.value)}
-className="bg-[#111827] border border-[#1F2937] p-2 rounded"
+className="bg-[#111827] border border-[#1F2937] p-2 rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <input
 type="date"
 value={toDate}
 onChange={(e)=>setToDate(e.target.value)}
-className="bg-[#111827] border border-[#1F2937] p-2 rounded"
+className="bg-[#111827] border border-[#1F2937] p-2 rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 </div>

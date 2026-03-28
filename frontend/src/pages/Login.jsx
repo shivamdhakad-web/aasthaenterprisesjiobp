@@ -6,23 +6,33 @@ export default function Login(){
 const [password,setPassword] = useState("")
 const navigate = useNavigate()
 
-const handleLogin = ()=>{
+const handleLogin = () => {
 
-const now = new Date()
+  const now = new Date()
 
-const timePassword =
-String(now.getHours()).padStart(2,"0") +
-String(now.getMinutes()).padStart(2,"0")
+  // 🔹 24 HOUR FORMAT
+  const password24 =
+    String(now.getHours()).padStart(2,"0") +
+    String(now.getMinutes()).padStart(2,"0")
 
-if(password === timePassword){
+  // 🔹 12 HOUR FORMAT
+  let hours12 = now.getHours() % 12
+  hours12 = hours12 === 0 ? 12 : hours12
 
-navigate("/dashboard")
+  const password12 =
+    String(hours12).padStart(2,"0") +
+    String(now.getMinutes()).padStart(2,"0")
 
-}else{
+  // 🔥 MATCH CHECK
+  if(password === password24 || password === password12){
 
-alert("Wrong Password")
+    navigate("/dashboard")
 
-}
+  } else {
+
+    alert("Wrong Password")
+
+  }
 
 }
 

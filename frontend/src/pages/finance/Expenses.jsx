@@ -606,14 +606,14 @@ Generate Expense Report
 type="date"
 value={fromDate}
 onChange={(e)=>setFromDate(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-transparent rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 <input
 type="date"
 value={toDate}
 onChange={(e)=>setToDate(e.target.value)}
-className="border p-2 bg-transparent rounded"
+className="border p-2 bg-transparent rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
 />
 
 </div>
