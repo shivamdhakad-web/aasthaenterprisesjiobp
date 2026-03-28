@@ -92,8 +92,8 @@ font-size:14px;
   scrollbar-color: #1A1D26 #04060B;
 }
 
-@media (max-width: 640px){
+/* @media (max-width: 640px){
   html{
     font-size: 14px;
   }
-}
+} */

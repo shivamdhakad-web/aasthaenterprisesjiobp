@@ -397,7 +397,7 @@ const summary = calculateSalary()
 
 
 return(
-<div className="p-4 sm:p-6 text-gray-300 max-w-full overflow-x-hidden">
+<div className="p-3 sm:p-4 text-gray-300 w-full max-w-[100vw] overflow-x-hidden">
 
 <h1 className="text-3xl mb-4 font-bold">Employees & Attendance</h1>
 
