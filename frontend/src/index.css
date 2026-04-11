@@ -1,5 +1,10 @@
 @import "./styles/main.css";
 
+html, body {
+  background: #04060B !important;
+  color-scheme: dark;
+}
+
 body{
   margin:0;
   padding:0;

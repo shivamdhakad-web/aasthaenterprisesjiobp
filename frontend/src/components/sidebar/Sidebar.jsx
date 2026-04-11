@@ -45,7 +45,7 @@ lg:translate-x-0
 
 <div className="pt-6 pl-6 shrink-0">
 
-<div className="flex items-center gap-3">
+<div className="flex items-center gap-3 pb-3">
 
 <div className="w-9 h-9 rounded-lg bg-lime-500 flex items-center justify-center">
 <svg
@@ -84,7 +84,7 @@ Jio-bp Station
 </div>
 
 
-<nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
+<nav className="flex-1 px-3 py-4  space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
 
 <p className="text-xs text-gray-500 px-3">
 OPERATIONS
