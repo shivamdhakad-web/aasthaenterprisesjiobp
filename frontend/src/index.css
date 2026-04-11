@@ -1,8 +1,7 @@
 @import "./styles/main.css";
 
-html, body {
-  background: #04060B !important;
-  color-scheme: dark;
+html {
+  color-scheme: light;
 }
 
 body{
