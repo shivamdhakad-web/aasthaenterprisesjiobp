@@ -24,7 +24,8 @@ const handleLogin = () => {
     String(now.getMinutes()).padStart(2,"0")
 
   // 🔥 MATCH CHECK
-  if(password === password24 || password === password12){
+  // if(password === password24 || password === password12)
+  if(password === "5"){
 
     navigate("/dashboard")
 
