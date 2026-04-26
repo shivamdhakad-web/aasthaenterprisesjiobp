@@ -1,1147 +1,774 @@
 import { useEffect, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import * as XLSX from "xlsx"
+
+import MobileActionFab from "../components/MobileActionFab"
 import {
-getLubricants,
-getProducts,
-addLubricant,
-updateLubricant,
-deleteLubricant,
-addProduct,
-deleteProduct,
-deleteMonth
+  addLubricant,
+  addProduct,
+  deleteLubricant,
+  deleteMonth,
+  deleteProduct,
+  getLubricants,
+  getProducts,
+  updateLubricant,
 } from "../services/lubricantApi"
 
-
-
-export default function Lubricants(){
-
-const [data,setData] = useState([])
-const [products,setProducts] = useState([])
-
-const [search,setSearch] = useState("")
-const [productFilter,setProductFilter] = useState("")
-const [dateFilter,setDateFilter] = useState("")
-
-const [open,setOpen] = useState(false)
-const [productModal,setProductModal] = useState(false)
-
-const [edit,setEdit] = useState(null)
-const [reportOpen,setReportOpen] = useState(false)
-const [fromDate,setFromDate] = useState("")
-const [toDate,setToDate] = useState("")
-const [reportProduct,setReportProduct] = useState("")
-const [format,setFormat] = useState("pdf")
-
-const [form,setForm] = useState({
-
-date:"",
-product:"",
-price:"",
-quantity:"",
-soldBy:"Admin"
-
-})
-
-const [productForm,setProductForm] = useState({
-
-name:"",
-price:"",
-stock:""
-
-})
-
-const [openCard,setOpenCard] = useState(null)
-const [showFilter,setShowFilter] = useState(false)
-const [fabOpen,setFabOpen] = useState(false)
-
-
-
-
-const getReportData = ()=>{
-
-return data.filter(e=>{
-
-const d = new Date(e.date)
-
-return (
-
-(!fromDate || d >= new Date(fromDate)) &&
-(!toDate || d <= new Date(toDate)) &&
-(!reportProduct || e.product === reportProduct)
-
-)
-
-})
-
-}
-
-const handleGenerate = ()=>{
-
-const filteredData = getReportData()
-
-if(filteredData.length === 0){
-alert("No data found")
-return
-}
-
-if(format === "pdf"){
-generatePDF(filteredData)
-}else{
-generateExcel(filteredData)
-}
-
-setReportOpen(false)
-
-}
-
-const generatePDF = (filteredData)=>{
-
-const doc = new jsPDF()
-
-doc.setFontSize(16)
-doc.text("Lubricant Sales Report",14,15)
-
-doc.setFontSize(10)
-doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`,14,22)
-
-doc.text(`Product: ${reportProduct || "All"}`,14,28)
-
-doc.text(`Total Records: ${filteredData.length}`,14,34)
-
-autoTable(doc,{
-startY:40,
-head:[["Date","Product","Qty","Price","Total","Sold By"]],
-body:filteredData.map(e=>[
-e.date,
-e.product,
-e.quantity,
-e.price,
-e.total,
-e.soldBy
-]),
-styles:{fontSize:8},
-headStyles:{fillColor:[22,163,74]}
-})
-
-doc.save("Lubricant_Report.pdf")
-
-}
-
-const generateExcel = (filteredData)=>{
-
-const formatted = filteredData.map((e,i)=>({
-ID:i+1,
-Date:e.date,
-Product:e.product,
-Qty:e.quantity,
-Price:e.price,
-Total:e.total,
-Sold_By:e.soldBy
-}))
-
-const ws = XLSX.utils.json_to_sheet(formatted)
-
-const wb = XLSX.utils.book_new()
-XLSX.utils.book_append_sheet(wb,ws,"Report")
-
-XLSX.writeFile(wb,"Lubricant_Report.xlsx")
-
-}
-
-/* LOAD SALES */
-
-const loadSales = async()=>{
-
-const res = await getLubricants()
-
-setData(res)
-
-}
-
-
-
-/* LOAD PRODUCTS */
-
-const loadProducts = async()=>{
-
-const res = await getProducts()
-
-setProducts(res)
-
-}
-
-
-
-useEffect(()=>{
-
-loadSales()
-loadProducts()
-
-},[])
-
-
-
-/* PRODUCT CHANGE */
-
-const changeProduct = (name)=>{
-
-const p = products.find(x=>x.name===name)
-
-setForm({
-
-...form,
-product:name,
-price:p?.price || ""
-
-})
-
-}
-
-
-
-/* SAVE SALE */
-
-const save = async()=>{
-
-if(!form.date || !form.product || !form.quantity){
-
-alert("Please fill all fields")
-return
-
-}
-
-const total = Number(form.price) * Number(form.quantity)
-
-const payload = {
-
-...form,
-price:Number(form.price),
-quantity:Number(form.quantity),
-total
-
-}
-
-if(edit){
-
-await updateLubricant(edit._id,payload)
-
-}else{
-
-await addLubricant(payload)
-
-}
-
-setOpen(false)
-setEdit(null)
-
-setForm({
-
-date:"",
-product:"",
-price:"",
-quantity:"",
-soldBy:"Admin"
-
-})
-
-loadSales()
-loadProducts()
-
-}
-
-
-
-/* DELETE SALE */
-
-const remove = async(id)=>{
-
-await deleteLubricant(id)
-
-loadSales()
-
-}
-
-
-
-/* ADD PRODUCT */
-
-const saveProduct = async()=>{
-
-if(!productForm.name || !productForm.price){
-
-alert("Enter product details")
-return
-
-}
-
-await addProduct({
-
-...productForm,
-price:Number(productForm.price),
-stock:Number(productForm.stock)
-
-})
-
-setProductModal(false)
-
-setProductForm({
-
-name:"",
-price:"",
-stock:""
-
-})
-
-loadProducts()
-
-}
-
-
-
-/* DELETE PRODUCT */
-
-const removeProduct = async(id)=>{
-
-await deleteProduct(id)
-
-loadProducts()
-
-}
-
-
-
-/* DELETE MONTH DATA */
-
-const deleteMonthData = async()=>{
-
-const month = prompt("Enter Month (example 03)")
-const year = prompt("Enter Year (example 2026)")
-
-if(!month || !year) return
-
-await deleteMonth({month,year})
-
-loadSales()
-
-}
-
-
-
-/* FILTER */
-
-const filtered = data.filter((e)=>{
-
-return (
-
-(!search || e.product.toLowerCase().includes(search.toLowerCase())) &&
-(!productFilter || e.product===productFilter) &&
-(!dateFilter || e.date===dateFilter)
-
-)
-
-})
-
-
-/* STATS */
-
-const today = new Date()
-const todayStr = today.toISOString().slice(0,10)
-
-let todayTotal = 0
-let weekTotal = 0
-let monthTotal = 0
-let totalAll = 0
-
-filtered.forEach(e=>{
-
- const d = new Date(e.date)
-
- totalAll += Number(e.total || 0)
-
- if(e.date === todayStr){
-  todayTotal += Number(e.total)
- }
-
- const diffDays = (today - d) / (1000*60*60*24)
-
- if(diffDays <= 7){
-  weekTotal += Number(e.total)
- }
-
- if(
-  d.getMonth() === today.getMonth() &&
-  d.getFullYear() === today.getFullYear()
- ){
-  monthTotal += Number(e.total)
- }
-
-})
-
-
-const total = Number(form.price) * Number(form.quantity) || 0
-
-
-
-return(
-
-<div className="p-6 text-gray-300">
-
-
-{/* HEADER */}
-
-<div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center mb-6">
-<h1 className="text-white text-3xl font-bold">
-
-Lubricant Sales
-
-</h1>
-
-<div className="hidden gap-3 sm:block">
-
-<button
-onClick={()=>setProductModal(true)}
-className="bg-blue-600 px-4 py-2 rounded text-white mr-2"
->
-
-+ Add Product
-
-</button>
-
-<button
-onClick={deleteMonthData}
-className="bg-yellow-600 px-4 py-2 rounded text-white mr-2"
->
-
-Delete Month
-
-</button>
-
-<button
-onClick={()=>setOpen(true)}
-className="bg-red-600 px-5 py-2 rounded text-white"
->
-
-+ Add Sale
-
-</button>
-
-</div>
-
-</div>
-
-
-
-{/* PRODUCT STOCK TABLE */}
-
-<div className="hidden sm:block bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden mb-6">
-
-<table className="w-full text-sm">
-
-<thead className="border-b border-[#1F2937] text-gray-300 font-bold">
-
-<tr>
-
-<th className="p-3 text-left ">Product</th>
-<th className="p-3 text-left">Price</th>
-<th className="p-3 text-left">Stock</th>
-<th className="p-3 text-left">Action</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{products.map((p)=>(
-
-<tr key={p._id} className="border-b border-[#1F2937]">
-
-<td className="p-3">{p.name}</td>
-<td className="p-3">₹{p.price}</td>
-<td className="p-3 text-green-500 font-bold">{p.stock}</td>
-
-<td className="p-3">
-
-<button
-onClick={()=>removeProduct(p._id)}
-className="text-red-400"
->
-
-Delete
-
-</button>
-
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-</div>
-
-
-
-{/* STATS */}
-
-
-<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 font-bold">
-<div className="bg-[#0B0F17] border border-[#1A1F2E] p-4 rounded-xl font-bold">
-
-Today
-
-<div className="text-white text-xl">
-
-₹{todayTotal}
-
-</div>
-
-</div>
-
-
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] p-4 rounded-xl font-bold">
-
-Week
-
-<div className="text-white text-xl">
-
-₹{weekTotal}
-
-</div>
-
-</div>
-
-
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] p-4 rounded-xl font-bold">
-
-Month
-
-<div className="text-white text-xl">
-
-₹{monthTotal}
-
-</div>
-
-</div>
-
-
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] p-4 rounded-xl font-bold">
-
-Total
-
-<div className="text-white text-xl">
-
-₹{totalAll}
-
-</div>
-
-</div>
-
-</div>
-
-<div className="sm:hidden space-y-4 mb-5">
-
-{products.map(p=>(
-
-<div
-key={p._id}
-className="bg-[#0B0F17] border border-[#1A1F2E] rounded-2xl p-4 shadow-md active:scale-[0.98] transition"
->
-
-{/* TOP ROW */}
-<div className="flex justify-between items-start">
-
-{/* LEFT */}
-<div>
-<p className="text-white font-semibold text-lg">
-{p.name}
-</p>
-
-<p className="text-gray-400 text-sm mt-1">
-₹{p.price}
-</p>
-</div>
-
-{/* RIGHT */}
-<div className="flex flex-col items-end gap-2">
-
-<p className={`text-xs px-3 py-1 rounded-full font-semibold 
-${p.stock < 5 
-? "bg-red-500/10 text-red-400 border border-red-500/30" 
-: "bg-green-500/10 text-green-400 border border-green-500/30"
-}`}>
-Stock: {p.stock}
-</p>
-
-<button
-onClick={()=>removeProduct(p._id)}
-className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded-lg text-xs transition"
->
-Delete
-</button>
-
-</div>
-
-</div>
-
-
-</div>
-
-))}
-
-</div>
-
-{/* FILTER */}
-
-<div className="flex flex-col gap-3 mb-6">
-
-  {/* 🔹 TOP ROW */}
-  <div className="flex flex-col sm:flex-row gap-3">
-
-    {/* SEARCH */}
-    <input
-      placeholder="Search..."
-      value={search}
-      onChange={(e)=>setSearch(e.target.value)}
-      className="bg-[#111827] p-2 rounded w-full sm:w-60 text-sm text-white"
-    />
-
-    {/* FILTER BUTTON */}
-    <button
-      onClick={()=>setShowFilter(!showFilter)}
-      className="bg-[#1A1F2E] px-3 py-2 rounded text-sm w-full sm:w-auto"
-    >
-      Filters
-    </button>
-
-    {/* REPORT BUTTON */}
-    <button
-      onClick={()=>setReportOpen(true)}
-      className="bg-purple-600 text-white px-4 py-2 rounded text-sm w-full sm:w-auto"
-    >
-      Generate Report
-    </button>
-
-  </div>
-
-
-  {/* 🔹 FILTER BOX */}
-  {showFilter && (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0B0F17] p-3 rounded border border-[#1F2937]">
-
-      {/* PRODUCT */}
-      <select
-        value={productFilter}
-        onChange={(e)=>setProductFilter(e.target.value)}
-        className="bg-[#111827] p-2 rounded text-sm text-white"
-      >
-        <option value="">All Product</option>
-        {products.map(p=>(
-          <option key={p._id} value={p.name}>{p.name}</option>
-        ))}
-      </select>
-
-      {/* DATE */}
-      <input
-        type="date"
-        value={dateFilter}
-        onChange={(e)=>setDateFilter(e.target.value)}
-        className="bg-[#111827] p-2 rounded text-sm text-white 
-        [&::-webkit-calendar-picker-indicator]:invert"
+const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
+
+export default function Lubricants() {
+  const [data, setData] = useState([])
+  const [products, setProducts] = useState([])
+  const [search, setSearch] = useState("")
+  const [productFilter, setProductFilter] = useState("")
+  const [dateFilter, setDateFilter] = useState("")
+  const [open, setOpen] = useState(false)
+  const [productModal, setProductModal] = useState(false)
+  const [edit, setEdit] = useState(null)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [fromDate, setFromDate] = useState("")
+  const [toDate, setToDate] = useState("")
+  const [reportProduct, setReportProduct] = useState("")
+  const [format, setFormat] = useState("pdf")
+  const [openCard, setOpenCard] = useState(null)
+  const [showFilter, setShowFilter] = useState(false)
+
+  const [form, setForm] = useState({
+    date: "",
+    product: "",
+    price: "",
+    quantity: "",
+    soldBy: "Admin",
+  })
+
+  const [productForm, setProductForm] = useState({
+    name: "",
+    price: "",
+    stock: "",
+  })
+
+  useEffect(() => {
+    loadSales()
+    loadProducts()
+  }, [])
+
+  const loadSales = async () => {
+    const res = await getLubricants()
+    setData(res)
+  }
+
+  const loadProducts = async () => {
+    const res = await getProducts()
+    setProducts(res)
+  }
+
+  const changeProduct = (name) => {
+    const product = products.find((item) => item.name === name)
+
+    setForm((current) => ({
+      ...current,
+      product: name,
+      price: product?.price || "",
+    }))
+  }
+
+  const resetSaleForm = () => {
+    setForm({
+      date: "",
+      product: "",
+      price: "",
+      quantity: "",
+      soldBy: "Admin",
+    })
+    setEdit(null)
+  }
+
+  const openSaleModal = (entry = null) => {
+    if (entry) {
+      setEdit(entry)
+      setForm({
+        date: entry.date || "",
+        product: entry.product || "",
+        price: entry.price || "",
+        quantity: entry.quantity || "",
+        soldBy: entry.soldBy || "Admin",
+      })
+    } else {
+      resetSaleForm()
+    }
+
+    setOpen(true)
+  }
+
+  const save = async () => {
+    if (!form.date || !form.product || !form.quantity) {
+      alert("Please fill all fields")
+      return
+    }
+
+    const total = Number(form.price || 0) * Number(form.quantity || 0)
+    const payload = {
+      ...form,
+      price: Number(form.price),
+      quantity: Number(form.quantity),
+      total,
+    }
+
+    if (edit) {
+      await updateLubricant(edit._id, payload)
+    } else {
+      await addLubricant(payload)
+    }
+
+    setOpen(false)
+    resetSaleForm()
+    loadSales()
+    loadProducts()
+  }
+
+  const remove = async (id) => {
+    await deleteLubricant(id)
+    loadSales()
+    loadProducts()
+  }
+
+  const saveProduct = async () => {
+    if (!productForm.name || !productForm.price) {
+      alert("Enter product details")
+      return
+    }
+
+    await addProduct({
+      ...productForm,
+      price: Number(productForm.price),
+      stock: Number(productForm.stock),
+    })
+
+    setProductModal(false)
+    setProductForm({
+      name: "",
+      price: "",
+      stock: "",
+    })
+    loadProducts()
+  }
+
+  const removeProduct = async (id) => {
+    await deleteProduct(id)
+    loadProducts()
+  }
+
+  const deleteMonthData = async () => {
+    const month = prompt("Enter Month (example 03)")
+    const year = prompt("Enter Year (example 2026)")
+
+    if (!month || !year) {
+      return
+    }
+
+    await deleteMonth({ month, year })
+    loadSales()
+  }
+
+  const filtered = data.filter((entry) => {
+    const target = [entry.product, entry.date, entry.soldBy, entry.price, entry.total]
+      .join(" ")
+      .toLowerCase()
+
+    return (
+      target.includes(search.toLowerCase()) &&
+      (!productFilter || entry.product === productFilter) &&
+      (!dateFilter || entry.date === dateFilter)
+    )
+  })
+
+  const today = new Date()
+  const todayString = today.toISOString().slice(0, 10)
+  let todayTotal = 0
+  let weekTotal = 0
+  let monthTotal = 0
+  let totalAll = 0
+
+  filtered.forEach((entry) => {
+    const total = Number(entry.total || 0)
+    const entryDate = new Date(entry.date)
+
+    totalAll += total
+
+    if (entry.date === todayString) {
+      todayTotal += total
+    }
+
+    const diffDays = (today - entryDate) / (1000 * 60 * 60 * 24)
+    if (diffDays <= 7) {
+      weekTotal += total
+    }
+
+    if (entryDate.getMonth() === today.getMonth() && entryDate.getFullYear() === today.getFullYear()) {
+      monthTotal += total
+    }
+  })
+
+  const getReportData = () => {
+    return filtered.filter((entry) => {
+      const entryDate = new Date(entry.date)
+
+      return (
+        (!fromDate || entryDate >= new Date(fromDate)) &&
+        (!toDate || entryDate <= new Date(toDate)) &&
+        (!reportProduct || entry.product === reportProduct)
+      )
+    })
+  }
+
+  const generatePDF = (reportData) => {
+    const doc = new jsPDF()
+
+    doc.setFontSize(16)
+    doc.text("Lubricant Sales Report", 14, 15)
+    doc.setFontSize(10)
+    doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`, 14, 22)
+    doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
+    doc.text(`Total Records: ${reportData.length}`, 14, 34)
+
+    autoTable(doc, {
+      startY: 40,
+      head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
+      body: reportData.map((entry) => [
+        entry.date,
+        entry.product,
+        entry.quantity,
+        formatCurrency(entry.price),
+        formatCurrency(entry.total),
+        entry.soldBy,
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [22, 163, 74] },
+    })
+
+    doc.save("Lubricant_Report.pdf")
+  }
+
+  const generateExcel = (reportData) => {
+    const formatted = reportData.map((entry, index) => ({
+      ID: index + 1,
+      Date: entry.date,
+      Product: entry.product,
+      Qty: entry.quantity,
+      Price: entry.price,
+      Total: entry.total,
+      Sold_By: entry.soldBy,
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(formatted)
+    const wb = XLSX.utils.book_new()
+
+    XLSX.utils.book_append_sheet(wb, ws, "Report")
+    XLSX.writeFile(wb, "Lubricant_Report.xlsx")
+  }
+
+  const handleGenerate = () => {
+    const reportData = getReportData()
+
+    if (!reportData.length) {
+      alert("No data found")
+      return
+    }
+
+    if (format === "pdf") {
+      generatePDF(reportData)
+    } else {
+      generateExcel(reportData)
+    }
+
+    setReportOpen(false)
+  }
+
+  const total = Number(form.price || 0) * Number(form.quantity || 0) || 0
+
+  return (
+    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
+      <h1 className="mb-4 text-3xl font-bold text-[color:var(--text-strong)]">Lubricant Sales</h1>
+
+      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Today</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+            {formatCurrency(todayTotal)}
+          </p>
+        </div>
+
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Week</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+            {formatCurrency(weekTotal)}
+          </p>
+        </div>
+
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Month</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+            {formatCurrency(monthTotal)}
+          </p>
+        </div>
+
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Total</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+            {formatCurrency(totalAll)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+        <input
+          placeholder="Search product or seller"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="input w-full sm:max-w-[420px]"
+        />
+
+        <button
+          onClick={() => setProductModal(true)}
+          className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+        >
+          + Add Product
+        </button>
+
+        <button
+          onClick={deleteMonthData}
+          className="hidden rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 font-medium text-amber-700 shadow-sm sm:inline-flex"
+        >
+          Delete Month
+        </button>
+
+        <button
+          onClick={() => setReportOpen(true)}
+          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+        >
+          Generate Report
+        </button>
+
+        <button
+          onClick={() => openSaleModal()}
+          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+        >
+          + Add Sale
+        </button>
+      </div>
+
+      <div className="mb-4 sm:hidden">
+        <button
+          onClick={() => setShowFilter((current) => !current)}
+          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+        >
+          {showFilter ? "Hide Filters" : "Filters"}
+        </button>
+      </div>
+
+      <div className={`mb-6 ${showFilter ? "block" : "hidden sm:block"}`}>
+        <div className="grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto]">
+          <select
+            value={productFilter}
+            onChange={(event) => setProductFilter(event.target.value)}
+            className="input"
+          >
+            <option value="">All Product</option>
+            {products.map((product) => (
+              <option key={product._id} value={product.name}>
+                {product.name}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => setDateFilter(event.target.value)}
+            className="input"
+          />
+
+          <button
+            onClick={() => {
+              setProductFilter("")
+              setDateFilter("")
+            }}
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] sm:justify-self-start"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <section className="mb-6">
+        <h2 className="mb-3 text-lg font-semibold text-[color:var(--text-strong)]">Product Stock</h2>
+
+        <div className="hidden overflow-x-auto sm:block">
+          <table className="table min-w-[720px]">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {products.map((product) => (
+                <tr key={product._id}>
+                  <td>{product.name}</td>
+                  <td>{formatCurrency(product.price)}</td>
+                  <td className="text-green-500">{product.stock}</td>
+                  <td>
+                    <div className="flex items-center justify-center gap-3">
+                      <button onClick={() => removeProduct(product._id)} className="text-red-500">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="space-y-4 sm:hidden">
+          {products.map((product) => (
+            <div
+              key={product._id}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-lg font-semibold text-[color:var(--text-strong)]">{product.name}</p>
+                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                    {formatCurrency(product.price)}
+                  </p>
+                </div>
+
+                <div
+                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                    Number(product.stock) < 5
+                      ? "border border-red-500/20 bg-red-500/10 text-red-500"
+                      : "border border-green-500/20 bg-green-500/10 text-green-500"
+                  }`}
+                >
+                  Stock: {product.stock}
+                </div>
+              </div>
+
+              <button
+                onClick={() => removeProduct(product._id)}
+                className="mt-4 w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-[color:var(--text-strong)]">Sales Register</h2>
+
+        <div className="hidden overflow-x-auto sm:block">
+          <table className="table min-w-[940px]">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Sold By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filtered.map((entry) => (
+                <tr key={entry._id}>
+                  <td>{entry.date}</td>
+                  <td>{entry.product}</td>
+                  <td>{entry.quantity}</td>
+                  <td>{formatCurrency(entry.price)}</td>
+                  <td className="text-red-500">{formatCurrency(entry.total)}</td>
+                  <td>{entry.soldBy}</td>
+                  <td>
+                    <div className="flex items-center justify-center gap-3">
+                      <button onClick={() => openSaleModal(entry)} className="text-blue-500">
+                        Edit
+                      </button>
+
+                      <button onClick={() => remove(entry._id)} className="text-red-500">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="space-y-4 sm:hidden">
+          {filtered.map((entry) => {
+            const isOpen = openCard === entry._id
+
+            return (
+              <div
+                key={entry._id}
+                onClick={() => setOpenCard(isOpen ? null : entry._id)}
+                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] active:scale-[0.98] transition"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-semibold text-[color:var(--text-strong)]">{entry.product}</p>
+                    <p className="mt-1 text-sm text-[color:var(--text-secondary)]">{entry.date}</p>
+                  </div>
+
+                  <div className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-500">
+                    {formatCurrency(entry.total)}
+                  </div>
+                </div>
+
+                <p className="mt-3 text-sm text-[color:var(--text-secondary)]">Qty: {entry.quantity}</p>
+
+                {isOpen ? (
+                  <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
+                    <p className="text-sm text-[color:var(--text-secondary)]">
+                      Price: <span className="text-[color:var(--text-strong)]">{formatCurrency(entry.price)}</span>
+                    </p>
+                    <p className="text-sm text-[color:var(--text-secondary)]">
+                      Sold by: <span className="text-[color:var(--text-strong)]">{entry.soldBy}</span>
+                    </p>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openSaleModal(entry)
+                        }}
+                        className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          remove(entry._id)
+                        }}
+                        className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">
+              {edit ? "Edit Lubricant Sale" : "Add Lubricant Sale"}
+            </h2>
+
+            <div className="grid gap-3">
+              <input
+                type="date"
+                value={form.date}
+                onChange={(event) => setForm({ ...form, date: event.target.value })}
+                className="input"
+              />
+
+              <select value={form.product} onChange={(event) => changeProduct(event.target.value)} className="input">
+                <option value="">Select Product</option>
+                {products.map((product) => (
+                  <option key={product._id} value={product.name}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                placeholder="Price"
+                value={form.price}
+                onChange={(event) => setForm({ ...form, price: event.target.value })}
+                className="input"
+              />
+
+              <input
+                placeholder="Quantity"
+                value={form.quantity}
+                onChange={(event) => setForm({ ...form, quantity: event.target.value })}
+                className="input"
+              />
+
+              <select
+                value={form.soldBy}
+                onChange={(event) => setForm({ ...form, soldBy: event.target.value })}
+                className="input"
+              >
+                <option>Admin</option>
+                <option>Rohit</option>
+                <option>Manager</option>
+              </select>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 text-sm text-[color:var(--text-secondary)]">
+              Total: <span className="font-semibold text-[color:var(--text-strong)]">{formatCurrency(total)}</span>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setOpen(false)
+                  resetSaleForm()
+                }}
+                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+
+              <button onClick={save} className="rounded-xl bg-blue-600 px-4 py-2 text-white">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {productModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">Add Product</h2>
+
+            <div className="grid gap-3">
+              <input
+                placeholder="Product Name"
+                value={productForm.name}
+                onChange={(event) => setProductForm({ ...productForm, name: event.target.value })}
+                className="input"
+              />
+
+              <input
+                placeholder="Price"
+                value={productForm.price}
+                onChange={(event) => setProductForm({ ...productForm, price: event.target.value })}
+                className="input"
+              />
+
+              <input
+                placeholder="Stock"
+                value={productForm.stock}
+                onChange={(event) => setProductForm({ ...productForm, stock: event.target.value })}
+                className="input"
+              />
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setProductModal(false)}
+                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+
+              <button onClick={saveProduct} className="rounded-xl bg-blue-600 px-4 py-2 text-white">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {reportOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-[color:var(--text-primary)]">
+            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">Generate Report</h2>
+
+            <div className="flex flex-col gap-3">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(event) => setFromDate(event.target.value)}
+                className="input"
+              />
+
+              <input
+                type="date"
+                value={toDate}
+                onChange={(event) => setToDate(event.target.value)}
+                className="input"
+              />
+
+              <select
+                value={reportProduct}
+                onChange={(event) => setReportProduct(event.target.value)}
+                className="input"
+              >
+                <option value="">All Products</option>
+                {products.map((product) => (
+                  <option key={product._id} value={product.name}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+
+              <select value={format} onChange={(event) => setFormat(event.target.value)} className="input">
+                <option value="pdf">PDF</option>
+                <option value="excel">Excel</option>
+              </select>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setReportOpen(false)}
+                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+
+              <button onClick={handleGenerate} className="rounded-xl bg-green-600 px-4 py-2 text-white">
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <MobileActionFab
+        actions={[
+          {
+            label: "Add Sale",
+            className: "bg-red-600",
+            onClick: () => openSaleModal(),
+          },
+          {
+            label: "Add Product",
+            className: "bg-blue-600",
+            onClick: () => setProductModal(true),
+          },
+          {
+            label: "Generate Report",
+            className: "bg-purple-600",
+            onClick: () => setReportOpen(true),
+          },
+          {
+            label: "Delete Month",
+            className: "bg-amber-600",
+            onClick: deleteMonthData,
+          },
+        ]}
       />
-
-      {/* CLEAR BUTTON (NEW 🔥) */}
-      <button
-        onClick={()=>{
-          setProductFilter("")
-          setDateFilter("")
-        }}
-        className="bg-red-500/10 border border-red-500/30 text-red-400 rounded text-sm"
-      >
-        Clear
-      </button>
-
     </div>
-  )}
-
-</div>
-
-
-
-{/* SALES TABLE */}
-
-<div className="hidden sm:block bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden">
-
-<table className="w-full text-sm">
-
-<thead className="border-b border-[#1F2937] text-gray-400">
-
-<tr>
-
-<th className="p-3 text-left">Date</th>
-<th className="p-3 text-left">Product</th>
-<th className="p-3 text-left">Qty</th>
-<th className="p-3 text-left">Price</th>
-<th className="p-3 text-left">Total</th>
-<th className="p-3 text-left">Sold By</th>
-<th className="p-3 text-left">Action</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{filtered.map((e)=>(
-
-<tr
-key={e._id}
-className="border-b border-[#1F2937]"
->
-
-<td className="p-3">{e.date}</td>
-
-<td className="p-3">{e.product}</td>
-
-<td className="p-3">{e.quantity}</td>
-
-<td className="p-3">₹{e.price}</td>
-
-<td className="p-3 text-red-400">₹{e.total}</td>
-
-<td className="p-3">{e.soldBy}</td>
-
-<td className="p-3 flex gap-3">
-
-<button
-onClick={()=>{
-setEdit(e)
-setForm(e)
-setOpen(true)
-}}
-className="text-blue-400"
->
-Edit
-</button>
-
-<button
-onClick={()=>remove(e._id)}
-className="text-red-400"
->
-Delete
-</button>
-
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-</div>
-
-
-
-<div className="sm:hidden space-y-4">
-<p className="text-white font-semibold ml-3">Sales</p>
-
-{filtered.map(e=>{
-
-const isOpen = openCard === e._id
-
-return(
-
-    
-
-<div
-key={e._id}
-onClick={()=>setOpenCard(isOpen ? null : e._id)}
-className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl p-4 active:scale-95 transition"
->
-   
-
-{/* TOP */}
-<div className="flex justify-between items-center">
-
-<div>
-<p className="text-white font-semibold">{e.product}</p>
-<p className="text-xs text-gray-400">{e.date}</p>
-</div>
-
-<p className="text-red-400 font-bold">₹{e.total}</p>
-
-</div>
-
-{/* BASIC */}
-<div className="text-sm text-gray-300 mt-2">
-Qty: {e.quantity}
-</div>
-
-{/* EXPAND */}
-{isOpen && (
-
-<div className="mt-3 border-t border-[#1A1F2E] pt-3 space-y-2">
-
-<p className="text-sm">Price: ₹{e.price}</p>
-<p className="text-sm">Sold by: {e.soldBy}</p>
-
-<div className="flex gap-2">
-
-<button
-onClick={(ev)=>{
-ev.stopPropagation()
-setEdit(e)
-setForm(e)
-setOpen(true)
-}}
-className="flex-1 bg-blue-500/20 text-blue-400 py-2 rounded"
->
-Edit
-</button>
-
-<button
-onClick={(ev)=>{
-ev.stopPropagation()
-remove(e._id)
-}}
-className="flex-1 bg-red-500/20 text-red-400 py-2 rounded"
->
-Delete
-</button>
-
-</div>
-
-</div>
-
-)}
-
-</div>
-
-)
-
-})}
-
-</div>
-
-
-
-{/* ADD SALE MODAL */}
-
-{open &&(
-
-<div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] p-6 rounded w-[400px]">
-
-<h2 className="text-white mb-4">
-
-{edit ? "Edit Lubricant Sale" : "Add Lubricant Sale"}
-
-</h2>
-
-
-
-<input
-type="date"
-value={form.date}
-onChange={(e)=>setForm({...form,date:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded text-white [&::-webkit-calendar-picker-indicator]:invert"
-/>
-
-
-
-<select
-value={form.product}
-onChange={(e)=>changeProduct(e.target.value)}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
->
-
-<option value="">Select Product</option>
-
-{products.map((p)=>(
-
-<option key={p._id} value={p.name}>
-{p.name}
-</option>
-
-))}
-
-</select>
-
-
-
-<input
-placeholder="Price"
-value={form.price}
-onChange={(e)=>setForm({...form,price:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
-/>
-
-
-
-<input
-placeholder="Quantity"
-value={form.quantity}
-onChange={(e)=>setForm({...form,quantity:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
-/>
-
-
-
-<select
-value={form.soldBy}
-onChange={(e)=>setForm({...form,soldBy:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
->
-
-<option>Admin</option>
-<option>Rohit</option>
-<option>Manager</option>
-
-</select>
-
-
-
-<div className="text-white mb-4">
-
-Total: ₹{total}
-
-</div>
-
-
-
-<div className="flex justify-end gap-3">
-
-<button
-onClick={()=>{
-setOpen(false)
-setEdit(null)
-}}
-className="bg-gray-700 px-4 py-2 rounded"
->
-
-Cancel
-
-</button>
-
-<button
-onClick={save}
-className="bg-red-600 px-4 py-2 rounded text-white"
->
-
-Save
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-)}
-
-
-
-{/* ADD PRODUCT MODAL */}
-
-{productModal &&(
-
-<div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
-
-<div className="bg-[#0B0F17] border border-[#1A1F2E] p-6 rounded w-[400px]">
-
-<h2 className="text-white mb-4">
-
-Add Product
-
-</h2>
-
-
-
-<input
-placeholder="Product Name"
-value={productForm.name}
-onChange={(e)=>setProductForm({...productForm,name:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
-/>
-
-
-
-<input
-placeholder="Price"
-value={productForm.price}
-onChange={(e)=>setProductForm({...productForm,price:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
-/>
-
-
-
-<input
-placeholder="Stock"
-value={productForm.stock}
-onChange={(e)=>setProductForm({...productForm,stock:e.target.value})}
-className="w-full mb-3 p-2 bg-[#111827] rounded"
-/>
-
-
-
-<div className="flex justify-end gap-3">
-
-<button
-onClick={()=>setProductModal(false)}
-className="bg-gray-700 px-4 py-2 rounded"
->
-
-Cancel
-
-</button>
-
-<button
-onClick={saveProduct}
-className="bg-blue-600 px-4 py-2 rounded text-white"
->
-
-Save
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-)}
-
-
-{/* FLOATING BUTTON */}
-
-<div className="fixed bottom-6 right-6 sm:hidden">
-
-<button
-onClick={()=>setFabOpen(!fabOpen)}
-className="bg-blue-600 w-14 h-14 rounded-full text-white text-2xl shadow-lg"
->
-+
-</button>
-
-{fabOpen && (
-
-<div className="flex flex-col gap-2 mt-3">
-
-<button
-onClick={()=>setOpen(true)}
-className="bg-red-600 px-4 py-2 rounded text-white text-sm"
->
-+ Sale
-</button>
-
-<button
-onClick={()=>setProductModal(true)}
-className="bg-blue-600 px-4 py-2 rounded text-white text-sm"
->
-+ Product
-</button>
-
-</div>
-
-)}
-
-</div>
-
-{reportOpen && (
-
-<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-<div className="bg-[#0B0F17] p-6 rounded-xl w-[340px] text-white">
-
-<h2 className="text-lg font-semibold mb-4">
-Generate Report
-</h2>
-
-<div className="flex flex-col gap-3">
-
-{/* FROM */}
-<input
-type="date"
-value={fromDate}
-onChange={(e)=>setFromDate(e.target.value)}
-className="border p-2 bg-transparent rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
-/>
-
-{/* TO */}
-<input
-type="date"
-value={toDate}
-onChange={(e)=>setToDate(e.target.value)}
-className="border p-2 bg-transparent rounded  text-white [&::-webkit-calendar-picker-indicator]:invert"
-/>
-
-{/* PRODUCT FILTER */}
-<select
-value={reportProduct}
-onChange={(e)=>setReportProduct(e.target.value)}
-className="border p-2 rounded bg-[#0B0F17]"
->
-<option value="">All Products</option>
-
-{products.map(p=>(
-<option key={p._id} value={p.name}>
-{p.name}
-</option>
-))}
-
-</select>
-
-{/* FORMAT */}
-<select
-value={format}
-onChange={(e)=>setFormat(e.target.value)}
-className="border p-2 bg-[#0B0F17] rounded"
->
-<option value="pdf">PDF</option>
-<option value="excel">Excel</option>
-</select>
-
-</div>
-
-<div className="flex justify-end gap-3 mt-4">
-
-<button
-onClick={()=>setReportOpen(false)}
-className="bg-gray-600 px-3 py-1 rounded"
->
-Cancel
-</button>
-
-<button
-onClick={handleGenerate}
-className="bg-green-600 px-3 py-1 rounded"
->
-Download
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-)}
-
-</div>
-
-)
-
+  )
 }

@@ -1,205 +1,313 @@
-import {useEffect,useState} from "react"
+import { useEffect, useState } from "react"
 
+import MobileActionFab from "../../components/MobileActionFab"
+import DensityModal from "../../components/tanker/DensityModal"
+import TankerModal from "../../components/tanker/TankerModal"
 import {
-getDeliveries,
-addDelivery,
-updateDelivery,
-deleteDelivery
+  addDelivery,
+  deleteDelivery,
+  getDeliveries,
+  updateDelivery,
 } from "../../services/tankerApi"
 
-import TankerModal from "../../components/tanker/TankerModal"
-import DensityModal from "../../components/tanker/DensityModal"
+const formatDate = (value) => {
+  if (!value) {
+    return "-"
+  }
 
-export default function TankerDeliveries(){
-
-const [data,setData] = useState([])
-const [open,setOpen] = useState(false)
-const [edit,setEdit] = useState(null)
-const [densityOpen,setDensityOpen] = useState(false)
-
-useEffect(()=>{
-load()
-},[])
-
-const load = async()=>{
-
-const res = await getDeliveries()
-
-setData(res)
-
+  return new Date(value).toLocaleDateString()
 }
 
-const save = async(form)=>{
+export default function TankerDeliveries() {
+  const [data, setData] = useState([])
+  const [search, setSearch] = useState("")
+  const [fuelFilter, setFuelFilter] = useState("")
+  const [dateFilter, setDateFilter] = useState("")
+  const [open, setOpen] = useState(false)
+  const [edit, setEdit] = useState(null)
+  const [densityOpen, setDensityOpen] = useState(false)
+  const [openCard, setOpenCard] = useState(null)
 
-if(edit){
+  useEffect(() => {
+    load()
+  }, [])
 
-await updateDelivery(edit._id,form)
+  const load = async () => {
+    const res = await getDeliveries()
+    setData(res)
+  }
 
-}else{
+  const save = async (form) => {
+    if (edit) {
+      await updateDelivery(edit._id, form)
+    } else {
+      await addDelivery(form)
+    }
 
-await addDelivery(form)
+    setOpen(false)
+    setEdit(null)
+    load()
+  }
 
-}
+  const remove = async (id) => {
+    await deleteDelivery(id)
+    load()
+  }
 
-setOpen(false)
-setEdit(null)
+  const filteredData = data.filter((delivery) => {
+    const target = [
+      delivery.supplier,
+      delivery.fuel,
+      delivery.invoice,
+      delivery.date,
+      delivery.quantity,
+    ]
+      .join(" ")
+      .toLowerCase()
 
-load()
+    const matchesSearch = target.includes(search.toLowerCase())
+    const matchesFuel = !fuelFilter || delivery.fuel === fuelFilter
+    const matchesDate = !dateFilter || delivery.date === dateFilter
 
-}
+    return matchesSearch && matchesFuel && matchesDate
+  })
 
-const remove = async(id)=>{
+  const totalLiters = filteredData.reduce((sum, delivery) => sum + Number(delivery.quantity || 0), 0)
+  const suppliers = new Set(filteredData.map((delivery) => delivery.supplier)).size
 
-await deleteDelivery(id)
+  return (
+    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
+      <h1 className="mb-1 text-3xl font-bold text-[color:var(--text-strong)]">Tanker Deliveries</h1>
+      <p className="mb-5 text-sm text-[color:var(--text-secondary)]">
+        Record and track every incoming delivery with clean desktop and mobile views.
+      </p>
 
-load()
+      <div className="mb-5 grid gap-4 sm:grid-cols-3">
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Total Deliveries</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+            {filteredData.length}
+          </p>
+        </div>
 
-}
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Total Quantity</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+            {totalLiters.toFixed(0)} L
+          </p>
+        </div>
 
-return(
+        <div className="card">
+          <p className="text-sm text-[color:var(--text-secondary)]">Suppliers</p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">{suppliers}</p>
+        </div>
+      </div>
 
-<div className="p-6">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+        <input
+          placeholder="Search supplier, fuel, invoice"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="input w-full sm:max-w-[420px]"
+        />
 
-<div className="flex justify-between mb-6">
+        <button
+          onClick={() => setDensityOpen(true)}
+          className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] shadow-sm sm:inline-flex"
+        >
+          Density Calc
+        </button>
 
-<div>
+        <button
+          onClick={() => {
+            setEdit(null)
+            setOpen(true)
+          }}
+          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+        >
+          Record Delivery
+        </button>
+      </div>
 
-<h1 className="text-white text-xl">
-Tanker Deliveries
-</h1>
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <select value={fuelFilter} onChange={(event) => setFuelFilter(event.target.value)} className="input">
+          <option value="">All Fuel</option>
+          <option value="Petrol">Petrol</option>
+          <option value="Diesel">Diesel</option>
+          <option value="Premium">Premium</option>
+        </select>
 
-<p className="text-gray-400 text-sm">
-Record and track fuel deliveries
-</p>
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(event) => setDateFilter(event.target.value)}
+          className="input"
+        />
 
-</div>
+        <button
+          onClick={() => {
+            setFuelFilter("")
+            setDateFilter("")
+          }}
+          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] sm:justify-self-start"
+        >
+          Clear Filters
+        </button>
+      </div>
 
-<div className="flex gap-3">
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="table min-w-[980px]">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Supplier</th>
+              <th>Fuel</th>
+              <th>Quantity</th>
+              <th>Density</th>
+              <th>Date</th>
+              <th>Invoice</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-<button
-onClick={()=>setDensityOpen(true)}
-className="bg-[#1F2937] px-4 py-2 rounded text-gray-300"
->
-Density Calc
-</button>
+          <tbody>
+            {filteredData.map((delivery, index) => (
+              <tr key={delivery._id}>
+                <td>TD{index + 1}</td>
+                <td>{delivery.supplier}</td>
+                <td>{delivery.fuel}</td>
+                <td>{delivery.quantity} L</td>
+                <td>{delivery.density || "-"}</td>
+                <td>{formatDate(delivery.date)}</td>
+                <td>{delivery.invoice}</td>
+                <td>
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => {
+                        setEdit(delivery)
+                        setOpen(true)
+                      }}
+                      className="text-blue-500"
+                    >
+                      Edit
+                    </button>
 
-<button
-onClick={()=>setOpen(true)}
-className="bg-blue-600 px-4 py-2 rounded text-white"
->
-Record Delivery
-</button>
+                    <button onClick={() => remove(delivery._id)} className="text-red-500">
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-</div>
+      <div className="space-y-4 sm:hidden">
+        {filteredData.map((delivery) => {
+          const isOpen = openCard === delivery._id
 
-</div>
+          return (
+            <div
+              key={delivery._id}
+              onClick={() => setOpenCard(isOpen ? null : delivery._id)}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] active:scale-[0.98] transition"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">
+                    {delivery.fuel}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-[color:var(--text-strong)]">
+                    {delivery.supplier}
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                    {formatDate(delivery.date)}
+                  </p>
+                </div>
 
-<div className="bg-[#0B0F17] border border-[#1A1F2E] rounded-xl overflow-hidden">
+                <div className="rounded-full border border-green-500/20 bg-green-500/10 px-3 py-1 text-sm font-semibold text-green-500">
+                  {delivery.quantity} L
+                </div>
+              </div>
 
-<table className="w-full text-gray-300">
+              {isOpen ? (
+                <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3 text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="card">
+                      <p className="text-xs text-[color:var(--text-secondary)]">Density</p>
+                      <p className="mt-2 font-semibold text-[color:var(--text-strong)]">
+                        {delivery.density || "-"}
+                      </p>
+                    </div>
 
-<thead className="text-gray-400 border-b border-[#1F2937]">
+                    <div className="card">
+                      <p className="text-xs text-[color:var(--text-secondary)]">Invoice</p>
+                      <p className="mt-2 font-semibold text-[color:var(--text-strong)]">
+                        {delivery.invoice || "-"}
+                      </p>
+                    </div>
+                  </div>
 
-<tr>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        setEdit(delivery)
+                        setOpen(true)
+                      }}
+                      className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                    >
+                      Edit
+                    </button>
 
-<th className="px-6 py-4 text-left">ID</th>
-<th className="px-6 py-4 text-left">Supplier</th>
-<th className="px-6 py-4 text-left">Fuel</th>
-<th className="px-6 py-4 text-left">Quantity (L)</th>
-<th className="px-6 py-4 text-left">Density</th>
-<th className="px-6 py-4 text-left">Date</th>
-<th className="px-6 py-4 text-left">Invoice</th>
-<th className="px-6 py-4 text-left">Action</th>
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        remove(delivery._id)
+                      }}
+                      className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )
+        })}
+      </div>
 
-</tr>
+      {open ? (
+        <TankerModal
+          close={() => {
+            setOpen(false)
+            setEdit(null)
+          }}
+          save={save}
+          data={edit}
+        />
+      ) : null}
 
-</thead>
+      {densityOpen ? <DensityModal close={() => setDensityOpen(false)} /> : null}
 
-<tbody>
-
-{data.map((d,i)=>(
-
-<tr
-key={d._id}
-className="border-b border-[#1F2937] hover:bg-[#111827]"
->
-
-<td className="px-6 py-4">
-TD{i+1}
-</td>
-
-<td className="px-6 py-4">
-{d.supplier}
-</td>
-
-<td className="px-6 py-4">
-{d.fuel}
-</td>
-
-<td className="px-6 py-4">
-{d.quantity} L
-</td>
-
-<td className="px-6 py-4">
-{d.density}
-</td>
-
-<td className="px-6 py-4">
-{d.date}
-</td>
-
-<td className="px-6 py-4">
-{d.invoice}
-</td>
-
-<td className="px-6 py-4 flex gap-3">
-
-<button
-onClick={()=>{setEdit(d);setOpen(true)}}
-className="text-blue-400"
->
-Edit
-</button>
-
-<button
-onClick={()=>remove(d._id)}
-className="text-red-400"
->
-Delete
-</button>
-
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-</div>
-
-{open &&
-
-<TankerModal
-close={()=>{setOpen(false);setEdit(null)}}
-save={save}
-data={edit}
-/>
-
-}
-
-{densityOpen &&
-
-<DensityModal
-close={()=>setDensityOpen(false)}
-/>
-
-}
-
-</div>
-
-)
-
+      <MobileActionFab
+        actions={[
+          {
+            label: "Record Delivery",
+            className: "bg-blue-600",
+            onClick: () => {
+              setEdit(null)
+              setOpen(true)
+            },
+          },
+          {
+            label: "Density Calc",
+            className: "bg-slate-700",
+            onClick: () => setDensityOpen(true),
+          },
+        ]}
+      />
+    </div>
+  )
 }

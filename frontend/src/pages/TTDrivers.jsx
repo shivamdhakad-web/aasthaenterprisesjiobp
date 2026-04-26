@@ -151,7 +151,7 @@ export default function TTDrivers() {
         />
 
         <button
-          className="w-full rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:w-auto"
+          className="hidden w-full rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex sm:w-auto"
           onClick={() => {
             setEditData(null)
             setModalOpen(true)
@@ -162,7 +162,7 @@ export default function TTDrivers() {
 
         <button
           onClick={() => setReportOpen(true)}
-          className="w-full rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:w-auto"
+          className="hidden w-full rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex sm:w-auto"
         >
           Generate Report
         </button>

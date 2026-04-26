@@ -194,7 +194,7 @@ className="input w-full sm:w-72"
 />
 
 <button
-className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
+className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
 onClick={()=>{
 
 setEditData(null)
@@ -207,7 +207,7 @@ setModalOpen(true)
 
 <button
 onClick={()=>setReportOpen(true)}
-className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
+className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
 >
 Generate Report
 </button>
