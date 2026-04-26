@@ -1,18 +1,44 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/petrol"
+import { api, executeOrRequestApproval } from "./api"
 
 export const getTodayPetrolStats = () =>
- axios.get(`${API}/stats/today`)
+ api.get("/petrol/stats/today").then((res) => res.data)
 
 export const addPetrolSale = (data) =>
- axios.post(`${API}/add`,data)
+ executeOrRequestApproval({
+  approval:{
+   moduleKey:"petrol-sales",
+   moduleLabel:"Petrol Sales",
+   operation:"create",
+   payload:data,
+   summary:`Add petrol sale ${data.date || ""}`
+  },
+  request:()=>api.post("/petrol/add",data)
+ })
 
 export const getPetrolSales = () =>
- axios.get(`${API}/all`)
+ api.get("/petrol/all").then((res) => res.data)
 
 export const deletePetrolSale = (id) =>
- axios.delete(`${API}/delete/${id}`)
+ executeOrRequestApproval({
+  approval:{
+   moduleKey:"petrol-sales",
+   moduleLabel:"Petrol Sales",
+   operation:"delete",
+   resourceId:id,
+   summary:`Delete petrol sale ${id}`
+  },
+  request:()=>api.delete(`/petrol/delete/${id}`)
+ })
 
 export const updatePetrolSale = (id,data) =>
- axios.put(`${API}/update/${id}`,data)
+ executeOrRequestApproval({
+  approval:{
+   moduleKey:"petrol-sales",
+   moduleLabel:"Petrol Sales",
+   operation:"update",
+   resourceId:id,
+   payload:data,
+   summary:`Update petrol sale ${id}`
+  },
+  request:()=>api.put(`/petrol/update/${id}`,data)
+ })

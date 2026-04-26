@@ -1,5 +1,17 @@
 const Employee = require("../models/Employee")
 
+const normalizeEmployeePayload = (payload = {}) => ({
+  ...payload,
+  name: payload.name?.trim?.() || payload.name,
+  phone: payload.phone?.trim?.() || payload.phone,
+  role: payload.role?.trim?.() || payload.role,
+  shift: payload.shift?.trim?.() || payload.shift,
+  tshirt: payload.tshirt?.trim?.() || payload.tshirt,
+  pant: payload.pant?.trim?.() || payload.pant,
+  shoes: payload.shoes?.trim?.() || payload.shoes,
+  loginPassword: payload.loginPassword?.trim?.() || payload.loginPassword,
+})
+
 exports.getEmployees = async(req,res)=>{
 try{
 
@@ -15,7 +27,13 @@ res.status(500).json({error:err.message})
 exports.addEmployee = async(req,res)=>{
 try{
 
-const emp = new Employee(req.body)
+const payload = normalizeEmployeePayload(req.body)
+
+if(!payload.loginPassword){
+return res.status(400).json({error:"Employee login password is required"})
+}
+
+const emp = new Employee(payload)
 
 await emp.save()
 
@@ -31,7 +49,9 @@ try{
 
 const {id}=req.params
 
-const emp = await Employee.findByIdAndUpdate(id,req.body,{new:true})
+const payload = normalizeEmployeePayload(req.body)
+
+const emp = await Employee.findByIdAndUpdate(id,payload,{new:true})
 
 res.json(emp)
 

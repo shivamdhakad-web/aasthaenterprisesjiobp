@@ -1,39 +1,79 @@
-:root {
+:root,
+:root[data-theme="night"] {
+  --bg-main: #04060b;
+  --bg-panel: #0b0f17;
+  --bg-soft: #0a0d14;
+  --bg-sidebar: #04060b;
+  --bg-topbar: rgba(4, 6, 11, 0.94);
+  --bg-hover: #111827;
+  --bg-subtle: #1a1d26;
+  --bg-elevated: #11151f;
+  --border-color: #1a1d26;
+  --border-strong: #1f2937;
+  --text-strong: #ffffff;
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --theme-ring: #3b82f6;
+  --theme-ring-soft: rgba(59, 130, 246, 0.18);
+  --theme-toggle-bg: #0a0d14;
+  --theme-toggle-text: #e5e7eb;
+  --theme-home-overlay: rgba(0, 0, 0, 0.7);
+  --calendar-filter: invert(1);
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
 
-/* BACKGROUND */
+:root[data-theme="day"] {
+  --bg-main: #f4f5ef;
+  --bg-panel: #ffffff;
+  --bg-soft: #f7f8f3;
+  --bg-sidebar: #fbfbf8;
+  --bg-topbar: rgba(255, 255, 255, 0.94);
+  --bg-hover: #f1f4ee;
+  --bg-subtle: #f6f8f2;
+  --bg-elevated: #edf2e7;
+  --border-color: #e6e9e1;
+  --border-strong: #dfe4da;
+  --text-strong: #0f1418;
+  --text-primary: #222a31;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --theme-ring: #9be564;
+  --theme-ring-soft: rgba(155, 229, 100, 0.24);
+  --theme-toggle-bg: #eff8e8;
+  --theme-toggle-text: #172314;
+  --theme-home-overlay: rgba(244, 245, 239, 0.68);
+  --calendar-filter: invert(0);
+  --shadow-soft: 0 14px 36px rgba(16, 24, 20, 0.06);
+}
 
---bg-main: #04060B;
---bg-card: #0A0D14;
---bg-sidebar: #04060B;
+.app-shell {
+  background: var(--bg-main);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
+.theme-surface {
+  background: var(--bg-panel);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
-/* BORDER */
+.theme-sidebar {
+  background: var(--bg-sidebar);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-soft);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
 
---border-color: #1A1D26;
+.theme-topbar {
+  background: var(--bg-topbar);
+  border-color: var(--border-color);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 rgba(15, 20, 24, 0.04);
+}
 
-
-/* FUEL COLORS */
-
---petrol: #FF3B3B;
---diesel: #22C1F1;
---premium: #22C55E;
-
-
-/* TEXT */
-
---text-primary: #E5E7EB;
---text-secondary: #9CA3AF;
---text-muted: #6B7280;
-
-
-/* RADIUS */
-
---radius-card: 12px;
---radius-button: 8px;
-
-
-/* LAYOUT */
-
---sidebar-width: 240px;
-
+.theme-text-strong {
+  color: var(--text-strong);
 }

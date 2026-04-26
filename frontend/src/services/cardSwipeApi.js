@@ -1,17 +1,11 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/card-swipe"
+import { api, executeOrRequestApproval } from "./api"
 
 
 
 // GET ENTRIES (WITH FILTERS)
 export const getEntries = async(params)=>{
-
-const res = await axios.get(API,{
-params
-})
-
-return res.data
+const { data } = await api.get("/card-swipe",{ params })
+return data
 
 }
 
@@ -19,10 +13,16 @@ return res.data
 
 // ADD ENTRY
 export const addEntry = async(data)=>{
-
-const res = await axios.post(API,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"card-swipe",
+moduleLabel:"Card Swipe",
+operation:"create",
+payload:data,
+summary:`Add card swipe ${data.date || ""}`
+},
+request:()=>api.post("/card-swipe",data)
+})
 
 }
 
@@ -30,10 +30,17 @@ return res.data
 
 // UPDATE ENTRY
 export const updateEntry = async(id,data)=>{
-
-const res = await axios.put(`${API}/${id}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"card-swipe",
+moduleLabel:"Card Swipe",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update card swipe ${id}`
+},
+request:()=>api.put(`/card-swipe/${id}`,data)
+})
 
 }
 
@@ -41,10 +48,16 @@ return res.data
 
 // DELETE ENTRY
 export const deleteEntry = async(id)=>{
-
-const res = await axios.delete(`${API}/${id}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"card-swipe",
+moduleLabel:"Card Swipe",
+operation:"delete",
+resourceId:id,
+summary:`Delete card swipe ${id}`
+},
+request:()=>api.delete(`/card-swipe/${id}`)
+})
 
 }
 
@@ -52,9 +65,15 @@ return res.data
 
 // DELETE MONTH
 export const deleteMonth = async(year,month)=>{
-
-const res = await axios.delete(`${API}/month/${year}/${month}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"card-swipe",
+moduleLabel:"Card Swipe",
+operation:"deleteMonth",
+meta:{ year, month },
+summary:`Delete card swipe month ${month}/${year}`
+},
+request:()=>api.delete(`/card-swipe/month/${year}/${month}`)
+})
 
 }

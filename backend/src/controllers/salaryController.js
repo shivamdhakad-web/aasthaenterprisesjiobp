@@ -1,0 +1,91 @@
+const Employee = require("../models/Employee")
+const EmployeeAttendance = require("../models/EmployeeAttendance")
+
+const buildMonthRange = (month) => {
+  const current = month ? new Date(`${month}-01T00:00:00`) : new Date()
+  const start = new Date(current.getFullYear(), current.getMonth(), 1)
+  const end = new Date(current.getFullYear(), current.getMonth() + 1, 1)
+
+  return {
+    start,
+    end,
+    monthKey: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`,
+  }
+}
+
+exports.getSalarySummary = async (req, res) => {
+  try {
+    const employeeId = req.params.employeeId || req.user.employeeId
+
+    if (!employeeId) {
+      return res.status(400).json({ message: "Employee id is required" })
+    }
+
+    if (req.user.role === "Employee" && req.user.employeeId !== employeeId) {
+      return res.status(403).json({ message: "You can only access your own salary summary" })
+    }
+
+    const employee = await Employee.findById(employeeId)
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" })
+    }
+
+    const { start, end, monthKey } = buildMonthRange(req.query.month)
+
+    const attendance = await EmployeeAttendance.find({
+      employeeId,
+      date: {
+        $gte: start,
+        $lt: end,
+      },
+    }).sort({ date: 1 })
+
+    const monthlySalary = Number(employee.salary || 0)
+    const perDay = monthlySalary / 30
+
+    let present = 0
+    let absent = 0
+    let doubleShift = 0
+    let halfShift = 0
+    let shortage = 0
+    let advance = 0
+
+    attendance.forEach((entry) => {
+      if (entry.status === "present") present += 1
+      if (entry.status === "absent") absent += 1
+      if (entry.status === "double") doubleShift += 1
+      if (entry.status === "half") halfShift += 1
+
+      shortage += Number(entry.shortage || 0)
+      advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+    })
+
+    const earned =
+      present * perDay + doubleShift * perDay * 2 + halfShift * perDay * 0.5
+
+    res.json({
+      employee: {
+        _id: employee._id,
+        name: employee.name,
+        role: employee.role,
+        shift: employee.shift,
+        salary: monthlySalary,
+      },
+      month: monthKey,
+      breakdown: {
+        present,
+        absent,
+        double: doubleShift,
+        half: halfShift,
+        shortage,
+        advance,
+        earned: Math.round(earned),
+        final: Math.round(earned + shortage - advance),
+      },
+      entries: attendance,
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}

@@ -8,6 +8,7 @@ phone:"",
 role:"",
 shift:"",
 salary:"",
+loginPassword:"",
 tshirt:"",
 pant:"",
 shoes:""
@@ -92,6 +93,15 @@ className="input"
 name="salary"
 placeholder="Salary"
 value={form.salary}
+onChange={handleChange}
+className="input"
+/>
+
+<input
+name="loginPassword"
+type="password"
+placeholder="Employee Login Password"
+value={form.loginPassword}
 onChange={handleChange}
 className="input"
 />

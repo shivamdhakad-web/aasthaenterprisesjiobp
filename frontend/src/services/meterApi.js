@@ -1,31 +1,50 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/meter"
+import { api, executeOrRequestApproval } from "./api"
 
 export const getMeterReadings = async()=>{
-
-const res = await axios.get(API)
-
-return res.data
+const { data } = await api.get("/meter")
+return data
 
 }
 
 export const addMeterReading = async(data)=>{
-
-const res = await axios.post(API,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"meter-readings",
+moduleLabel:"Meter Readings",
+operation:"create",
+payload:data,
+summary:`Add meter reading ${data.nozzle || ""}`
+},
+request:()=>api.post("/meter",data)
+})
 
 }
 
 export const deleteMeterReading = async(id)=>{
-
-await axios.delete(`${API}/${id}`)
+return executeOrRequestApproval({
+approval:{
+moduleKey:"meter-readings",
+moduleLabel:"Meter Readings",
+operation:"delete",
+resourceId:id,
+summary:`Delete meter reading ${id}`
+},
+request:()=>api.delete(`/meter/${id}`)
+})
 
 }
 
 export const updateMeterReading = async(id,data)=>{
-
-await axios.put(`${API}/${id}`,data)
+return executeOrRequestApproval({
+approval:{
+moduleKey:"meter-readings",
+moduleLabel:"Meter Readings",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update meter reading ${id}`
+},
+request:()=>api.put(`/meter/${id}`,data)
+})
 
 }

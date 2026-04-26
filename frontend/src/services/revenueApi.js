@@ -1,11 +1,7 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/revenue"
+import { api } from "./api"
 
 export const getTodayRevenue = async()=>{
-
- const res = await axios.get(`${API}/today`)
-
- return res.data
+ const { data } = await api.get("/revenue/today")
+ return data
 
 }

@@ -14,7 +14,7 @@ export default function PetrolTable({ close, reload }) {
 
   const load = async () => {
     const res = await getPetrolSales()
-    setData(res.data)
+    setData(res)
   }
 
   const remove = async (id) => {

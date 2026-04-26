@@ -1,16 +1,12 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/lubricants"
+import { api, executeOrRequestApproval } from "./api"
 
 
 
 /* GET PRODUCTS */
 
 export const getProducts = async()=>{
-
- const res = await axios.get(API + "/products")
-
- return res.data
+ const { data } = await api.get("/lubricants/products")
+ return data
 
 }
 
@@ -19,10 +15,16 @@ export const getProducts = async()=>{
 /* ADD PRODUCT */
 
 export const addProduct = async(data)=>{
-
- const res = await axios.post(API + "/products",data)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-products",
+   moduleLabel:"Lubricant Products",
+   operation:"create",
+   payload:data,
+   summary:`Add product ${data.name || ""}`
+  },
+  request:()=>api.post("/lubricants/products",data)
+ })
 
 }
 
@@ -31,10 +33,17 @@ export const addProduct = async(data)=>{
 /* UPDATE PRODUCT */
 
 export const updateProduct = async(id,data)=>{
-
- const res = await axios.put(API + "/products/" + id,data)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-products",
+   moduleLabel:"Lubricant Products",
+   operation:"update",
+   resourceId:id,
+   payload:data,
+   summary:`Update product ${data.name || id}`
+  },
+  request:()=>api.put(`/lubricants/products/${id}`,data)
+ })
 
 }
 
@@ -43,10 +52,16 @@ export const updateProduct = async(id,data)=>{
 /* DELETE PRODUCT */
 
 export const deleteProduct = async(id)=>{
-
- const res = await axios.delete(API + "/products/" + id)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-products",
+   moduleLabel:"Lubricant Products",
+   operation:"delete",
+   resourceId:id,
+   summary:`Delete product ${id}`
+  },
+  request:()=>api.delete(`/lubricants/products/${id}`)
+ })
 
 }
 
@@ -55,10 +70,8 @@ export const deleteProduct = async(id)=>{
 /* GET SALES */
 
 export const getLubricants = async()=>{
-
- const res = await axios.get(API)
-
- return res.data
+ const { data } = await api.get("/lubricants")
+ return data
 
 }
 
@@ -67,10 +80,16 @@ export const getLubricants = async()=>{
 /* ADD SALE */
 
 export const addLubricant = async(data)=>{
-
- const res = await axios.post(API,data)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-sales",
+   moduleLabel:"Lubricant Sales",
+   operation:"create",
+   payload:data,
+   summary:`Add lubricant sale ${data.product || ""}`
+  },
+  request:()=>api.post("/lubricants",data)
+ })
 
 }
 
@@ -79,10 +98,17 @@ export const addLubricant = async(data)=>{
 /* UPDATE SALE */
 
 export const updateLubricant = async(id,data)=>{
-
- const res = await axios.put(API + "/" + id,data)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-sales",
+   moduleLabel:"Lubricant Sales",
+   operation:"update",
+   resourceId:id,
+   payload:data,
+   summary:`Update lubricant sale ${data.product || id}`
+  },
+  request:()=>api.put(`/lubricants/${id}`,data)
+ })
 
 }
 
@@ -91,10 +117,16 @@ export const updateLubricant = async(id,data)=>{
 /* DELETE SALE */
 
 export const deleteLubricant = async(id)=>{
-
- const res = await axios.delete(API + "/" + id)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-sales",
+   moduleLabel:"Lubricant Sales",
+   operation:"delete",
+   resourceId:id,
+   summary:`Delete lubricant sale ${id}`
+  },
+  request:()=>api.delete(`/lubricants/${id}`)
+ })
 
 }
 
@@ -103,9 +135,15 @@ export const deleteLubricant = async(id)=>{
 /* DELETE MONTH DATA */
 
 export const deleteMonth = async(data)=>{
-
- const res = await axios.post(API + "/delete-month",data)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"lubricant-sales",
+   moduleLabel:"Lubricant Sales",
+   operation:"deleteMonth",
+   meta:{ year:data.year, month:data.month },
+   summary:`Delete lubricant month ${data.month}/${data.year}`
+  },
+  request:()=>api.post("/lubricants/delete-month",data)
+ })
 
 }

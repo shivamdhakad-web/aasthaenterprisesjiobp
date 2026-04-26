@@ -97,7 +97,15 @@ exports.addSale = async(req,res)=>{
 
  await p.save()
 
- const sale = new Sale(req.body)
+ const sale = new Sale({
+  ...req.body,
+  price:Number(req.body.price || 0),
+  quantity:Number(quantity || 0),
+  total:Number(req.body.total || Number(req.body.price || 0) * Number(quantity || 0)),
+  createdByRole:req.body.createdByRole || "Admin",
+  createdByEmployeeId:req.body.createdByEmployeeId,
+  createdByName:req.body.createdByName || req.body.soldBy
+ })
 
  await sale.save()
 
@@ -111,9 +119,43 @@ exports.addSale = async(req,res)=>{
 
 exports.updateSale = async(req,res)=>{
 
+ const existing = await Sale.findById(req.params.id)
+
+ if(!existing){
+  return res.status(404).json({message:"Sale not found"})
+ }
+
+ const oldProduct = await Product.findOne({name:existing.product})
+
+ if(oldProduct){
+  oldProduct.stock = Number(oldProduct.stock || 0) + Number(existing.quantity || 0)
+  await oldProduct.save()
+ }
+
+ const nextProduct = await Product.findOne({name:req.body.product})
+
+ if(!nextProduct){
+  return res.status(404).json({message:"Product not found"})
+ }
+
+ if(Number(nextProduct.stock || 0) < Number(req.body.quantity || 0)){
+  return res.status(400).json({message:"Not enough stock"})
+ }
+
+ nextProduct.stock = Number(nextProduct.stock || 0) - Number(req.body.quantity || 0)
+ await nextProduct.save()
+
  const sale = await Sale.findByIdAndUpdate(
   req.params.id,
-  req.body,
+  {
+   ...req.body,
+   price:Number(req.body.price || 0),
+   quantity:Number(req.body.quantity || 0),
+   total:Number(req.body.total || Number(req.body.price || 0) * Number(req.body.quantity || 0)),
+   createdByRole:req.body.createdByRole || existing.createdByRole || "Admin",
+   createdByEmployeeId:req.body.createdByEmployeeId || existing.createdByEmployeeId,
+   createdByName:req.body.createdByName || req.body.soldBy || existing.createdByName
+  },
   {new:true}
  )
 
@@ -126,6 +168,17 @@ exports.updateSale = async(req,res)=>{
 /* DELETE SALE */
 
 exports.deleteSale = async(req,res)=>{
+
+ const existing = await Sale.findById(req.params.id)
+
+ if(existing){
+  const product = await Product.findOne({name:existing.product})
+
+  if(product){
+   product.stock = Number(product.stock || 0) + Number(existing.quantity || 0)
+   await product.save()
+  }
+ }
 
  await Sale.findByIdAndDelete(req.params.id)
 
@@ -142,6 +195,19 @@ exports.deleteMonth = async(req,res)=>{
  const {month,year} = req.body
 
  const key = `${year}-${month}`
+
+ const sales = await Sale.find({
+  date:{$regex:key}
+ })
+
+ for(const sale of sales){
+  const product = await Product.findOne({name:sale.product})
+
+  if(product){
+   product.stock = Number(product.stock || 0) + Number(sale.quantity || 0)
+   await product.save()
+  }
+ }
 
  await Sale.deleteMany({
 

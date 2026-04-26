@@ -1,19 +1,22 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/tank"
+import { api, executeOrRequestApproval } from "./api"
 
 export const getTankLevels = async()=>{
-
- const res = await axios.get(`${API}/levels`)
-
- return res.data
+ const { data } = await api.get("/tank/levels")
+ return data
 
 }
 
 export const updateTank = async(data)=>{
-
- const res = await axios.post(`${API}/update`,data)
-
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"tank",
+   moduleLabel:"Tank Levels",
+   operation:"update",
+   resourceId:data.id || data._id,
+   payload:data,
+   summary:`Update tank ${(data.fuelType || data.id || "").toString()}`
+  },
+  request:()=>api.post("/tank/update",data)
+ })
 
 }

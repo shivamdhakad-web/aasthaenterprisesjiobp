@@ -1,48 +1,70 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/attendance"
+import { api, executeOrRequestApproval } from "./api"
 
 
 export const getAttendance = async (employeeId) => {
-
-const res = await axios.get(`${API}/${employeeId}`)
-
-return res.data
+const { data } = await api.get(`/attendance/${employeeId}`)
+return data
 
 }
 
 
 export const addAttendance = async (employeeId,data) => {
-
-const res = await axios.post(`${API}/${employeeId}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"attendance",
+moduleLabel:"Attendance",
+operation:"create",
+payload:data,
+meta:{ employeeId },
+summary:`Add attendance for ${employeeId}`
+},
+request:()=>api.post(`/attendance/${employeeId}`,data)
+})
 
 }
 
 
 export const updateAttendance = async (id,data) => {
-
-const res = await axios.put(`${API}/update/${id}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"attendance",
+moduleLabel:"Attendance",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update attendance ${id}`
+},
+request:()=>api.put(`/attendance/update/${id}`,data)
+})
 
 }
 
 
 export const deleteAttendance = async (id) => {
-
-const res = await axios.delete(`${API}/delete/${id}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"attendance",
+moduleLabel:"Attendance",
+operation:"delete",
+resourceId:id,
+summary:`Delete attendance ${id}`
+},
+request:()=>api.delete(`/attendance/delete/${id}`)
+})
 
 }
 
 
 export const deleteMonth = async (employeeId,year,month) => {
-
-const res = await axios.delete(`${API}/month/${employeeId}/${year}/${month}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"attendance",
+moduleLabel:"Attendance",
+operation:"deleteMonth",
+meta:{ employeeId, year, month },
+summary:`Delete attendance for ${month}/${year}`
+},
+request:()=>api.delete(`/attendance/month/${employeeId}/${year}/${month}`)
+})
 
 }

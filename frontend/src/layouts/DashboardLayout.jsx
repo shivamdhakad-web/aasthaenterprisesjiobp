@@ -8,7 +8,7 @@ const [open,setOpen] = useState(false)
 
 return(
 
-<div className="flex h-screen bg-[#04060B] text-white">
+<div className="app-shell flex h-screen">
 
 {/* SIDEBAR */}
 
@@ -21,7 +21,7 @@ return(
 
 <Topbar toggleSidebar={()=>setOpen(!open)}/>
 
-<main className="flex-1 overflow-y-auto lg:p-6">
+<main className="flex-1 overflow-y-auto bg-[var(--bg-main)] transition-colors duration-300">
 
 <Outlet/>
 

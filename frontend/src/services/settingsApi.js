@@ -1,19 +1,25 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api"
+import { api, executeOrRequestApproval } from "./api"
 
 
 
 /* SETTINGS */
 
 export const getSettings = async()=>{
- const res = await axios.get(`${API}/settings`)
- return res.data
+ const { data } = await api.get("/settings")
+ return data
 }
 
 export const updateSettings = async(data)=>{
- const res = await axios.put(`${API}/settings`,data)
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"settings",
+   moduleLabel:"Station Settings",
+   operation:"update",
+   payload:data,
+   summary:"Update station settings"
+  },
+  request:()=>api.put("/settings",data)
+ })
 }
 
 
@@ -21,12 +27,12 @@ export const updateSettings = async(data)=>{
 /* FUEL PRICES */
 
 export const getFuelPrices = async()=>{
- const res = await axios.get(`${API}/settings/fuel-prices`)
+ const res = await api.get(`/settings/fuel-prices`)
  return res.data
 }
 
 export const updateFuelPrices = async(data)=>{
- const res = await axios.put(`${API}/settings/fuel-prices`,data)
+ const res = await api.put(`/settings/fuel-prices`,data)
  return res.data
 }
 
@@ -35,17 +41,17 @@ export const updateFuelPrices = async(data)=>{
 /* FUEL HISTORY */
 
 export const getFuelHistory = async()=>{
- const res = await axios.get(`${API}/settings/fuel-history`)
+ const res = await api.get(`/settings/fuel-history`)
  return res.data
 }
 
 export const addFuelHistory = async(data)=>{
- const res = await axios.post(`${API}/settings/fuel-history`,data)
+ const res = await api.post(`/settings/fuel-history`,data)
  return res.data
 }
 
 export const deleteFuelHistory = async(id)=>{
- const res = await axios.delete(`${API}/settings/fuel-history/${id}`)
+ const res = await api.delete(`/settings/fuel-history/${id}`)
  return res.data
 }
 
@@ -54,12 +60,12 @@ export const deleteFuelHistory = async(id)=>{
 /* TANK SETTINGS */
 
 export const getTankSettings = async()=>{
- const res = await axios.get(`${API}/settings/tank`)
+ const res = await api.get(`/settings/tank`)
  return res.data
 }
 
 export const updateTankSettings = async(id,data)=>{
- const res = await axios.put(`${API}/settings/tank/${id}`,data)
+ const res = await api.put(`/settings/tank/${id}`,data)
  return res.data
 }
 
@@ -68,12 +74,12 @@ export const updateTankSettings = async(id,data)=>{
 /* CREDIT SETTINGS */
 
 export const getCreditSettings = async()=>{
- const res = await axios.get(`${API}/settings/credit`)
+ const res = await api.get(`/settings/credit`)
  return res.data
 }
 
 export const updateCreditSettings = async(data)=>{
- const res = await axios.put(`${API}/settings/credit`,data)
+ const res = await api.put(`/settings/credit`,data)
  return res.data
 }
 

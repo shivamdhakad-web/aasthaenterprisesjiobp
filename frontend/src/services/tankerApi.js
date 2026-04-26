@@ -1,45 +1,50 @@
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/tanker-deliveries"
+import { api, executeOrRequestApproval } from "./api"
 
 export const getDeliveries = async()=>{
-
-const res = await fetch(API)
-
-return res.json()
+const { data } = await api.get("/tanker-deliveries")
+return data
 
 }
 
 export const addDelivery = async(data)=>{
-
-const res = await fetch(API,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
+return executeOrRequestApproval({
+approval:{
+moduleKey:"tanker-deliveries",
+moduleLabel:"Tanker Deliveries",
+operation:"create",
+payload:data,
+summary:`Add tanker delivery ${data.invoice || data.date || ""}`
 },
-body:JSON.stringify(data)
+request:()=>api.post("/tanker-deliveries",data)
 })
-
-return res.json()
 
 }
 
 export const updateDelivery = async(id,data)=>{
-
-const res = await fetch(`${API}/${id}`,{
-method:"PUT",
-headers:{
-"Content-Type":"application/json"
+return executeOrRequestApproval({
+approval:{
+moduleKey:"tanker-deliveries",
+moduleLabel:"Tanker Deliveries",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update tanker delivery ${id}`
 },
-body:JSON.stringify(data)
+request:()=>api.put(`/tanker-deliveries/${id}`,data)
 })
-
-return res.json()
 
 }
 
 export const deleteDelivery = async(id)=>{
-
-await fetch(`${API}/${id}`,{
-method:"DELETE"
+return executeOrRequestApproval({
+approval:{
+moduleKey:"tanker-deliveries",
+moduleLabel:"Tanker Deliveries",
+operation:"delete",
+resourceId:id,
+summary:`Delete tanker delivery ${id}`
+},
+request:()=>api.delete(`/tanker-deliveries/${id}`)
 })
 
 }

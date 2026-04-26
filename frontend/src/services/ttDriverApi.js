@@ -1,39 +1,54 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/ttdrivers"
+import { api, executeOrRequestApproval } from "./api"
 
 
 export const getDrivers = async () => {
-
-const res = await axios.get(API)
-
-return res.data
+const { data } = await api.get("/ttdrivers")
+return data
 
 }
 
 
 export const addDriver = async (data) => {
-
-const res = await axios.post(API,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"tt-drivers",
+moduleLabel:"TT Drivers",
+operation:"create",
+payload:data,
+summary:`Add TT driver ${data.name || ""}`
+},
+request:()=>api.post("/ttdrivers",data)
+})
 
 }
 
 
 export const updateDriver = async (id,data) => {
-
-const res = await axios.put(`${API}/${id}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"tt-drivers",
+moduleLabel:"TT Drivers",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update TT driver ${data.name || id}`
+},
+request:()=>api.put(`/ttdrivers/${id}`,data)
+})
 
 }
 
 
 export const deleteDriver = async (id) => {
-
-const res = await axios.delete(`${API}/${id}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"tt-drivers",
+moduleLabel:"TT Drivers",
+operation:"delete",
+resourceId:id,
+summary:`Delete TT driver ${id}`
+},
+request:()=>api.delete(`/ttdrivers/${id}`)
+})
 
 }

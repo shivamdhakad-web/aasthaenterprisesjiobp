@@ -2,12 +2,12 @@ const express = require("express")
 
 const {
  updateTank,
- getTankLevels
+ getTank
 } = require("../controllers/tankController")
 
 const router = express.Router()
 
-router.get("/levels",getTankLevels)
+router.get("/levels",getTank)
 
 router.post("/update",updateTank)
 

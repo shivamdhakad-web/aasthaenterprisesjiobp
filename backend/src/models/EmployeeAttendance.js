@@ -12,7 +12,7 @@ date:{type:Date,required:true},
 
 status:{
 type:String,
-enum:["present","absent","double"],
+enum:["present","absent","double","half"],
 default:"present"
 },
 
@@ -22,7 +22,16 @@ advanceCash:{type:Number,default:0},
 
 advancePetrol:{type:Number,default:0},
 
-remark:{type:String}
+remark:{type:String},
+
+createdByRole:{
+type:String,
+default:"Admin"
+},
+
+createdByEmployeeId:{
+type:String
+}
 
 },{timestamps:true})
 

@@ -12,6 +12,8 @@ shift:{type:String},
 
 salary:{type:Number,default:0},
 
+loginPassword:{type:String},
+
 tshirt:{type:String},
 
 pant:{type:String},

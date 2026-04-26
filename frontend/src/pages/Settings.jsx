@@ -1,284 +1,236 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
+import { getSettings, updateSettings } from "../services/settingsApi"
 
-export default function Settings(){
-
-const [settings,setSettings] = useState({
- companyName:"",
- stationName:"",
- gstNumber:"",
- address:"",
- contacts:[]
-})
-
-const [name,setName] = useState("")
-const [phone,setPhone] = useState("")
-
-/* LOAD SETTINGS */
-
-const loadSettings = async()=>{
-
- const res = await axios.get("https://aasthaenterprisesjiobp.onrender.com/api/settings")
-
- if(res.data){
-  setSettings(res.data)
- }
-
+const defaultSettings = {
+  companyName: "",
+  stationName: "",
+  gstNumber: "",
+  address: "",
+  contacts: [],
+  loginPasswords: {
+    admin: "123",
+    manager: "456",
+    employee: "789",
+  },
 }
 
-useEffect(()=>{
- loadSettings()
-},[])
+export default function Settings() {
+  const [settings, setSettings] = useState(defaultSettings)
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [saving, setSaving] = useState(false)
 
+  const loadSettings = async () => {
+    const data = await getSettings()
 
+    if (!data) {
+      return
+    }
 
-/* ADD CONTACT */
+    setSettings({
+      companyName: data.companyName || "",
+      stationName: data.stationName || "",
+      gstNumber: data.gstNumber || "",
+      address: data.address || "",
+      contacts: data.contacts || [],
+      loginPasswords: {
+        ...defaultSettings.loginPasswords,
+        ...(data.loginPasswords || {}),
+      },
+    })
+  }
 
-const addContact = ()=>{
+  useEffect(() => {
+    loadSettings()
+  }, [])
 
- if(!name || !phone) return
+  const updateField = (key, value) => {
+    setSettings((current) => ({
+      ...current,
+      [key]: value,
+    }))
+  }
 
- const newContact = { name, phone }
+  const updatePassword = (key, value) => {
+    setSettings((current) => ({
+      ...current,
+      loginPasswords: {
+        ...current.loginPasswords,
+        [key]: value,
+      },
+    }))
+  }
 
- setSettings({
-  ...settings,
-  contacts:[...settings.contacts,newContact]
- })
+  const addContact = () => {
+    if (!name.trim() || !phone.trim()) {
+      return
+    }
 
- setName("")
- setPhone("")
+    setSettings((current) => ({
+      ...current,
+      contacts: [...current.contacts, { name: name.trim(), phone: phone.trim() }],
+    }))
+
+    setName("")
+    setPhone("")
+  }
+
+  const deleteContact = (index) => {
+    setSettings((current) => ({
+      ...current,
+      contacts: current.contacts.filter((_, itemIndex) => itemIndex !== index),
+    }))
+  }
+
+  const save = async () => {
+    setSaving(true)
+
+    try {
+      await updateSettings(settings)
+      window.alert("Settings saved")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="w-full max-w-[100vw] overflow-x-hidden space-y-5 p-4 text-[color:var(--text-primary)] sm:p-6">
+      <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
+        <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Station Settings</h1>
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+          Station details, contact numbers, aur dashboard login passwords yahin se manage honge.
+        </p>
+      </section>
+
+      <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
+        <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Station Information</h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <Field
+            label="Company Name"
+            value={settings.companyName}
+            onChange={(value) => updateField("companyName", value)}
+          />
+          <Field
+            label="Station Name"
+            value={settings.stationName}
+            onChange={(value) => updateField("stationName", value)}
+          />
+          <Field
+            label="GST Number"
+            value={settings.gstNumber}
+            onChange={(value) => updateField("gstNumber", value)}
+          />
+          <Field
+            label="Address"
+            value={settings.address}
+            onChange={(value) => updateField("address", value)}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Dashboard Passwords</h2>
+            <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+              Admin yahin se admin, manager, aur employee login passwords change kar sakta hai.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <Field
+            label="Admin Password"
+            value={settings.loginPasswords.admin}
+            type="password"
+            onChange={(value) => updatePassword("admin", value)}
+          />
+          <Field
+            label="Manager Password"
+            value={settings.loginPasswords.manager}
+            type="password"
+            onChange={(value) => updatePassword("manager", value)}
+          />
+          <Field
+            label="Employee Master Password"
+            value={settings.loginPasswords.employee}
+            type="password"
+            onChange={(value) => updatePassword("employee", value)}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
+        <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Contact Numbers</h2>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="table min-w-[520px]">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {settings.contacts.map((contact, index) => (
+                <tr key={`${contact.phone}-${index}`}>
+                  <td>{contact.name}</td>
+                  <td>{contact.phone}</td>
+                  <td>
+                    <button
+                      onClick={() => deleteContact(index)}
+                      className="text-red-500 hover:text-red-400"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <input
+            placeholder="Name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="input"
+          />
+          <input
+            placeholder="Phone"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            className="input"
+          />
+          <button onClick={addContact} className="btn btn-green w-full md:w-auto">
+            Add Contact
+          </button>
+        </div>
+      </section>
+
+      <div className="flex justify-end">
+        <button onClick={save} disabled={saving} className="btn btn-purple w-full sm:w-auto">
+          {saving ? "Saving..." : "Save Settings"}
+        </button>
+      </div>
+    </div>
+  )
 }
 
-
-
-/* DELETE CONTACT */
-
-const deleteContact = (index)=>{
-
- const updated = settings.contacts.filter((_,i)=>i !== index)
-
- setSettings({
-  ...settings,
-  contacts:updated
- })
-}
-
-
-
-/* SAVE SETTINGS */
-
-const saveSettings = async()=>{
-
- await axios.put(
-  "https://aasthaenterprisesjiobp.onrender.com/api/settings",
-  settings
- )
-
- alert("Settings Saved")
-
-}
-
-
-
-return(
-
-<div className="p-3 text-gray-200">
-
-<h1 className="text-xl font-bold mb-5 text-white">
-
-⚙️ Station Settings
-
-</h1>
-
-
-
-{/* STATION INFO */}
-
-<div className="bg-[#0b0f17] border border-[#1F2937] p-5 rounded-xl shadow-xl mb-5">
-
-<h2 className="text-xl font-semibold text-white mb-6">
-
-Station Information
-
-</h2>
-
-
-
-<div className="grid md:grid-cols-2 gap-6">
-
-<div>
-<label className="text-sm text-gray-400">
-Company Name
-</label>
-
-<input
-value={settings.companyName}
-onChange={(e)=>setSettings({...settings,companyName:e.target.value})}
-className="bg-[#04060b] border border-[#374151] p-3 rounded-lg w-full mt-1 focus:outline-none focus:border-red-500"
-/>
-</div>
-
-
-
-<div>
-<label className="text-sm text-gray-400">
-Station Name
-</label>
-
-<input
-value={settings.stationName}
-onChange={(e)=>setSettings({...settings,stationName:e.target.value})}
-className="bg-[#04060b] border border-[#374151] p-3 rounded-lg w-full mt-1 focus:outline-none focus:border-red-500"
-/>
-</div>
-
-
-
-<div>
-<label className="text-sm text-gray-400">
-GST Number
-</label>
-
-<input
-value={settings.gstNumber}
-onChange={(e)=>setSettings({...settings,gstNumber:e.target.value})}
-className="bg-[#04060b] border border-[#374151] p-3 rounded-lg w-full mt-1 focus:outline-none focus:border-red-500"
-/>
-</div>
-
-
-
-<div>
-<label className="text-sm text-gray-400">
-Address
-</label>
-
-<input
-value={settings.address}
-onChange={(e)=>setSettings({...settings,address:e.target.value})}
-className="bg-[#04060b] border border-[#374151] p-3 rounded-lg w-full mt-1 focus:outline-none focus:border-red-500"
-/>
-</div>
-
-</div>
-
-</div>
-
-
-
-{/* CONTACTS */}
-
-<div className="bg-[#0b0f17] border border-[#1F2937] p-5 rounded-2xl shadow-xl mb-5">
-
-<h2 className="text-xl font-semibold text-white mb-6">
-
-📞 Contact Numbers
-
-</h2>
-
-
-
-<table className="w-full text-sm mb-6">
-
-<thead>
-
-<tr className="text-gray-400 border-b border-[#1F2937]">
-
-<th className="p-3 text-left">Name</th>
-<th className="p-3 text-left">Phone</th>
-<th className="p-3"></th>
-
-</tr>
-
-</thead>
-
-
-
-<tbody>
-
-{settings.contacts.map((c,i)=>(
-
-<tr
-key={i}
-className="border-b border-[#1F2937] hover:bg-[#020617]"
->
-
-<td className="p-3">{c.name}</td>
-<td className="p-3">{c.phone}</td>
-
-<td className="p-3 text-right">
-
-<button
-onClick={()=>deleteContact(i)}
-className="text-red-400 hover:text-red-500"
->
-
-Delete
-
-</button>
-
-</td>
-
-</tr>
-
-))}
-
-</tbody>
-
-</table>
-
-
-
-{/* ADD CONTACT */}
-
-<div className="flex gap-4">
-
-<input
-placeholder="Name"
-value={name}
-onChange={(e)=>setName(e.target.value)}
-className="bg-[#04060b] border border-[#374151] p-3 rounded-lg"
-/>
-
-
-
-<input
-placeholder="Phone"
-value={phone}
-onChange={(e)=>setPhone(e.target.value)}
-className="bg-[#04060b] border border-[#374151] p-3 rounded-lg"
-/>
-
-
-
-<button
-onClick={addContact}
-className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg text-white font-medium"
->
-
-Add
-
-</button>
-
-</div>
-
-</div>
-
-
-
-{/* SAVE */}
-
-<button
-onClick={saveSettings}
-className="bg-gradient-to-r from-red-600 to-red-500 hover:scale-105 transition px-8 py-3 rounded-lg text-white font-semibold shadow-lg"
->
-
-Save Settings
-
-</button>
-
-</div>
-
-)
-
+function Field({ label, value, onChange, type = "text" }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+        {label}
+      </span>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="input"
+      />
+    </label>
+  )
 }

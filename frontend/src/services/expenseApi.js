@@ -1,15 +1,11 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/expenses"
+import { api, executeOrRequestApproval } from "./api"
 
 
 /* GET */
 
 export const getExpenses = async()=>{
-
-const res = await axios.get(API)
-
-return res.data
+const { data } = await api.get("/expenses")
+return data
 
 }
 
@@ -17,10 +13,16 @@ return res.data
 /* ADD */
 
 export const addExpense = async(data)=>{
-
-const res = await axios.post(API,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"expenses",
+moduleLabel:"Expenses",
+operation:"create",
+payload:data,
+summary:`Add expense ${data.category || ""}`
+},
+request:()=>api.post("/expenses",data)
+})
 
 }
 
@@ -28,10 +30,17 @@ return res.data
 /* UPDATE */
 
 export const updateExpense = async(id,data)=>{
-
-const res = await axios.put(`${API}/${id}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"expenses",
+moduleLabel:"Expenses",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update expense ${data.category || id}`
+},
+request:()=>api.put(`/expenses/${id}`,data)
+})
 
 }
 
@@ -39,9 +48,15 @@ return res.data
 /* DELETE */
 
 export const deleteExpense = async(id)=>{
-
-const res = await axios.delete(`${API}/${id}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"expenses",
+moduleLabel:"Expenses",
+operation:"delete",
+resourceId:id,
+summary:`Delete expense ${id}`
+},
+request:()=>api.delete(`/expenses/${id}`)
+})
 
 }

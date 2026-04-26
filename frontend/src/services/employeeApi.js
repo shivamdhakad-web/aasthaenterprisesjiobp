@@ -1,39 +1,54 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/employees"
+import { api, executeOrRequestApproval } from "./api"
 
 
 export const getEmployees = async () => {
-
-const res = await axios.get(API)
-
-return res.data
+const { data } = await api.get("/employees")
+return data
 
 }
 
 
 export const addEmployee = async (data) => {
-
-const res = await axios.post(API,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"employees",
+moduleLabel:"Employees",
+operation:"create",
+payload:data,
+summary:`Add employee ${data.name || ""}`
+},
+request:()=>api.post("/employees",data)
+})
 
 }
 
 
 export const updateEmployee = async (id,data) => {
-
-const res = await axios.put(`${API}/${id}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"employees",
+moduleLabel:"Employees",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update employee ${data.name || id}`
+},
+request:()=>api.put(`/employees/${id}`,data)
+})
 
 }
 
 
 export const deleteEmployee = async (id) => {
-
-const res = await axios.delete(`${API}/${id}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"employees",
+moduleLabel:"Employees",
+operation:"delete",
+resourceId:id,
+summary:`Delete employee ${id}`
+},
+request:()=>api.delete(`/employees/${id}`)
+})
 
 }

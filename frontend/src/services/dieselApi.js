@@ -1,28 +1,51 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/diesel"
+import { api, executeOrRequestApproval } from "./api"
 
 export const getTodayDieselStats = async ()=>{
- const res = await axios.get(`${API}/stats/today`)
- return res.data
+ const { data } = await api.get("/diesel/stats/today")
+ return data
 }
 
 export const addDieselSale = async(data)=>{
- const res = await axios.post(`${API}/add`,data)
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"diesel-sales",
+   moduleLabel:"Diesel Sales",
+   operation:"create",
+   payload:data,
+   summary:`Add diesel sale ${data.date || ""}`
+  },
+  request:()=>api.post("/diesel/add",data)
+ })
 }
 
 export const getDieselSales = async()=>{
- const res = await axios.get(`${API}/all`)
- return res.data
+ const { data } = await api.get("/diesel/all")
+ return data
 }
 
 export const deleteDieselSale = async(id)=>{
- const res = await axios.delete(`${API}/delete/${id}`)
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"diesel-sales",
+   moduleLabel:"Diesel Sales",
+   operation:"delete",
+   resourceId:id,
+   summary:`Delete diesel sale ${id}`
+  },
+  request:()=>api.delete(`/diesel/delete/${id}`)
+ })
 }
 
 export const updateDieselSale = async(id,data)=>{
- const res = await axios.put(`${API}/update/${id}`,data)
- return res.data
+ return executeOrRequestApproval({
+  approval:{
+   moduleKey:"diesel-sales",
+   moduleLabel:"Diesel Sales",
+   operation:"update",
+   resourceId:id,
+   payload:data,
+   summary:`Update diesel sale ${id}`
+  },
+  request:()=>api.put(`/diesel/update/${id}`,data)
+ })
 }

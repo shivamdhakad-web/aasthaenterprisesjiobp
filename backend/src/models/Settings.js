@@ -5,6 +5,24 @@ const contactSchema = new mongoose.Schema({
   phone: String
 })
 
+const loginPasswordsSchema = new mongoose.Schema(
+  {
+    admin: {
+      type: String,
+      default: "123"
+    },
+    manager: {
+      type: String,
+      default: "456"
+    },
+    employee: {
+      type: String,
+      default: "789"
+    }
+  },
+  { _id: false }
+)
+
 const settingsSchema = new mongoose.Schema({
 
   companyName: String,
@@ -12,7 +30,11 @@ const settingsSchema = new mongoose.Schema({
   gstNumber: String,
   address: String,
 
-  contacts: [contactSchema]
+  contacts: [contactSchema],
+  loginPasswords: {
+    type: loginPasswordsSchema,
+    default: () => ({})
+  }
 
 })
 

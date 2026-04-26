@@ -12,9 +12,18 @@ const schema = new mongoose.Schema({
 
  total:Number,
 
- soldBy:String
+ soldBy:String,
 
-})
+ createdByRole:{
+  type:String,
+  default:"Admin"
+ },
+
+ createdByEmployeeId:String,
+
+ createdByName:String
+
+},{timestamps:true})
 
 module.exports = mongoose.model(
  "LubricantSale",

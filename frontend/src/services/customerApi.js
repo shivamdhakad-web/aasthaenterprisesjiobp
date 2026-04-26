@@ -1,66 +1,93 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/customers"
+import { api, executeOrRequestApproval } from "./api"
 
 
 // GET CUSTOMERS
 export const getCustomers = async () => {
-
-    const res = await axios.get(API)
-
-    return res.data
+    const { data } = await api.get("/customers")
+    return data
 }
 
 
 // ADD CUSTOMER
 export const addCustomer = async (data) => {
-
-    const res = await axios.post(API, data)
-
-    return res.data
+    return executeOrRequestApproval({
+      approval: {
+        moduleKey: "customers",
+        moduleLabel: "Credit Customers",
+        operation: "create",
+        payload: data,
+        summary: `Add customer ${data.name || ""}`,
+      },
+      request: () => api.post("/customers", data),
+    })
 }
 
 
 // UPDATE CUSTOMER
 export const updateCustomer = async (id,data) => {
-
-    const res = await axios.put(`${API}/${id}`,data)
-
-    return res.data
+    return executeOrRequestApproval({
+      approval: {
+        moduleKey: "customers",
+        moduleLabel: "Credit Customers",
+        operation: "update",
+        resourceId: id,
+        payload: data,
+        summary: `Update customer ${data.name || id}`,
+      },
+      request: () => api.put(`/customers/${id}`,data),
+    })
 }
 
 
 // DELETE CUSTOMER
 export const deleteCustomer = async (id) => {
-
-    const res = await axios.delete(`${API}/${id}`)
-
-    return res.data
+    return executeOrRequestApproval({
+      approval: {
+        moduleKey: "customers",
+        moduleLabel: "Credit Customers",
+        operation: "delete",
+        resourceId: id,
+        summary: `Delete customer ${id}`,
+      },
+      request: () => api.delete(`/customers/${id}`),
+    })
 }
 
 
 // CUSTOMER LEDGER
 export const getCustomerLedger = async (id) => {
-
-    const res = await axios.get(`${API}/${id}/ledger`)
-
-    return res.data
+    const { data } = await api.get(`/customers/${id}/ledger`)
+    return data
 }
 
 
 // ADD FUEL
 export const addFuel = async (id,data) => {
-
-    const res = await axios.post(`${API}/${id}/fuel`,data)
-
-    return res.data
+    return executeOrRequestApproval({
+      approval: {
+        moduleKey: "customers",
+        moduleLabel: "Credit Customers",
+        operation: "fuel",
+        resourceId: id,
+        payload: data,
+        summary: `Add fuel entry for customer ${id}`,
+      },
+      request: () => api.post(`/customers/${id}/fuel`,data),
+    })
 }
 
 
 // ADD PAYMENT
 export const addPayment = async (id,data) => {
-
-    const res = await axios.post(`${API}/${id}/payment`,data)
-
-    return res.data
+    return executeOrRequestApproval({
+      approval: {
+        moduleKey: "customers",
+        moduleLabel: "Credit Customers",
+        operation: "payment",
+        resourceId: id,
+        payload: data,
+        summary: `Add payment for customer ${id}`,
+      },
+      request: () => api.post(`/customers/${id}/payment`,data),
+    })
 }

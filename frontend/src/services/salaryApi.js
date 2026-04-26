@@ -1,23 +1,9 @@
-import axios from "axios"
+import { api } from "./api"
 
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/salary"
-
-
-
-export const getSalary = async()=>{
-
-const res = await axios.get(API)
-
-return res.data
-
-}
-
-
-
-export const generateSalary = async(data)=>{
-
-const res = await axios.post(API + "/generate",data)
-
-return res.data
-
+export const getSalarySummary = async (employeeId, month) => {
+  const target = employeeId ? `/salary/summary/${employeeId}` : "/salary/summary"
+  const { data } = await api.get(target, {
+    params: month ? { month } : {},
+  })
+  return data
 }

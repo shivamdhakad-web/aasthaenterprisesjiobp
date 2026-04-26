@@ -1,14 +1,10 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/mobile-dispenser"
+import { api, executeOrRequestApproval } from "./api"
 
 
 // GET SETTINGS
 export const getSettings = async () => {
-
-const res = await axios.get(`${API}/settings`)
-
-return res.data
+const { data } = await api.get("/mobile-dispenser/settings")
+return data
 
 }
 
@@ -16,10 +12,16 @@ return res.data
 
 // UPDATE SETTINGS
 export const updateSettings = async (data) => {
-
-const res = await axios.put(`${API}/settings`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"mobile-dispenser-settings",
+moduleLabel:"Mobile Dispenser Settings",
+operation:"update",
+payload:data,
+summary:"Update mobile dispenser settings"
+},
+request:()=>api.put("/mobile-dispenser/settings",data)
+})
 
 }
 
@@ -27,10 +29,8 @@ return res.data
 
 // GET ENTRIES
 export const getEntries = async () => {
-
-const res = await axios.get(API)
-
-return res.data
+const { data } = await api.get("/mobile-dispenser")
+return data
 
 }
 
@@ -38,10 +38,16 @@ return res.data
 
 // ADD ENTRY
 export const addEntry = async (data) => {
-
-const res = await axios.post(API,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"mobile-dispenser-entries",
+moduleLabel:"Mobile Dispenser Entries",
+operation:"create",
+payload:data,
+summary:`Add mobile dispenser entry ${data.date || ""}`
+},
+request:()=>api.post("/mobile-dispenser",data)
+})
 
 }
 
@@ -49,10 +55,17 @@ return res.data
 
 // UPDATE ENTRY
 export const updateEntry = async (id,data) => {
-
-const res = await axios.put(`${API}/${id}`,data)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"mobile-dispenser-entries",
+moduleLabel:"Mobile Dispenser Entries",
+operation:"update",
+resourceId:id,
+payload:data,
+summary:`Update mobile dispenser entry ${id}`
+},
+request:()=>api.put(`/mobile-dispenser/${id}`,data)
+})
 
 }
 
@@ -60,10 +73,16 @@ return res.data
 
 // DELETE ENTRY
 export const deleteEntry = async (id) => {
-
-const res = await axios.delete(`${API}/${id}`)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"mobile-dispenser-entries",
+moduleLabel:"Mobile Dispenser Entries",
+operation:"delete",
+resourceId:id,
+summary:`Delete mobile dispenser entry ${id}`
+},
+request:()=>api.delete(`/mobile-dispenser/${id}`)
+})
 
 }
 
@@ -71,11 +90,15 @@ return res.data
 
 // DELETE MONTH
 export const deleteMonth = async (year,month) => {
-
-const res = await axios.delete(
-`${API}/month/${year}/${month}`
-)
-
-return res.data
+return executeOrRequestApproval({
+approval:{
+moduleKey:"mobile-dispenser-entries",
+moduleLabel:"Mobile Dispenser Entries",
+operation:"deleteMonth",
+meta:{ year, month },
+summary:`Delete mobile dispenser month ${month}/${year}`
+},
+request:()=>api.delete(`/mobile-dispenser/month/${year}/${month}`)
+})
 
 }

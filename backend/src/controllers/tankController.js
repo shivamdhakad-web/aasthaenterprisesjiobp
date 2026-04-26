@@ -60,7 +60,9 @@ exports.updateTank = async (req, res) => {
 
   const { currentStock } = req.body
 
-  const tank = await Tank.findById(req.params.id)
+  const tankId = req.params.id || req.body.id || req.body._id
+
+  const tank = await Tank.findById(tankId)
 
   if (!tank) {
    return res.status(404).json({

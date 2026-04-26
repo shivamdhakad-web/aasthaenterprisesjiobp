@@ -1,15 +1,40 @@
-import { useState } from "react"
-import { updateTank } from "../../services/tankApi"
+import { useEffect, useState } from "react"
+import { getTankLevels, updateTank } from "../../services/tankApi"
 
 export default function TankUpdateModal({ close, reload }) {
 
  const [form,setForm] = useState({
+  id:"",
   fuelType:"",
   currentStock:""
  })
 
+ const [tanks, setTanks] = useState([])
+
+ useEffect(()=>{
+  const load = async()=>{
+   const data = await getTankLevels()
+   setTanks(data.tanks || [])
+  }
+
+  load()
+ },[])
+
  const handleChange = (e)=>{
-  setForm({...form,[e.target.name]:e.target.value})
+  const { name, value } = e.target
+
+  if(name === "fuelType"){
+   const tank = tanks.find((item)=>item.fuelType === value)
+   setForm({
+    ...form,
+    fuelType:value,
+    id:tank?._id || "",
+    currentStock:tank?.currentStock || form.currentStock
+   })
+   return
+  }
+
+  setForm({...form,[name]:value})
  }
 
  const submit = async()=>{

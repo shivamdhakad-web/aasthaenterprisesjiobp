@@ -1,27 +1,19 @@
-import axios from "axios"
-
-const API = "https://aasthaenterprisesjiobp.onrender.com/api/charts"
+import { api } from "./api"
 
 export const getSalesTrend = async()=>{
-
- const res = await axios.get(`${API}/sales-trend`)
- return res.data
+ const { data } = await api.get("/charts/sales-trend")
+ return data
 
 }
 
 export const getFuelMix = async()=>{
-
- const res = await axios.get(`${API}/fuel-mix`)
- return res.data
+ const { data } = await api.get("/charts/fuel-mix")
+ return data
 
 }
 
 export const getFuelRevenueChart = async()=>{
-
-const res = await axios.get(
-"https://aasthaenterprisesjiobp.onrender.com/api/dashboard/fuel-revenue-chart"
-)
-
-return res.data
+const { data } = await api.get("/dashboard/fuel-revenue-chart")
+return data
 
 }
