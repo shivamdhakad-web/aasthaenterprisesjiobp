@@ -3,10 +3,14 @@ import { getSalarySummary } from "../../services/salaryApi"
 
 export default function EmployeeSalary() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [selectedDate, setSelectedDate] = useState("")
   const [summary, setSummary] = useState(null)
 
-  const load = async (targetMonth = month) => {
-    const data = await getSalarySummary(null, targetMonth)
+  const load = async ({ targetMonth = month, targetDate = selectedDate } = {}) => {
+    const data = await getSalarySummary(
+      null,
+      targetDate ? { date: targetDate } : { month: targetMonth },
+    )
     setSummary(data)
   }
 
@@ -31,14 +35,29 @@ export default function EmployeeSalary() {
               onChange={(event) => setMonth(event.target.value)}
               className="input w-full sm:w-[180px]"
             />
-            <button onClick={() => load(month)} className="btn btn-green w-full sm:w-auto">
-              Load
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="input w-full sm:w-[180px]"
+            />
+            <button onClick={() => load()} className="btn btn-green w-full sm:w-auto">
+              {selectedDate ? "Load Date" : "Load Month"}
+            </button>
+            <button
+              onClick={() => {
+                setSelectedDate("")
+                load({ targetMonth: month, targetDate: "" })
+              }}
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-[color:var(--text-primary)]"
+            >
+              Clear Date
             </button>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <SalaryCard label="Present" value={summary?.breakdown?.present || 0} accent="text-green-300" />
         <SalaryCard label="Double" value={summary?.breakdown?.double || 0} accent="text-blue-300" />
         <SalaryCard label="Half" value={summary?.breakdown?.half || 0} accent="text-yellow-300" />
@@ -62,10 +81,68 @@ export default function EmployeeSalary() {
             Rs. {summary?.breakdown?.final?.toLocaleString?.() || 0}
           </p>
           <p className="mt-4 text-sm text-green-700">
-            Month: {summary?.month || month}
+            {summary?.scope === "date"
+              ? `Date: ${summary?.selectedDate || selectedDate}`
+              : `Month: ${summary?.month || month}`}
           </p>
         </section>
       </div>
+
+      <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">Attendance Data</h2>
+          <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-1 text-xs text-[color:var(--text-secondary)]">
+            {summary?.entries?.length || 0} entr{summary?.entries?.length === 1 ? "y" : "ies"}
+          </span>
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Shortage</th>
+                <th>Advance</th>
+                <th>Remark</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(summary?.entries || []).map((entry) => (
+                <tr key={entry._id}>
+                  <td>{new Date(entry.date).toLocaleDateString("en-IN")}</td>
+                  <td>{entry.status}</td>
+                  <td>Rs. {entry.shortage || 0}</td>
+                  <td>Rs. {Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)}</td>
+                  <td>{entry.remark || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="space-y-3 md:hidden">
+          {(summary?.entries || []).map((entry) => (
+            <div key={entry._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
+              <p className="text-base font-semibold text-[color:var(--text-strong)]">
+                {new Date(entry.date).toLocaleDateString("en-IN")}
+              </p>
+              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                Status: {entry.status}
+              </p>
+              <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                Shortage: Rs. {entry.shortage || 0}
+              </p>
+              <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                Advance: Rs. {Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)}
+              </p>
+              <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                Remark: {entry.remark || "-"}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

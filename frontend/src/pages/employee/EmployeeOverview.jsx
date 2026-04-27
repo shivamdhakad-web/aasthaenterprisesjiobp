@@ -63,7 +63,7 @@ export default function EmployeeOverview() {
       <div className="grid gap-4 xl:grid-cols-3">
         <section className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-5 xl:col-span-2">
           <p className="text-sm text-gray-400">Current Month Salary</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
             <MiniStat label="Present" value={salary?.breakdown?.present || 0} />
             <MiniStat label="Double Shift" value={salary?.breakdown?.double || 0} />
             <MiniStat label="Half Shift" value={salary?.breakdown?.half || 0} />

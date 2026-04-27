@@ -19,6 +19,27 @@ export default function EmployeeLubricants() {
   const [sales, setSales] = useState([])
   const [form, setForm] = useState(baseForm)
   const [editing, setEditing] = useState(null)
+  const [showMobileForm, setShowMobileForm] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+
+  const openForm = (sale = null) => {
+  if (sale) {
+    setEditing(sale)
+    setForm({
+      date: sale.date,
+      product: sale.product,
+      price: sale.price,
+      quantity: sale.quantity,
+    })
+  } else {
+    setEditing(null)
+    setForm(baseForm)
+  }
+
+  setShowMobileForm(true)
+  window.scrollTo({ top: 0, behavior: "smooth" })
+}
 
   const load = async () => {
     const [productData, salesData] = await Promise.all([getEmployeeProducts(), getMyLubricants()])
@@ -41,18 +62,21 @@ export default function EmployeeLubricants() {
   }
 
   const submit = async () => {
-    if (editing && !editing.canEdit) {
-      return
-    }
+    if (editing && !editing.canEdit) return
 
     if (editing) {
       await updateMyLubricant(editing._id, form)
+      setSuccessMessage("Sale Updated")
     } else {
       await addMyLubricant(form)
+      setSuccessMessage("Sale Submitted")
     }
+
+    setShowSuccessPopup(true)
 
     setForm(baseForm)
     setEditing(null)
+    setShowMobileForm(false)
     load()
   }
 
@@ -60,7 +84,11 @@ export default function EmployeeLubricants() {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
-      <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5">
+      <div
+  className={`rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5 ${
+    showMobileForm || editing ? "block" : "hidden sm:block"
+  }`}
+>
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">My Lubricant Sales</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
           Yahan sirf apni sales add ya edit kar sakte ho. Product master aur stock admin side se
@@ -135,15 +163,7 @@ export default function EmployeeLubricants() {
                   <td>Rs. {sale.total}</td>
                   <td>
                     <button
-                      onClick={() => {
-                        setEditing(sale)
-                        setForm({
-                          date: sale.date,
-                          product: sale.product,
-                          price: sale.price,
-                          quantity: sale.quantity,
-                        })
-                      }}
+                      onClick={() => openForm(sale)}
                       className="text-blue-500"
                     >
                       {sale.canEdit ? "Edit" : "View"}
@@ -192,14 +212,27 @@ export default function EmployeeLubricants() {
           {
             label: "New Sale",
             className: "bg-green-600",
-            onClick: () => {
-              setEditing(null)
-              setForm(baseForm)
-              window.scrollTo({ top: 0, behavior: "smooth" })
-            },
+            onClick: () => openForm()
           },
         ]}
       />
+
+      {showSuccessPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
+            <h2 className="text-xl font-semibold text-green-600">
+              {successMessage}
+            </h2>
+
+            <button
+              onClick={() => setShowSuccessPopup(false)}
+              className="mt-5 w-full bg-green-600 text-white py-2 rounded-xl"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

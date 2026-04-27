@@ -7,6 +7,11 @@ const policyRules = [
   { pattern: /^\/notifications(?:\/|$)/, methods: ["GET", "PUT"], roles: ["Admin", "Manager", "Employee"] },
 
   { pattern: /^\/salary\/summary(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager", "Employee"] },
+  { pattern: /^\/leaves\/[^/]+\/decision$/, methods: ["PUT"], roles: ["Admin"] },
+  { pattern: /^\/leaves(?:\/|$)/, methods: ["GET"], roles: ["Admin"] },
+  { pattern: /^\/shifts(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin", "Manager"] },
+  { pattern: /^\/tasks(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin", "Manager"] },
+  { pattern: /^\/storage(?:\/|$)/, methods: ["GET"], roles: ["Admin"] },
   { pattern: /^\/employee(?:\/|$)/, methods: ["GET", "POST", "PUT"], roles: ["Employee"] },
   { pattern: /^\/daily-reports(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
   { pattern: /^\/daily-reports(?:\/|$)/, methods: ["PUT"], roles: ["Admin"] },

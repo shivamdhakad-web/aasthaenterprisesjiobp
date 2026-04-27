@@ -13,6 +13,18 @@ const buildMonthRange = (month) => {
   }
 }
 
+const buildDayRange = (date) => {
+  const start = new Date(`${date}T00:00:00`)
+  const end = new Date(start)
+  end.setDate(end.getDate() + 1)
+
+  return {
+    start,
+    end,
+    dayKey: date,
+  }
+}
+
 exports.getSalarySummary = async (req, res) => {
   try {
     const employeeId = req.params.employeeId || req.user.employeeId
@@ -31,7 +43,9 @@ exports.getSalarySummary = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" })
     }
 
-    const { start, end, monthKey } = buildMonthRange(req.query.month)
+    const isDateMode = Boolean(req.query.date)
+    const range = isDateMode ? buildDayRange(req.query.date) : buildMonthRange(req.query.month)
+    const { start, end } = range
 
     const attendance = await EmployeeAttendance.find({
       employeeId,
@@ -72,7 +86,9 @@ exports.getSalarySummary = async (req, res) => {
         shift: employee.shift,
         salary: monthlySalary,
       },
-      month: monthKey,
+      month: isDateMode ? req.query.date?.slice?.(0, 7) : range.monthKey,
+      selectedDate: isDateMode ? range.dayKey : null,
+      scope: isDateMode ? "date" : "month",
       breakdown: {
         present,
         absent,

@@ -24,6 +24,11 @@ advancePetrol:{type:Number,default:0},
 
 remark:{type:String},
 
+leaveRequestId:{
+type:mongoose.Schema.Types.ObjectId,
+ref:"EmployeeLeave"
+},
+
 createdByRole:{
 type:String,
 default:"Admin"

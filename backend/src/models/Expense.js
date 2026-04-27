@@ -28,6 +28,27 @@ default:"Cash"
 
 addedBy:{
 type:String
+},
+
+employeeId:{
+type:mongoose.Schema.Types.ObjectId,
+ref:"Employee"
+},
+
+employeeName:{
+type:String
+},
+
+createdByRole:{
+type:String,
+enum:["Admin","Manager","Employee"],
+default:"Admin"
+},
+
+expenseSource:{
+type:String,
+enum:["station","employee"],
+default:"station"
 }
 
 },{

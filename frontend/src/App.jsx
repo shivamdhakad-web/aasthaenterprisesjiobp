@@ -21,14 +21,24 @@ import RoleRedirect from "./components/auth/RoleRedirect"
 import AdminOverview from "./pages/admin/AdminOverview"
 import ManagerOverview from "./pages/manager/ManagerOverview"
 import EmployeeOverview from "./pages/employee/EmployeeOverview"
+import EmployeeInfo from "./pages/employee/EmployeeInfo"
 import EmployeeAttendance from "./pages/employee/EmployeeAttendance"
+import EmployeeLeave from "./pages/employee/EmployeeLeave"
+import EmployeeShiftSchedule from "./pages/employee/EmployeeShiftSchedule"
+import EmployeeTasks from "./pages/employee/EmployeeTasks"
+import EmployeeExpenses from "./pages/employee/EmployeeExpenses"
 import EmployeeLubricants from "./pages/employee/EmployeeLubricants"
+import EmployeePerformance from "./pages/employee/EmployeePerformance"
 import EmployeeSalary from "./pages/employee/EmployeeSalary"
 import EmployeeDailyReport from "./pages/employee/EmployeeDailyReport"
 import ApprovalsPage from "./pages/shared/ApprovalsPage"
 import NotificationsPage from "./pages/shared/NotificationsPage"
 import DailyReportsPage from "./pages/shared/DailyReportsPage"
 import ApprovalWrappedPage from "./components/approvals/ApprovalWrappedPage"
+import LeaveManagementPage from "./pages/shared/LeaveManagementPage"
+import ShiftSchedulePage from "./pages/shared/ShiftSchedulePage"
+import TasksPage from "./pages/shared/TasksPage"
+import StorageOverview from "./pages/admin/StorageOverview"
 
 export default function App() {
   return (
@@ -47,10 +57,14 @@ export default function App() {
             <Route path="meter-readings" element={<MeterReadings />} />
             <Route path="tanker-deliveries" element={<TankerDeliveries />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="leaves" element={<LeaveManagementPage />} />
+            <Route path="shifts" element={<ShiftSchedulePage />} />
+            <Route path="tasks" element={<TasksPage />} />
             <Route path="credit-customers" element={<CreditCustomers />} />
             <Route path="expenses" element={<Expenses />} />
             <Route path="reminder" element={<ReminderBox />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="storage" element={<StorageOverview />} />
             <Route path="lubricants" element={<Lubricants />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
@@ -66,6 +80,8 @@ export default function App() {
             <Route path="approvals" element={<ApprovalsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="daily-reports" element={<DailyReportsPage />} />
+            <Route path="shifts" element={<ShiftSchedulePage />} />
+            <Route path="tasks" element={<TasksPage />} />
             <Route
               path="meter-readings"
               element={
@@ -172,8 +188,14 @@ export default function App() {
         <Route element={<ProtectedRoute roles={["Employee"]} />}>
           <Route path="/employee" element={<DashboardLayout />}>
             <Route index element={<EmployeeOverview />} />
+            <Route path="info" element={<EmployeeInfo />} />
             <Route path="attendance" element={<EmployeeAttendance />} />
+            <Route path="leaves" element={<EmployeeLeave />} />
+            <Route path="shifts" element={<EmployeeShiftSchedule />} />
+            <Route path="tasks" element={<EmployeeTasks />} />
+            <Route path="expenses" element={<EmployeeExpenses />} />
             <Route path="lubricants" element={<EmployeeLubricants />} />
+            <Route path="performance" element={<EmployeePerformance />} />
             <Route path="salary" element={<EmployeeSalary />} />
             <Route path="daily-report" element={<EmployeeDailyReport />} />
             <Route path="notifications" element={<NotificationsPage />} />
