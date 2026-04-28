@@ -5,6 +5,7 @@ export default function EmployeeSalary() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [selectedDate, setSelectedDate] = useState("")
   const [summary, setSummary] = useState(null)
+  const [showMonthPicker, setShowMonthPicker] = useState(false)
 
   const load = async ({ targetMonth = month, targetDate = selectedDate } = {}) => {
     const data = await getSalarySummary(
@@ -29,11 +30,17 @@ export default function EmployeeSalary() {
             </p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <button
+              onClick={() => setShowMonthPicker((current) => !current)}
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-[color:var(--text-primary)] sm:hidden"
+            >
+              {showMonthPicker ? "Hide Month Filter" : "Change Month"}
+            </button>
             <input
               type="month"
               value={month}
               onChange={(event) => setMonth(event.target.value)}
-              className="input w-full sm:w-[180px]"
+              className={`input w-full sm:w-[180px] ${showMonthPicker ? "block" : "hidden sm:block"}`}
             />
             <input
               type="date"

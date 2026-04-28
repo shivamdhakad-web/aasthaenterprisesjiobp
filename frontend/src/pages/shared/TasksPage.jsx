@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
-import MobileActionFab from "../../components/MobileActionFab"
-import { getEmployees } from "../../services/employeeApi"
-import { addTask, deleteTask, getTasks, updateTask } from "../../services/taskApi"
+import { useEffect, useMemo, useState } from "react";
+import MobileActionFab from "../../components/MobileActionFab";
+import { getEmployees } from "../../services/employeeApi";
+import { addTask, deleteTask, getTasks, updateTask } from "../../services/taskApi";
 
-const priorities = ["low", "medium", "high"]
-const statuses = ["pending", "in_progress", "completed"]
+const priorities = ["low", "medium", "high"];
+const statuses = ["pending", "in_progress", "completed"];
 
 const baseForm = {
   employeeId: "all",
@@ -15,149 +15,97 @@ const baseForm = {
   dueDate: "",
   priority: "medium",
   status: "pending",
-}
+};
 
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-")
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-");
 
 export default function TasksPage() {
-  const [employees, setEmployees] = useState([])
-  const [items, setItems] = useState([])
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
-  const [form, setForm] = useState(baseForm)
-  const [editing, setEditing] = useState(null)
+  const [employees, setEmployees] = useState([]);
+  const [items, setItems] = useState([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [form, setForm] = useState(baseForm);
+  const [editing, setEditing] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // State for custom confirmation dialog
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, message: "" });
 
   const load = async () => {
-    const [employeeData, taskData] = await Promise.all([
-      getEmployees(),
-      getTasks(),
-    ])
-
-    setEmployees(employeeData)
-    setItems(taskData)
-  }
+    const [employeeData, taskData] = await Promise.all([getEmployees(), getTasks()]);
+    setEmployees(employeeData);
+    setItems(taskData);
+  };
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
+
+  const openForm = (item = null) => {
+    if (item) {
+      setEditing(item);
+      setForm({
+        employeeId: item.employeeId?._id || item.employeeId,
+        title: item.title,
+        description: item.description || "",
+        instructions: item.instructions || "",
+        assignedDate: item.assignedDate?.slice?.(0, 10) || baseForm.assignedDate,
+        dueDate: item.dueDate?.slice?.(0, 10) || "",
+        priority: item.priority || "medium",
+        status: item.status || "pending",
+      });
+    } else {
+      setEditing(null);
+      setForm(baseForm);
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditing(null);
+    setForm(baseForm);
+  };
 
   const submit = async () => {
     if (editing) {
-      await updateTask(editing._id, form)
+      await updateTask(editing._id, form);
+      setConfirmDialog({ open: true, message: "Task updated successfully!" });
     } else {
-      await addTask(form)
+      await addTask(form);
+      setConfirmDialog({ open: true, message: "Task assigned successfully!" });
     }
-
-    setEditing(null)
-    setForm(baseForm)
-    load()
-  }
+    closeModal();
+    load();
+  };
 
   const filteredItems = useMemo(() => {
-    const term = search.toLowerCase()
-
+    const term = search.toLowerCase();
     return items.filter((item) => {
       const haystack = [item.employeeName || item.employeeId?.name, item.title, item.description, item.instructions]
         .join(" ")
-        .toLowerCase()
-
-      return haystack.includes(term) && (!statusFilter || item.status === statusFilter)
-    })
-  }, [items, search, statusFilter])
+        .toLowerCase();
+      return haystack.includes(term) && (!statusFilter || item.status === statusFilter);
+    });
+  }, [items, search, statusFilter]);
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
+      {/* Header Section */}
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Tasks / Work Assignments</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Daily assigned tasks, completed / pending status, aur manager instructions yahin manage
-          honge.
+          Daily assigned tasks, completed / pending status, aur manager instructions yahin manage honge.
         </p>
       </section>
 
-      <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <select
-            value={form.employeeId}
-            onChange={(event) => setForm({ ...form, employeeId: event.target.value })}
-            className="input"
-          >
-            <option value="all">All employees</option>
-            {employees.map((employee) => (
-              <option key={employee._id} value={employee._id}>
-                {employee.name}
-              </option>
-            ))}
-          </select>
-          <input
-            value={form.title}
-            onChange={(event) => setForm({ ...form, title: event.target.value })}
-            placeholder="Task title"
-            className="input"
-          />
-          <input
-            type="date"
-            value={form.assignedDate}
-            onChange={(event) => setForm({ ...form, assignedDate: event.target.value })}
-            className="input"
-          />
-          <input
-            type="date"
-            value={form.dueDate}
-            onChange={(event) => setForm({ ...form, dueDate: event.target.value })}
-            className="input"
-          />
-          <select
-            value={form.priority}
-            onChange={(event) => setForm({ ...form, priority: event.target.value })}
-            className="input"
-          >
-            {priorities.map((priority) => (
-              <option key={priority} value={priority}>
-                {priority}
-              </option>
-            ))}
-          </select>
-          <select
-            value={form.status}
-            onChange={(event) => setForm({ ...form, status: event.target.value })}
-            className="input"
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-          <button onClick={submit} className="btn btn-green w-full">
-            {editing ? "Update Task" : "Assign Task"}
-          </button>
-          <button
-            onClick={() => {
-              setEditing(null)
-              setForm(baseForm)
-            }}
-            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium text-[color:var(--text-primary)]"
-          >
-            Reset Form
-          </button>
-        </div>
-        <textarea
-          value={form.description}
-          onChange={(event) => setForm({ ...form, description: event.target.value })}
-          placeholder="Task description"
-          rows={3}
-          className="input mt-3"
-        />
-        <textarea
-          value={form.instructions}
-          onChange={(event) => setForm({ ...form, instructions: event.target.value })}
-          placeholder="Manager instructions"
-          rows={3}
-          className="input mt-3"
-        />
-      </section>
+      {/* Desktop Add Task Button */}
+      <div className="hidden sm:flex sm:justify-end">
+        <button onClick={() => openForm()} className="btn btn-green">
+          + New Task
+        </button>
+      </div>
 
+      {/* Search & Filter Section */}
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <input
@@ -180,6 +128,7 @@ export default function TasksPage() {
           </select>
         </div>
 
+        {/* Desktop Table */}
         <div className="hidden overflow-x-auto lg:block">
           <table className="table">
             <thead>
@@ -206,23 +155,7 @@ export default function TasksPage() {
                   <td>{item.instructions || "-"}</td>
                   <td>
                     <div className="flex items-center justify-center gap-3">
-                      <button
-                        onClick={() => {
-                          setEditing(item)
-                          setForm({
-                            employeeId: item.employeeId?._id || item.employeeId,
-                            title: item.title,
-                            description: item.description || "",
-                            instructions: item.instructions || "",
-                            assignedDate: item.assignedDate?.slice?.(0, 10) || baseForm.assignedDate,
-                            dueDate: item.dueDate?.slice?.(0, 10) || "",
-                            priority: item.priority || "medium",
-                            status: item.status || "pending",
-                          })
-                          window.scrollTo({ top: 0, behavior: "smooth" })
-                        }}
-                        className="text-blue-500"
-                      >
+                      <button onClick={() => openForm(item)} className="text-blue-500">
                         Edit
                       </button>
                       <button onClick={() => deleteTask(item._id).then(load)} className="text-red-500">
@@ -236,6 +169,7 @@ export default function TasksPage() {
           </table>
         </div>
 
+        {/* Mobile Cards */}
         <div className="space-y-3 lg:hidden">
           {filteredItems.map((item) => (
             <div key={item._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
@@ -259,20 +193,7 @@ export default function TasksPage() {
               </p>
               <div className="mt-4 flex gap-2">
                 <button
-                  onClick={() => {
-                    setEditing(item)
-                    setForm({
-                      employeeId: item.employeeId?._id || item.employeeId,
-                      title: item.title,
-                      description: item.description || "",
-                      instructions: item.instructions || "",
-                      assignedDate: item.assignedDate?.slice?.(0, 10) || baseForm.assignedDate,
-                      dueDate: item.dueDate?.slice?.(0, 10) || "",
-                      priority: item.priority || "medium",
-                      status: item.status || "pending",
-                    })
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }}
+                  onClick={() => openForm(item)}
                   className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
                 >
                   Edit
@@ -289,15 +210,134 @@ export default function TasksPage() {
         </div>
       </section>
 
+      {/* Modal for Task Form */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={closeModal}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 text-xl font-semibold text-[color:var(--text-strong)]">
+              {editing ? "Edit Task" : "Assign New Task"}
+            </h2>
+
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <select
+                  value={form.employeeId}
+                  onChange={(event) => setForm({ ...form, employeeId: event.target.value })}
+                  className="input"
+                >
+                  <option value="all">All employees</option>
+                  {employees.map((employee) => (
+                    <option key={employee._id} value={employee._id}>
+                      {employee.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={form.title}
+                  onChange={(event) => setForm({ ...form, title: event.target.value })}
+                  placeholder="Task title"
+                  className="input"
+                />
+                <input
+                  type="date"
+                  value={form.assignedDate}
+                  onChange={(event) => setForm({ ...form, assignedDate: event.target.value })}
+                  className="input"
+                />
+                <input
+                  type="date"
+                  value={form.dueDate}
+                  onChange={(event) => setForm({ ...form, dueDate: event.target.value })}
+                  className="input"
+                />
+                <select
+                  value={form.priority}
+                  onChange={(event) => setForm({ ...form, priority: event.target.value })}
+                  className="input"
+                >
+                  {priorities.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {priority}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={form.status}
+                  onChange={(event) => setForm({ ...form, status: event.target.value })}
+                  className="input"
+                >
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                value={form.description}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
+                placeholder="Task description"
+                rows={3}
+                className="input"
+              />
+              <textarea
+                value={form.instructions}
+                onChange={(event) => setForm({ ...form, instructions: event.target.value })}
+                placeholder="Manager instructions"
+                rows={3}
+                className="input"
+              />
+
+              <div className="flex gap-3 pt-4">
+                <button onClick={submit} className="btn btn-green flex-1">
+                  {editing ? "Update Task" : "Assign Task"}
+                </button>
+                <button onClick={closeModal} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Dialog (replaces alert) */}
+      {confirmDialog.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => setConfirmDialog({ open: false, message: "" })}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 text-center shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-6 text-lg text-[color:var(--text-strong)]">{confirmDialog.message}</p>
+            <button
+              onClick={() => setConfirmDialog({ open: false, message: "" })}
+              className="btn btn-green w-full"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile FAB */}
       <MobileActionFab
         actions={[
           {
-            label: editing ? "Edit Task" : "New Task",
+            label: "New Task",
             className: "bg-green-600",
-            onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }),
+            onClick: () => openForm(),
           },
         ]}
       />
     </div>
-  )
+  );
 }

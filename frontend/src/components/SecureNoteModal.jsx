@@ -1,184 +1,168 @@
-import { useState,useEffect } from "react"
-import { addNote,updateNote } from "../services/secureNoteApi"
+import { X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { addNote, updateNote } from "../services/secureNoteApi"
 
-export default function SecureNoteModal({open,onClose,onSave,editData}){
-
-const [form,setForm] = useState({
-title:"",
-website:"",
-username:"",
-password:"",
-note:"",
-color:""
-})
-
-useEffect(()=>{
-
-if(editData){
-
-setForm(editData)
-
+const initialForm = {
+  title: "",
+  website: "",
+  username: "",
+  password: "",
+  note: "",
+  color: "",
 }
 
-},[editData])
-
-
-if(!open) return null
-
-
-const handleChange = (e)=>{
-
-setForm({
-...form,
-[e.target.name]:e.target.value
-})
-
-}
-
-
-
-const handleSave = async()=>{
-
-// RANDOM NOTE COLOR
-
-const colors=[
-"bg-yellow-200",
-"bg-green-200",
-"bg-blue-200",
-"bg-purple-300",
-"bg-pink-300",
-"bg-orange-200"
+const colors = [
+  "bg-yellow-200",
+  "bg-green-200",
+  "bg-blue-200",
+  "bg-purple-300",
+  "bg-pink-300",
+  "bg-orange-200",
 ]
 
-const randomColor = colors[Math.floor(Math.random()*colors.length)]
+export default function SecureNoteModal({ open, onClose, onSave, editData }) {
+  const [form, setForm] = useState(initialForm)
+  const [saving, setSaving] = useState(false)
 
-const data={
-...form,
-color: randomColor
-}
+  useEffect(() => {
+    if (editData) {
+      setForm({
+        title: editData.title || "",
+        website: editData.website || "",
+        username: editData.username || "",
+        password: editData.password || "",
+        note: editData.note || "",
+        color: editData.color || "",
+      })
+      return
+    }
 
+    setForm(initialForm)
+  }, [editData, open])
 
-if(editData){
+  if (!open) {
+    return null
+  }
 
-await updateNote(editData._id,data)
+  const handleChange = (event) => {
+    setForm((current) => ({
+      ...current,
+      [event.target.name]: event.target.value,
+    }))
+  }
 
-}else{
+  const handleSave = async () => {
+    if (!form.title.trim()) {
+      window.alert("Title required hai")
+      return
+    }
 
-await addNote(data)
+    setSaving(true)
 
-}
+    try {
+      const payload = {
+        ...form,
+        color: editData?.color || form.color || colors[Math.floor(Math.random() * colors.length)],
+      }
 
+      if (editData) {
+        await updateNote(editData._id, payload)
+      } else {
+        await addNote(payload)
+      }
 
-onSave()
-onClose()
+      await onSave?.()
+      onClose?.()
+      setForm(initialForm)
+    } finally {
+      setSaving(false)
+    }
+  }
 
-setForm({
-title:"",
-website:"",
-username:"",
-password:"",
-note:"",
-color:""
-})
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+      <div className="mx-auto flex min-h-full max-w-2xl items-center justify-center">
+        <div className="w-full overflow-hidden rounded-[30px] border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-[0_28px_80px_rgba(15,23,42,0.24)]">
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] px-5 py-4 sm:px-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.32em] text-[color:var(--text-secondary)]">
+                Secure Vault
+              </p>
+              <h2 className="mt-2 text-xl font-semibold text-[color:var(--text-strong)]">
+                {editData ? "Edit Secure Note" : "Add Secure Note"}
+              </h2>
+            </div>
 
-}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3 text-[color:var(--text-secondary)]"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
+          <div className="max-h-[calc(100vh-170px)] overflow-y-auto px-5 py-5 sm:px-6">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input
+                name="title"
+                placeholder="Title"
+                value={form.title}
+                onChange={handleChange}
+                className="input"
+              />
+              <input
+                name="website"
+                placeholder="Website"
+                value={form.website}
+                onChange={handleChange}
+                className="input"
+              />
+              <input
+                name="username"
+                placeholder="Username"
+                value={form.username}
+                onChange={handleChange}
+                className="input"
+              />
+              <input
+                name="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+                className="input"
+              />
+            </div>
 
+            <textarea
+              name="note"
+              placeholder="Private note"
+              value={form.note}
+              onChange={handleChange}
+              rows={6}
+              className="input mt-3"
+            />
+          </div>
 
-return(
-
-<div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-
-
-<div className="bg-[#0B0F17] p-6 rounded-xl w-[420px] text-white">
-
-<h2 className="text-lg font-semibold mb-4">
-
-{editData ? "Edit Secure Note" : "Add Secure Note"}
-
-</h2>
-
-
-<div className="flex flex-col gap-3">
-
-<input
-name="title"
-placeholder="Title"
-value={form.title}
-onChange={handleChange}
-className="border border-gray-600 bg-transparent p-2 rounded"
-/>
-
-
-<input
-name="website"
-placeholder="Website"
-value={form.website}
-onChange={handleChange}
-className="border border-gray-600 bg-transparent p-2 rounded"
-/>
-
-
-<input
-name="username"
-placeholder="Username"
-value={form.username}
-onChange={handleChange}
-className="border border-gray-600 bg-transparent p-2 rounded"
-/>
-
-
-<input
-name="password"
-placeholder="Password"
-value={form.password}
-onChange={handleChange}
-className="border border-gray-600 bg-transparent p-2 rounded"
-/>
-
-
-<textarea
-name="note"
-placeholder="Note"
-value={form.note}
-onChange={handleChange}
-className="border border-gray-600 bg-transparent p-2 rounded"
-/>
-
-</div>
-
-
-
-<div className="flex justify-end gap-3 mt-5">
-
-<button
-onClick={onClose}
-className="px-4 py-2 bg-gray-600 rounded"
->
-
-Cancel
-
-</button>
-
-
-<button
-onClick={handleSave}
-className="px-4 py-2 bg-green-500 rounded"
->
-
-Save
-
-</button>
-
-
-</div>
-
-
-</div>
-
-
-</div>
-
-)
-
+          <div className="flex flex-col-reverse gap-3 border-t border-[var(--border-color)] px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="btn btn-green w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {saving ? "Saving..." : editData ? "Update Note" : "Save Note"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

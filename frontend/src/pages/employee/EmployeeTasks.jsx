@@ -43,11 +43,19 @@ export default function EmployeeTasks() {
   )
 
   const saveTask = async (taskId) => {
+    const confirmed = window.confirm("Task update save karni hai?")
+    if (!confirmed) {
+      return
+    }
+
     await updateMyTaskStatus(taskId, {
       status: statuses[taskId],
       employeeNote: notes[taskId],
     })
-    load()
+
+    window.alert("Task update save ho gayi hai")
+    await load()
+    setNotes((current) => ({ ...current, [taskId]: "" }))
   }
 
   return (
@@ -62,7 +70,7 @@ export default function EmployeeTasks() {
         </p>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <TaskCountCard label="Total Tasks" value={counts.total} />
         <TaskCountCard label="Pending" value={counts.pending} />
         <TaskCountCard label="In Progress" value={counts.inProgress} />
@@ -79,7 +87,10 @@ export default function EmployeeTasks() {
 
         <div className="space-y-4">
           {tasks.map((task) => (
-            <div key={task._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
+            <div
+              key={task._id}
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4"
+            >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <p className="text-lg font-semibold text-[color:var(--text-strong)]">

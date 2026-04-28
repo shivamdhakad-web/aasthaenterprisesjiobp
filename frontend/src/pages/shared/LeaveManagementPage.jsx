@@ -77,7 +77,7 @@ export default function LeaveManagementPage() {
         </p>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <SummaryCard label="Total Requests" value={totals.total} />
         <SummaryCard label="Pending" value={totals.pending} />
         <SummaryCard label="Approved" value={totals.approved} />

@@ -1,120 +1,110 @@
-import { useEffect, useState } from "react"
-import MobileActionFab from "../../components/MobileActionFab"
+import { useEffect, useState } from "react";
+import MobileActionFab from "../../components/MobileActionFab";
 import {
   addMyAttendance,
   getMyAttendance,
   updateMyAttendance,
-} from "../../services/employeeSelfApi"
+} from "../../services/employeeSelfApi";
 
 const initialForm = {
   date: new Date().toISOString().slice(0, 10),
   status: "present",
   remark: "",
-}
+};
+
+const getDateKey = (value) => new Date(value).toISOString().slice(0, 10);
 
 export default function EmployeeAttendance() {
-  const [entries, setEntries] = useState([])
-  const [form, setForm] = useState(initialForm)
-  const [editing, setEditing] = useState(null)
-  const [showMobileForm, setShowMobileForm] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+  const [entries, setEntries] = useState([]);
+  const [form, setForm] = useState(initialForm);
+  const [editing, setEditing] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, message: "" });
 
   const load = async () => {
-    const data = await getMyAttendance()
-    setEntries(data)
-  }
+    const data = await getMyAttendance();
+    setEntries(data);
+  };
 
   useEffect(() => {
-    load()
-  }, [])
+    load();
+  }, []);
 
   const openForm = (entry = null) => {
     if (entry) {
-      setEditing(entry)
+      setEditing(entry);
       setForm({
         date: new Date(entry.date).toISOString().slice(0, 10),
         status: entry.status,
         remark: entry.remark || "",
-      })
+      });
     } else {
-      setEditing(null)
-      setForm(initialForm)
+      setEditing(null);
+      setForm(initialForm);
     }
+    setIsModalOpen(true);
+  };
 
-    setShowMobileForm(true)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditing(null);
+    setForm(initialForm);
+  };
 
   const submit = async () => {
-    if (editing && !editing.canEdit) return
-
-    if (editing) {
-      await updateMyAttendance(editing._id, form)
-      setSuccessMessage("Updated Successfully")
-      setShowSuccessPopup(true)
-    } else {
-      await addMyAttendance(form)
-      setSuccessMessage("Submitted Successfully")
-      setShowSuccessPopup(true)
+    if (editing && !editing.canEdit) {
+      setConfirmDialog({ open: true, message: "You cannot edit this attendance entry." });
+      return;
     }
 
-    setForm(initialForm)
-    setEditing(null)
-    setShowMobileForm(false)
-    load()
-  }
+    const duplicateEntry = entries.find(
+      (entry) => getDateKey(entry.date) === form.date && (!editing || entry._id !== editing._id)
+    );
 
-  const readOnlyMode = Boolean(editing && !editing.canEdit)
+    if (duplicateEntry) {
+      setConfirmDialog({ open: true, message: "Attendance for this date already exists!" });
+      return;
+    }
+
+    try {
+      if (editing) {
+        await updateMyAttendance(editing._id, form);
+        setConfirmDialog({ open: true, message: "Attendance has been updated" });
+      } else {
+        await addMyAttendance(form);
+        setConfirmDialog({ open: true, message: "Attendance has been submitted" });
+      }
+
+      closeModal();
+      load();
+    } catch (error) {
+      setConfirmDialog({
+        open: true,
+        message: error?.response?.data?.message || "Attendance could not be saved",
+      });
+    }
+  };
+
+  const readOnlyMode = Boolean(editing && !editing.canEdit);
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
-      <div
-        className={`rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5 ${
-          showMobileForm || editing ? "block" : "hidden sm:block"
-        }`}
-      >
+      {/* Header Section */}
+      <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">My Attendance</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
           Current month ke entries yahin se mark ya update kar sakte ho.
         </p>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <input
-            type="date"
-            value={form.date}
-            disabled={readOnlyMode}
-            onChange={(event) => setForm({ ...form, date: event.target.value })}
-            className="input"
-          />
-          <select
-            value={form.status}
-            disabled={readOnlyMode}
-            onChange={(event) => setForm({ ...form, status: event.target.value })}
-            className="input"
-          >
-            <option value="present">Present</option>
-            <option value="absent">Absent</option>
-            <option value="double">Double Shift</option>
-            <option value="half">Half Shift</option>
-          </select>
-          <input
-            value={form.remark}
-            disabled={readOnlyMode}
-            onChange={(event) => setForm({ ...form, remark: event.target.value })}
-            placeholder="Remark"
-            className="input"
-          />
-          <button
-            onClick={submit}
-            disabled={readOnlyMode}
-            className="btn btn-green w-full disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {editing ? (readOnlyMode ? "View Only" : "Update Entry") : "Save Entry"}
-          </button>
-        </div>
       </div>
 
+      {/* Desktop Add Button */}
+      <div className="hidden sm:flex sm:justify-end">
+        <button onClick={() => openForm()} className="btn btn-green">
+          + New Entry
+        </button>
+      </div>
+
+      {/* Attendance List Table */}
       <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4">
         <div className="hidden overflow-x-auto md:block">
           <table className="table">
@@ -145,10 +135,7 @@ export default function EmployeeAttendance() {
 
         <div className="space-y-3 md:hidden">
           {entries.map((entry) => (
-            <div
-              key={entry._id}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4"
-            >
+            <div key={entry._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
               <p className="text-sm text-[color:var(--text-secondary)]">
                 {new Date(entry.date).toLocaleDateString()}
               </p>
@@ -169,6 +156,87 @@ export default function EmployeeAttendance() {
         </div>
       </div>
 
+      {/* Modal for Attendance Form */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={closeModal}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 text-xl font-semibold text-[color:var(--text-strong)]">
+              {editing ? (readOnlyMode ? "View Attendance" : "Edit Attendance") : "Add Attendance"}
+            </h2>
+
+            <div className="space-y-4">
+              <input
+                type="date"
+                value={form.date}
+                disabled={readOnlyMode}
+                onChange={(event) => setForm({ ...form, date: event.target.value })}
+                className="input"
+              />
+              <select
+                value={form.status}
+                disabled={readOnlyMode}
+                onChange={(event) => setForm({ ...form, status: event.target.value })}
+                className="input"
+              >
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="double">Double Shift</option>
+                <option value="half">Half Shift</option>
+              </select>
+              <input
+                value={form.remark}
+                disabled={readOnlyMode}
+                onChange={(event) => setForm({ ...form, remark: event.target.value })}
+                placeholder="Remark"
+                className="input"
+              />
+
+              <div className="flex gap-3 pt-4">
+                {!readOnlyMode && (
+                  <button onClick={submit} className="btn btn-green flex-1">
+                    {editing ? "Update Entry" : "Save Entry"}
+                  </button>
+                )}
+                <button
+                  onClick={closeModal}
+                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium"
+                >
+                  {readOnlyMode ? "Close" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Dialog */}
+      {confirmDialog.open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => setConfirmDialog({ open: false, message: "" })}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 text-center shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-6 text-lg text-[color:var(--text-strong)]">{confirmDialog.message}</p>
+            <button
+              onClick={() => setConfirmDialog({ open: false, message: "" })}
+              className="btn btn-green w-full"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile FAB */}
       <MobileActionFab
         actions={[
           {
@@ -178,23 +246,6 @@ export default function EmployeeAttendance() {
           },
         ]}
       />
-
-      {showSuccessPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-sm text-center shadow-xl">
-            <h2 className="text-xl font-semibold text-green-600">
-              {successMessage}
-            </h2>
-
-            <button
-              onClick={() => setShowSuccessPopup(false)}
-              className="mt-5 w-full bg-green-600 text-white py-2 rounded-xl"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
     </div>
-  )
+  );
 }

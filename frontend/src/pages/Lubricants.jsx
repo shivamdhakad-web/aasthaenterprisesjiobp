@@ -32,6 +32,7 @@ export default function Lubricants() {
   const [reportProduct, setReportProduct] = useState("")
   const [format, setFormat] = useState("pdf")
   const [openCard, setOpenCard] = useState(null)
+  const [openProductCard, setOpenProductCard] = useState(null)
   const [showFilter, setShowFilter] = useState(false)
 
   const [form, setForm] = useState({
@@ -438,6 +439,9 @@ export default function Lubricants() {
           {products.map((product) => (
             <div
               key={product._id}
+              onClick={() =>
+                setOpenProductCard((current) => (current === product._id ? null : product._id))
+              }
               className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)]"
             >
               <div className="flex items-start justify-between gap-3">
@@ -459,12 +463,17 @@ export default function Lubricants() {
                 </div>
               </div>
 
-              <button
-                onClick={() => removeProduct(product._id)}
-                className="mt-4 w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-              >
-                Delete
-              </button>
+              {openProductCard === product._id ? (
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    removeProduct(product._id)
+                  }}
+                  className="mt-4 w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                >
+                  Delete
+                </button>
+              ) : null}
             </div>
           ))}
         </div>
