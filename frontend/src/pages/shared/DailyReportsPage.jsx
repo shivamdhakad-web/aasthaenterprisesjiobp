@@ -85,8 +85,7 @@ export default function DailyReportsPage() {
           <div>
             <h1 className="text-2xl font-semibold text-white">Employee Daily Reports</h1>
             <p className="mt-2 text-sm text-gray-400">
-              Employee shift sheets yahan employee-wise milengi. PDF export ko bhi 2-page compact
-              format me tighter kiya gaya hai.
+              Employee shift sheets are available here employee-wise. PDF exports are also available in a compact 2-page format.
             </p>
           </div>
 

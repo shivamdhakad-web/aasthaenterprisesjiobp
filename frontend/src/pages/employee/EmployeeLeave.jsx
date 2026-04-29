@@ -60,7 +60,7 @@ export default function EmployeeLeave() {
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Leave Management</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Leave apply yahin se karo. Admin approval ke baad attendance me us date par automatic absent mark ho jayega.
+Apply for leave from here. After admin approval, that date will automatically be marked absent in the attendance sheet. 
         </p>
       </section>
 

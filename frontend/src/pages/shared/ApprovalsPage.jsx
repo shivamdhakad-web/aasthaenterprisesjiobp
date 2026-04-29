@@ -52,8 +52,7 @@ export default function ApprovalsPage() {
           {user?.role === "Admin" ? "Approval Center" : "My Approval History"}
         </h1>
         <p className="mt-2 text-sm text-gray-400">
-          Last 7 days ki requests date-wise yahin milengi. Old approval records backend se auto
-          cleanup ho rahe hain.
+          Requests from the last 7 days will be displayed here, date-wise. Old approval records are being automatically cleaned up from the backend.
         </p>
       </div>
 

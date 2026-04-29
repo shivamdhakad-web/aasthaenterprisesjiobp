@@ -1,37 +1,39 @@
-import { useEffect, useState } from "react"
-import { useAuth } from "../../contexts/AuthContext"
-import { getEmployeeChoices } from "../../services/authApi"
+import { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { getEmployeeChoices } from "../../services/authApi";
 import {
   getNotifications,
   markNotificationRead,
   sendNotification,
-} from "../../services/notificationApi"
+} from "../../services/notificationApi";
+import MobileActionFab from "../../components/MobileActionFab"; // FAB component
 
 const defaultForm = {
   title: "",
   message: "",
   mode: "manager",
   selectedEmployees: [],
-}
+};
 
 export default function NotificationsPage() {
-  const { user } = useAuth()
-  const [notifications, setNotifications] = useState([])
-  const [employees, setEmployees] = useState([])
-  const [form, setForm] = useState(defaultForm)
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [form, setForm] = useState(defaultForm);
+  const [isModalOpen, setIsModalOpen] = useState(false); // modal state (mobile only)
 
   const load = async () => {
-    const data = await getNotifications()
-    setNotifications(data)
-  }
+    const data = await getNotifications();
+    setNotifications(data);
+  };
 
   useEffect(() => {
-    load()
+    load();
 
     if (user?.role === "Admin") {
-      getEmployeeChoices().then(setEmployees).catch(() => setEmployees([]))
+      getEmployeeChoices().then(setEmployees).catch(() => setEmployees([]));
     }
-  }, [user?.role])
+  }, [user?.role]);
 
   const handleSend = async () => {
     const payload = {
@@ -46,15 +48,76 @@ export default function NotificationsPage() {
               ? ["Manager", "Employee"]
               : [],
       targetEmployeeIds: form.mode === "selected" ? form.selectedEmployees : [],
-    }
+    };
 
-    await sendNotification(payload)
-    setForm(defaultForm)
-    load()
-  }
+    await sendNotification(payload);
+    setForm(defaultForm);
+    await load();
+  };
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const handleModalSubmit = async () => {
+    await handleSend();
+    closeModal();
+  };
+
+  // Shared form fields (used in both desktop box and mobile modal)
+  const renderFormFields = () => (
+    <>
+      <div className="grid gap-3 md:grid-cols-2">
+        <input
+          value={form.title}
+          onChange={(event) => setForm({ ...form, title: event.target.value })}
+          placeholder="Title"
+          className="input"
+        />
+        <select
+          value={form.mode}
+          onChange={(event) => setForm({ ...form, mode: event.target.value })}
+          className="input"
+        >
+          <option value="manager">Manager</option>
+          <option value="employees">All Employees</option>
+          <option value="selected">Selected Employees</option>
+          <option value="everyone">Everyone</option>
+        </select>
+      </div>
+      <textarea
+        value={form.message}
+        onChange={(event) => setForm({ ...form, message: event.target.value })}
+        placeholder="Message"
+        className="input mt-3 min-h-[120px]"
+      />
+
+      {form.mode === "selected" && (
+        <select
+          multiple
+          value={form.selectedEmployees}
+          onChange={(event) =>
+            setForm({
+              ...form,
+              selectedEmployees: Array.from(event.target.selectedOptions).map(
+                (item) => item.value
+              ),
+            })
+          }
+          className="input mt-3 min-h-[120px]"
+        >
+          {employees.map((employee) => (
+            <option key={employee._id} value={employee._id}>
+              {employee.name}
+            </option>
+          ))}
+        </select>
+      )}
+    </>
+  );
 
   return (
     <div className="space-y-6 p-6">
+      {/* Header */}
       <div className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-5">
         <h1 className="text-2xl font-semibold text-white">Notifications</h1>
         <p className="mt-2 text-sm text-gray-400">
@@ -64,60 +127,23 @@ export default function NotificationsPage() {
         </p>
       </div>
 
-      {user?.role === "Admin" ? (
-        <div className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-5">
+      {/* Send Notification Box – visible only on desktop (md and up) */}
+      {user?.role === "Admin" && (
+        <div className="hidden rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-5 md:block">
           <h2 className="text-lg font-semibold text-white">Send New Notification</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <input
-              value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value })}
-              placeholder="Title"
-              className="input"
-            />
-            <select
-              value={form.mode}
-              onChange={(event) => setForm({ ...form, mode: event.target.value })}
-              className="input"
+          <div className="mt-4">{renderFormFields()}</div>
+          <div className="flex justify-end">
+            <button
+              onClick={handleSend}
+              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white"
             >
-              <option value="manager">Manager</option>
-              <option value="employees">All Employees</option>
-              <option value="selected">Selected Employees</option>
-              <option value="everyone">Everyone</option>
-            </select>
+              Send Notification
+            </button>
           </div>
-          <textarea
-            value={form.message}
-            onChange={(event) => setForm({ ...form, message: event.target.value })}
-            placeholder="Message"
-            className="input mt-3 min-h-[120px]"
-          />
-
-          {form.mode === "selected" ? (
-            <select
-              multiple
-              value={form.selectedEmployees}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  selectedEmployees: Array.from(event.target.selectedOptions).map((item) => item.value),
-                })
-              }
-              className="input mt-3 min-h-[120px]"
-            >
-              {employees.map((employee) => (
-                <option key={employee._id} value={employee._id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-          ) : null}
-
-          <button onClick={handleSend} className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white">
-            Send Notification
-          </button>
         </div>
-      ) : null}
+      )}
 
+      {/* Notifications List */}
       <div className="grid gap-4">
         {notifications.map((item) => (
           <div key={item._id} className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-5">
@@ -140,13 +166,13 @@ export default function NotificationsPage() {
                   {new Date(item.createdAt).toLocaleString()}
                 </p>
 
-                {user?.role === "Admin" ? (
+                {user?.role === "Admin" && (
                   <p className="mt-2 text-xs text-gray-500">
                     Remaining unread: {item.unreadCount ?? 0}
                   </p>
-                ) : null}
+                )}
 
-                {user?.role === "Admin" && item.readBy?.length ? (
+                {user?.role === "Admin" && item.readBy?.length && (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {item.readBy.map((reader) => (
                       <span
@@ -157,24 +183,68 @@ export default function NotificationsPage() {
                       </span>
                     ))}
                   </div>
-                ) : null}
+                )}
               </div>
 
-              {user?.role !== "Admin" && !item.isRead ? (
+              {user?.role !== "Admin" && !item.isRead && (
                 <button
                   onClick={async () => {
-                    await markNotificationRead(item._id)
-                    load()
+                    await markNotificationRead(item._id);
+                    load();
                   }}
                   className="rounded-lg bg-green-600 px-4 py-2 text-white"
                 >
                   Mark Read
                 </button>
-              ) : null}
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Mobile FAB – only visible on small screens */}
+      {user?.role === "Admin" && (
+        <MobileActionFab
+          actions={[
+            {
+              label: "New Notification",
+              className: "bg-red-600",
+              onClick: openModal,
+            },
+          ]}
+        />
+      )}
+
+      {/* Mobile Modal (Send Notification) */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={closeModal}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 text-xl font-semibold text-white">Send New Notification</h2>
+            <div className="space-y-4">{renderFormFields()}</div>
+            <div className="mt-6 flex gap-3">
+              
+              <button
+                onClick={closeModal}
+                className="rounded-lg border border-[#1F2937] bg-[#04060B] px-4 py-2 text-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleModalSubmit}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-white"
+              >
+                Send Notification
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

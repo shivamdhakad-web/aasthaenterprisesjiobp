@@ -93,7 +93,7 @@ export default function EmployeeAttendance() {
       <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">My Attendance</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Current month ke entries yahin se mark ya update kar sakte ho.
+          You can mark or update the current month's entries from here.
         </p>
       </div>
 
@@ -132,28 +132,35 @@ export default function EmployeeAttendance() {
             </tbody>
           </table>
         </div>
+              <div className="space-y-3 md:hidden">
+  {entries.map((entry) => (
+    <div
+      key={entry._id}
+      className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 flex justify-between items-center"
+    >
+      {/* Left side content */}
+      <div className="flex-1">
+        <p className="text-sm text-[color:var(--text-secondary)]">
+          {new Date(entry.date).toLocaleDateString()}
+        </p>
+        <p className="mt-2 text-lg font-medium capitalize text-[color:var(--text-strong)]">
+          {entry.status}
+        </p>
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+          {entry.remark || "No remark"}
+        </p>
+      </div>
 
-        <div className="space-y-3 md:hidden">
-          {entries.map((entry) => (
-            <div key={entry._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
-              <p className="text-sm text-[color:var(--text-secondary)]">
-                {new Date(entry.date).toLocaleDateString()}
-              </p>
-              <p className="mt-2 text-lg font-medium capitalize text-[color:var(--text-strong)]">
-                {entry.status}
-              </p>
-              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                {entry.remark || "No remark"}
-              </p>
-              <button
-                onClick={() => openForm(entry)}
-                className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
-              >
-                {entry.canEdit ? "Edit entry" : "View entry"}
-              </button>
-            </div>
-          ))}
-        </div>
+      {/* Right side button - vertically centered */}
+      <button
+        onClick={() => openForm(entry)}
+        className="ml-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
+      >
+        {entry.canEdit ? "Edit entry" : "View entry"}
+      </button>
+    </div>
+  ))}
+</div>
       </div>
 
       {/* Modal for Attendance Form */}
@@ -198,17 +205,18 @@ export default function EmployeeAttendance() {
               />
 
               <div className="flex gap-3 pt-4">
-                {!readOnlyMode && (
-                  <button onClick={submit} className="btn btn-green flex-1">
-                    {editing ? "Update Entry" : "Save Entry"}
-                  </button>
-                )}
+ 
                 <button
                   onClick={closeModal}
                   className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium"
                 >
                   {readOnlyMode ? "Close" : "Cancel"}
                 </button>
+                               {!readOnlyMode && (
+                  <button onClick={submit} className="btn btn-green flex-1">
+                    {editing ? "Update Entry" : "Save Entry"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

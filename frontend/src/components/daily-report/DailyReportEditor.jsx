@@ -556,12 +556,12 @@ export default function DailyReportEditor({
         </AccordionSection>
       </div>
 
-      <div className="sticky bottom-0 z-10 -mx-3 border-t border-[#1F2937] bg-[#04060B]/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+      <div className="sticky bottom-0 z-10 -mx-3 border-t border-[#1F2937] bg-white px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:justify-end sm:gap-3">
           {onExportPdf ? (
             <button
               onClick={onExportPdf}
-              className="w-full rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-200 sm:w-auto"
+              className="w-full rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-500 sm:w-auto"
             >
               Export PDF
             </button>

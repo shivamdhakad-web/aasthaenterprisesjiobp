@@ -66,26 +66,28 @@ export default function MeterReadings() {
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
       <h1 className="mb-4 text-3xl font-bold text-[color:var(--text-strong)]">Meter Readings</h1>
 
-      <div className="mb-5 grid gap-4 sm:grid-cols-3">
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Total Readings</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {filteredData.length}
-          </p>
-        </div>
+<div className="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+  <div className="card">
+    <p className="text-sm text-[color:var(--text-secondary)]">Total Readings</p>
+    <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+      {filteredData.length}
+    </p>
+  </div>
 
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Fuel Sold</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {totalFuelSold.toFixed(1)} L
-          </p>
-        </div>
+  {/* Shifts Covered – mobile par right side aayega (due to grid-cols-2), desktop par original order mein */}
+  <div className="card">
+    <p className="text-sm text-[color:var(--text-secondary)]">Shifts Covered</p>
+    <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">{shiftCount}</p>
+  </div>
 
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Shifts Covered</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">{shiftCount}</p>
-        </div>
-      </div>
+  {/* Fuel Sold – mobile par poora width le lega (col-span-2), desktop par normal column */}
+  <div className="col-span-2 sm:col-span-1 card">
+    <p className="text-sm text-[color:var(--text-secondary)]">Fuel Sold</p>
+    <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+      {totalFuelSold.toFixed(1)} L
+    </p>
+  </div>
+</div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <input

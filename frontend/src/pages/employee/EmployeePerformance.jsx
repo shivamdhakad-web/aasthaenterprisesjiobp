@@ -32,8 +32,7 @@ export default function EmployeePerformance() {
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Performance</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Lubricant sales aur employee expenses ka month-wise aur week-wise performance yahan se
-          track hota hai.
+          Month-wise and week-wise performance of lubricant sales and employee expenses is tracked here.
         </p>
       </section>
 

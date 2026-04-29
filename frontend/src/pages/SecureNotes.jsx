@@ -109,10 +109,6 @@ export default function SecureNotes() {
           <h1 className="text-center text-2xl font-semibold text-[color:var(--text-strong)]">
             Secure Notes Vault
           </h1>
-          <p className="mt-3 text-center text-sm leading-6 text-[color:var(--text-secondary)]">
-            Aaj ki date password se vault unlock karo. Format auto daily password pattern par based
-            hai.
-          </p>
 
           <div className="mt-6 space-y-3">
             <input

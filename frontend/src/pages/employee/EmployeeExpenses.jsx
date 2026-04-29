@@ -90,7 +90,7 @@ export default function EmployeeExpenses() {
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">My Expenses</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Employee side se jo expense add karoge woh admin expense page me bhi automatic show hoga.
+          The expense you add from the employee side will automatically be shown in the admin expense page also.
         </p>
       </section>
 
@@ -134,35 +134,35 @@ export default function EmployeeExpenses() {
           </table>
         </div>
 
-        <div className="space-y-3 md:hidden">
-          {items.map((item) => (
-            <div
-              key={item._id}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-[color:var(--text-strong)]">
-                    {formatCurrency(item.amount)}
-                  </p>
-                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-                    {item.date} • {item.category}
-                  </p>
-                </div>
-                <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-1 text-xs text-[color:var(--text-secondary)]">
-                  {item.paymentMode}
-                </span>
-              </div>
-              <p className="mt-3 text-sm text-[color:var(--text-primary)]">{item.description || "-"}</p>
-              <button
-                onClick={() => openForm(item)}
-                className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
-              >
-                {item.canEdit ? "Edit expense" : "View expense"}
-              </button>
-            </div>
-          ))}
-        </div>
+<div className="space-y-3 md:hidden">
+  {items.map((item) => (
+    <div
+      key={item._id}
+      className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 flex justify-between items-center"
+    >
+      {/* Left side: amount, date, category, description */}
+      <div className="flex-1">
+        <p className="text-lg font-semibold text-[color:var(--text-strong)]">
+          {formatCurrency(item.amount)}
+        </p>
+        <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+          {item.date} • {item.category}
+        </p>
+        <p className="mt-3 text-sm text-[color:var(--text-primary)]">
+          {item.description || "-"}
+        </p>
+      </div>
+
+      {/* Right side button - vertically centered */}
+      <button
+        onClick={() => openForm(item)}
+        className="ml-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
+      >
+        {item.canEdit ? "Edit expense" : "View expense"}
+      </button>
+    </div>
+  ))}
+</div>
       </section>
 
       {/* Modal for Expense Form */}
@@ -227,17 +227,18 @@ export default function EmployeeExpenses() {
               </select>
 
               <div className="flex gap-3 pt-4">
-                {!readOnlyMode && (
-                  <button onClick={submit} className="btn btn-green flex-1">
-                    {editing ? "Update Expense" : "Add Expense"}
-                  </button>
-                )}
+                
                 <button
                   onClick={closeModal}
                   className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium"
                 >
                   {readOnlyMode ? "Close" : "Cancel"}
                 </button>
+                {!readOnlyMode && (
+                  <button onClick={submit} className="btn btn-green flex-1">
+                    {editing ? "Update Expense" : "Add Expense"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

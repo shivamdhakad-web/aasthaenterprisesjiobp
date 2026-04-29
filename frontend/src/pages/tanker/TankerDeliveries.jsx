@@ -25,7 +25,7 @@ export default function TankerDeliveries() {
   const [dateFilter, setDateFilter] = useState("")
   const [open, setOpen] = useState(false)
   const [edit, setEdit] = useState(null)
-  const [densityOpen, setDensityOpen] = useState(false)
+  // const [densityOpen, setDensityOpen] = useState(false)
   const [openCard, setOpenCard] = useState(null)
 
   useEffect(() => {
@@ -79,29 +79,31 @@ export default function TankerDeliveries() {
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
       <h1 className="mb-1 text-3xl font-bold text-[color:var(--text-strong)]">Tanker Deliveries</h1>
       <p className="mb-5 text-sm text-[color:var(--text-secondary)]">
-        Record and track every incoming delivery with clean desktop and mobile views.
+        Record and track every incoming delivery.
       </p>
 
-      <div className="mb-5 grid gap-4 sm:grid-cols-3">
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Total Deliveries</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {filteredData.length}
-          </p>
-        </div>
+<div className="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+  <div className="card">
+    <p className="text-sm text-[color:var(--text-secondary)]">Total Deliveries</p>
+    <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+      {filteredData.length}
+    </p>
+  </div>
 
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Total Quantity</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {totalLiters.toFixed(0)} L
-          </p>
-        </div>
+  {/* Suppliers – mobile par right side aayega (grid-cols-2 ke dusre column mein) */}
+  <div className="card">
+    <p className="text-sm text-[color:var(--text-secondary)]">Suppliers</p>
+    <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">{suppliers}</p>
+  </div>
 
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Suppliers</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">{suppliers}</p>
-        </div>
-      </div>
+  {/* Total Quantity – mobile par poora width lega (col-span-2), desktop par normal column */}
+  <div className="col-span-2 sm:col-span-1 card">
+    <p className="text-sm text-[color:var(--text-secondary)]">Total Quantity</p>
+    <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
+      {totalLiters.toFixed(0)} L
+    </p>
+  </div>
+</div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         <input
@@ -111,12 +113,12 @@ export default function TankerDeliveries() {
           className="input w-full sm:max-w-[420px]"
         />
 
-        <button
+        {/* <button
           onClick={() => setDensityOpen(true)}
           className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] shadow-sm sm:inline-flex"
         >
           Density Calc
-        </button>
+        </button> */}
 
         <button
           onClick={() => {
@@ -289,7 +291,7 @@ export default function TankerDeliveries() {
         />
       ) : null}
 
-      {densityOpen ? <DensityModal close={() => setDensityOpen(false)} /> : null}
+      {/* {densityOpen ? <DensityModal close={() => setDensityOpen(false)} /> : null} */}
 
       <MobileActionFab
         actions={[
@@ -301,11 +303,11 @@ export default function TankerDeliveries() {
               setOpen(true)
             },
           },
-          {
-            label: "Density Calc",
-            className: "bg-slate-700",
-            onClick: () => setDensityOpen(true),
-          },
+          // {
+          //   label: "Density Calc",
+          //   className: "bg-slate-700",
+          //   onClick: () => setDensityOpen(true),
+          // },
         ]}
       />
     </div>

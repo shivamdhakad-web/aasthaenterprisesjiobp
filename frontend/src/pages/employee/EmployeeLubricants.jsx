@@ -72,10 +72,10 @@ export default function EmployeeLubricants() {
     try {
       if (editing) {
         await updateMyLubricant(editing._id, form);
-        setConfirmDialog({ open: true, message: "Lubricant sale update ho gayi hai" });
+        setConfirmDialog({ open: true, message: "Lubricant cell updated" });
       } else {
         await addMyLubricant(form);
-        setConfirmDialog({ open: true, message: "Lubricant sale add ho gayi hai" });
+        setConfirmDialog({ open: true, message: "Lubricant cell added" });
       }
       closeModal();
       await load();
@@ -95,7 +95,7 @@ export default function EmployeeLubricants() {
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 sm:p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">My Lubricant Sales</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Yahan sirf apni sales add ya edit kar sakte ho. Product master aur stock admin side se control hota hai.
+          You can only add or edit your sales here. The product master and stock are controlled from the admin side.
         </p>
       </section>
 
@@ -139,26 +139,31 @@ export default function EmployeeLubricants() {
           </table>
         </div>
 
-        <div className="space-y-3 md:hidden">
-          {sales.map((sale) => (
-            <div
-              key={sale._id}
-              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4"
-            >
-              <p className="text-sm text-[color:var(--text-secondary)]">{sale.date}</p>
-              <p className="mt-2 text-lg font-medium text-[color:var(--text-strong)]">{sale.product}</p>
-              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                Qty {sale.quantity} - Rs. {sale.total}
-              </p>
-              <button
-                onClick={() => openForm(sale)}
-                className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
-              >
-                {sale.canEdit ? "Edit sale" : "View sale"}
-              </button>
-            </div>
-          ))}
-        </div>
+<div className="space-y-3 md:hidden">
+  {sales.map((sale) => (
+    <div
+      key={sale._id}
+      className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 flex justify-between items-center"
+    >
+      {/* Left side: date, product, quantity & total */}
+      <div className="flex-1">
+        <p className="text-sm text-[color:var(--text-secondary)]">{sale.date}</p>
+        <p className="mt-2 text-lg font-medium text-[color:var(--text-strong)]">{sale.product}</p>
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+          Qty {sale.quantity} - Rs. {sale.total}
+        </p>
+      </div>
+
+      {/* Right side button - vertically centered */}
+      <button
+        onClick={() => openForm(sale)}
+        className="ml-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
+      >
+        {sale.canEdit ? "Edit sale" : "View sale"}
+      </button>
+    </div>
+  ))}
+</div>
       </section>
 
       {/* Modal for Sale Form */}
@@ -212,17 +217,18 @@ export default function EmployeeLubricants() {
               />
 
               <div className="flex gap-3 pt-4">
-                {!readOnlyMode && (
-                  <button onClick={submit} className="btn btn-green flex-1">
-                    {editing ? "Update Sale" : "Add Sale"}
-                  </button>
-                )}
+                
                 <button
                   onClick={closeModal}
                   className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium"
                 >
                   {readOnlyMode ? "Close" : "Cancel"}
                 </button>
+                {!readOnlyMode && (
+                  <button onClick={submit} className="btn btn-green flex-1">
+                    {editing ? "Update Sale" : "Add Sale"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

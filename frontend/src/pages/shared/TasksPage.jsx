@@ -19,6 +19,19 @@ const baseForm = {
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-");
 
+const getStatusColor = (status) => {
+  switch (status) {
+    case "pending":
+      return "bg-yellow-500/20 text-yellow-700 border-yellow-500/30";
+    case "in_progress":
+      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+    case "completed":
+      return "bg-green-500/20 text-green-400 border-green-500/30";
+    default:
+      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  }
+};
+
 export default function TasksPage() {
   const [employees, setEmployees] = useState([]);
   const [items, setItems] = useState([]);
@@ -27,8 +40,8 @@ export default function TasksPage() {
   const [form, setForm] = useState(baseForm);
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // State for custom confirmation dialog
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: "" });
+  const [openCard, setOpenCard] = useState(null);
 
   const load = async () => {
     const [employeeData, taskData] = await Promise.all([getEmployees(), getTasks()]);
@@ -94,7 +107,7 @@ export default function TasksPage() {
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Tasks / Work Assignments</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Daily assigned tasks, completed / pending status, aur manager instructions yahin manage honge.
+          Daily assigned tasks, completed/pending status, and manager instructions will be managed here.
         </p>
       </section>
 
@@ -106,7 +119,7 @@ export default function TasksPage() {
       </div>
 
       {/* Search & Filter Section */}
-      <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
+      <section className="rounded-2xl p-0">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <input
             value={search}
@@ -151,7 +164,11 @@ export default function TasksPage() {
                   <td>{formatDate(item.assignedDate)}</td>
                   <td>{formatDate(item.dueDate)}</td>
                   <td className="capitalize">{item.priority}</td>
-                  <td>{item.status}</td>
+                  <td>
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(item.status)}`}>
+                      {item.status}
+                    </span>
+                  </td>
                   <td>{item.instructions || "-"}</td>
                   <td>
                     <div className="flex items-center justify-center gap-3">
@@ -169,44 +186,66 @@ export default function TasksPage() {
           </table>
         </div>
 
-        {/* Mobile Cards */}
+        {/* Mobile Cards – expandable with colored status */}
         <div className="space-y-3 lg:hidden">
-          {filteredItems.map((item) => (
-            <div key={item._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-base font-semibold text-[color:var(--text-strong)]">{item.title}</p>
-                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-                    {item.employeeName || item.employeeId?.name || "-"}
-                  </p>
+          {filteredItems.map((item) => {
+            const isOpen = openCard === item._id;
+            return (
+              <div
+                key={item._id}
+                onClick={() => setOpenCard(isOpen ? null : item._id)}
+                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] active:scale-[0.98] transition"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-semibold text-[color:var(--text-strong)]">{item.title}</p>
+                    <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                      {item.employeeName || item.employeeId?.name || "-"}
+                    </p>
+                  </div>
+                  <span className={`rounded-full border px-3 py-1 text-xs capitalize ${getStatusColor(item.status)}`}>
+                    {item.status}
+                  </span>
                 </div>
-                <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-1 text-xs capitalize text-[color:var(--text-secondary)]">
-                  {item.status}
-                </span>
+
+                <p className="mt-3 text-sm text-[color:var(--text-primary)]">{item.description || "-"}</p>
+
+                <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                  Due {formatDate(item.dueDate)} • {item.priority}
+                </p>
+
+                <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+                  {item.instructions || "No manager instruction"}
+                </p>
+
+                {isOpen && (
+                  <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openForm(item);
+                        }}
+                        className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await deleteTask(item._id);
+                          await load();
+                        }}
+                        className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="mt-3 text-sm text-[color:var(--text-primary)]">{item.description || "-"}</p>
-              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                Due {formatDate(item.dueDate)} • {item.priority}
-              </p>
-              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                {item.instructions || "No manager instruction"}
-              </p>
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => openForm(item)}
-                  className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteTask(item._id).then(load)}
-                  className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -307,7 +346,7 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Custom Confirmation Dialog (replaces alert) */}
+      {/* Confirmation Dialog */}
       {confirmDialog.open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"

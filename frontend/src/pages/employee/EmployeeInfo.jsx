@@ -42,8 +42,7 @@ export default function EmployeeInfo() {
           {employee?.name || "My profile"}
         </h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Admin dashboard me jo employee profile details save hui hain, wahi yahan read-only mode me
-          dikh rahi hain.
+          The employee profile details saved in the admin dashboard are visible here in read-only mode.
         </p>
       </section>
 

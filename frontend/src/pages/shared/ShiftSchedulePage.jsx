@@ -40,7 +40,9 @@ export default function ShiftSchedulePage() {
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: "" });
-
+  const [expandedCardId, setExpandedCardId] = useState(null); // ← NEW for mobile expand
+  const [openCard, setOpenCard] = useState(null);
+  
   const load = async () => {
     const [employeeData, scheduleData] = await Promise.all([getEmployees(), getShiftSchedules()]);
     setEmployees(employeeData);
@@ -100,13 +102,18 @@ export default function ShiftSchedulePage() {
     );
   }, [items, search]);
 
+  // Toggle expand on mobile card
+  const toggleExpand = (id) => {
+    setExpandedCardId(expandedCardId === id ? null : id);
+  };
+
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
       {/* Header Section */}
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Shift / Duty Schedule</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Yahan se employee-wise ya sabke liye shift timing, weekly duty, aur day/night schedule assign kar sakte ho.
+          From here you can assign shift timings, weekly duties, and day/night schedules employee-wise or for everyone.
         </p>
       </section>
 
@@ -118,7 +125,7 @@ export default function ShiftSchedulePage() {
       </div>
 
       {/* Search & Reset Section */}
-      <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
+      <section className="rounded-2xl p-0">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <input
             value={search}
@@ -128,7 +135,7 @@ export default function ShiftSchedulePage() {
           />
         </div>
 
-        {/* Desktop Table */}
+        {/* Desktop Table (unchanged) */}
         <div className="hidden overflow-x-auto lg:block">
           <table className="table">
             <thead>
@@ -152,7 +159,7 @@ export default function ShiftSchedulePage() {
                     {item.scheduleType === "recurring"
                       ? weekdayOptions.find((option) => option.value === String(item.weekDay))?.label
                       : item.date?.slice?.(0, 10)}
-                   </td>
+                    </td>
                   <td>{item.shiftName}</td>
                   <td>{item.startTime} - {item.endTime}</td>
                   <td className="capitalize">{item.period}</td>
@@ -166,55 +173,91 @@ export default function ShiftSchedulePage() {
                         Delete
                       </button>
                     </div>
-                   </td>
-                 </tr>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Mobile Cards */}
-        <div className="space-y-3 lg:hidden">
-          {filteredItems.map((item) => (
-            <div key={item._id} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-base font-semibold text-[color:var(--text-strong)]">{item.shiftName}</p>
-                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">{getDisplayTarget(item)}</p>
-                </div>
-                <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-1 text-xs capitalize text-[color:var(--text-secondary)]">
-                  {item.period}
-                </span>
-              </div>
-              <p className="mt-3 text-sm text-[color:var(--text-primary)]">
-                {item.startTime} - {item.endTime}
-              </p>
-              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                {item.scheduleType === "recurring"
-                  ? weekdayOptions.find((option) => option.value === String(item.weekDay))?.label
-                  : item.date?.slice?.(0, 10)}
-              </p>
-              <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{item.notes || "-"}</p>
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => openForm(item)}
-                  className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteShiftSchedule(item._id).then(load)}
-                  className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+        {/* ========== MOBILE CARDS – expandable Edit/Delete ========== */}
+<div className="space-y-3 lg:hidden">
+  {filteredItems.map((item) => {
+    const isOpen = openCard === item._id;
+    return (
+      <div
+        key={item._id}
+        onClick={() => setOpenCard(isOpen ? null : item._id)}
+        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] active:scale-[0.98] transition"
+      >
+        {/* Always visible content */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">
+              {item.period}
+            </p>
+            <p className="mt-1 text-lg font-semibold text-[color:var(--text-strong)]">
+              {item.shiftName}
+            </p>
+            <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+              {getDisplayTarget(item)}
+            </p>
+          </div>
+          <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-1 text-xs text-[color:var(--text-secondary)]">
+            {item.period === "day" ? "Day" : "Night"}
+          </span>
         </div>
+
+        <p className="mt-3 text-sm text-[color:var(--text-primary)]">
+          🕒 {item.startTime} – {item.endTime}
+        </p>
+
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+          📅 {item.scheduleType === "recurring"
+            ? weekdayOptions.find((opt) => opt.value === String(item.weekDay))?.label
+            : item.date?.slice?.(0, 10)}
+        </p>
+
+        {item.notes && (
+          <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+            📌 {item.notes}
+          </p>
+        )}
+
+        {/* Expandable part – only show when card is open */}
+        {isOpen && (
+          <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
+            {/* Optionally add extra info like "Assigned by" if available, but we keep simple */}
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openForm(item);
+                }}
+                className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+              >
+                Edit
+              </button>
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await deleteShiftSchedule(item._id);
+                  await load();
+                }}
+                className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  })}
+</div>
       </section>
 
-      {/* Modal for Schedule Form */}
+      {/* Modal – unchanged */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
@@ -227,40 +270,38 @@ export default function ShiftSchedulePage() {
             <h2 className="mb-4 text-xl font-semibold text-[color:var(--text-strong)]">
               {editing ? "Edit Schedule" : "New Schedule"}
             </h2>
-
             <div className="space-y-4">
+              {/* ... same form fields ... */}
               <div className="grid gap-3 md:grid-cols-2">
                 <select
                   value={form.employeeId}
-                  onChange={(event) => setForm({ ...form, employeeId: event.target.value })}
+                  onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
                   className="input"
                 >
                   <option value="all">All employees</option>
-                  {employees.map((employee) => (
-                    <option key={employee._id} value={employee._id}>
-                      {employee.name}
+                  {employees.map((emp) => (
+                    <option key={emp._id} value={emp._id}>
+                      {emp.name}
                     </option>
                   ))}
                 </select>
-
                 <select
                   value={form.scheduleType}
-                  onChange={(event) => setForm({ ...form, scheduleType: event.target.value })}
+                  onChange={(e) => setForm({ ...form, scheduleType: e.target.value })}
                   className="input"
                 >
                   <option value="recurring">Recurring weekly</option>
                   <option value="one-time">One-time date</option>
                 </select>
-
                 {form.scheduleType === "recurring" ? (
                   <select
                     value={form.weekDay}
-                    onChange={(event) => setForm({ ...form, weekDay: event.target.value })}
+                    onChange={(e) => setForm({ ...form, weekDay: e.target.value })}
                     className="input"
                   >
-                    {weekdayOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                    {weekdayOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
@@ -268,55 +309,49 @@ export default function ShiftSchedulePage() {
                   <input
                     type="date"
                     value={form.date}
-                    onChange={(event) => setForm({ ...form, date: event.target.value })}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
                     className="input"
                   />
                 )}
-
                 <input
                   value={form.shiftName}
-                  onChange={(event) => setForm({ ...form, shiftName: event.target.value })}
+                  onChange={(e) => setForm({ ...form, shiftName: e.target.value })}
                   placeholder="Shift name"
                   className="input"
                 />
                 <input
                   type="time"
                   value={form.startTime}
-                  onChange={(event) => setForm({ ...form, startTime: event.target.value })}
+                  onChange={(e) => setForm({ ...form, startTime: e.target.value })}
                   className="input"
                 />
                 <input
                   type="time"
                   value={form.endTime}
-                  onChange={(event) => setForm({ ...form, endTime: event.target.value })}
+                  onChange={(e) => setForm({ ...form, endTime: e.target.value })}
                   className="input"
                 />
                 <select
                   value={form.period}
-                  onChange={(event) => setForm({ ...form, period: event.target.value })}
+                  onChange={(e) => setForm({ ...form, period: e.target.value })}
                   className="input"
                 >
                   <option value="day">Day shift</option>
                   <option value="night">Night shift</option>
                 </select>
               </div>
-
               <textarea
                 value={form.notes}
-                onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Duty note or instruction"
                 rows={3}
                 className="input"
               />
-
               <div className="flex gap-3 pt-4">
                 <button onClick={submit} className="btn btn-green flex-1">
                   {editing ? "Update Schedule" : "Save Schedule"}
                 </button>
-                <button
-                  onClick={closeModal}
-                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium"
-                >
+                <button onClick={closeModal} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium">
                   Cancel
                 </button>
               </div>
@@ -325,7 +360,7 @@ export default function ShiftSchedulePage() {
         </div>
       )}
 
-      {/* Custom Confirmation Dialog */}
+      {/* Confirmation Dialog */}
       {confirmDialog.open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
@@ -336,10 +371,7 @@ export default function ShiftSchedulePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="mb-6 text-lg text-[color:var(--text-strong)]">{confirmDialog.message}</p>
-            <button
-              onClick={() => setConfirmDialog({ open: false, message: "" })}
-              className="btn btn-green w-full"
-            >
+            <button onClick={() => setConfirmDialog({ open: false, message: "" })} className="btn btn-green w-full">
               OK
             </button>
           </div>

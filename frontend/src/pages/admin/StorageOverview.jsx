@@ -35,8 +35,7 @@ export default function StorageOverview() {
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">MongoDB Storage</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          512 MB cap ke against current database usage, collection-wise storage, aur cleanup
-          impact yahin se dekh sakte ho.
+          Current database usage against the 512 MB cap, collection-wise storage, and cleanup impact can be seen here.
         </p>
 
         <div className="mt-5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
@@ -95,7 +94,7 @@ export default function StorageOverview() {
               <div key={item.name} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
                 <p className="text-base font-semibold text-[color:var(--text-strong)]">{item.name}</p>
                 <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                  Delete karne par approx {formatBytes(item.removableBytes)} free ho sakta hai
+                  Approx {formatBytes(item.removableBytes)} may be freed upon deletion
                 </p>
                 <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
                   After delete: {formatBytes(item.remainingAfterDeleteBytes)} free • {item.usedAfterDeletePercentage}% used

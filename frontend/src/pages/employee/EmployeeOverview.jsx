@@ -44,20 +44,19 @@ export default function EmployeeOverview() {
           {overview?.employee?.name || "My work summary"}
         </h1>
         <p className={`mt-2 text-sm ${isDayTheme ? "text-[color:var(--text-secondary)]" : "text-gray-400"}`}>
-          Attendance, lubricant sales, salary, and admin notices all stay connected from one
-          place.
+          Attendance, lubricant sales, salary, and admin notices all stay connected from one place.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <InfoCard label="Role" value={overview?.employee?.role || "-"} accent="text-white" />
-        <InfoCard label="Shift" value={overview?.employee?.shift || "-"} accent="text-blue-300" />
-        <InfoCard
-          label="Attendance Entries"
-          value={overview?.totals?.attendanceCount || 0}
-          accent="text-green-300"
-        />
-        <InfoCard label="Unread Notices" value={unread} accent="text-yellow-300" />
+        {/* Role card - vertical (original style) */}
+        <InfoCardVertical label="Role" value={overview?.employee?.role || "-"} accent="text-white" />
+        {/* Shift card - vertical */}
+        <InfoCardVertical label="Shift" value={overview?.employee?.shift || "-"} accent="text-blue-300" />
+        {/* Attendance Entries card - horizontal (left/right) */}
+        <InfoCardHorizontal label="Attendance Entries" value={overview?.totals?.attendanceCount || 0} accent="text-green-300" />
+        {/* Unread Notices card - horizontal */}
+        <InfoCardHorizontal label="Unread Notices" value={unread} accent="text-yellow-300" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -91,11 +90,22 @@ export default function EmployeeOverview() {
   )
 }
 
-function InfoCard({ label, value, accent }) {
+// Vertical card (original – label on top, value below)
+function InfoCardVertical({ label, value, accent }) {
   return (
     <div className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4">
       <p className="text-sm text-gray-400">{label}</p>
       <p className={`mt-3 text-2xl font-semibold ${accent}`}>{value}</p>
+    </div>
+  )
+}
+
+// Horizontal card – label left, value right (flex justify-between items-center)
+function InfoCardHorizontal({ label, value, accent }) {
+  return (
+    <div className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4 flex justify-between items-center">
+      <p className="text-sm text-gray-400">{label}</p>
+      <p className={`text-2xl font-semibold ${accent}`}>{value}</p>
     </div>
   )
 }

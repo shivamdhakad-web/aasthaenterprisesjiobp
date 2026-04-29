@@ -40,7 +40,7 @@ export default function ApprovalActivityPanel({ moduleKey, title }) {
 
   return (
     <>
-      <div className="m-6 rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4">
+      <div className="m-4 rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-gray-500">
@@ -55,7 +55,7 @@ export default function ApprovalActivityPanel({ moduleKey, title }) {
             <CountPill label="Rejected" value={counts.rejected} tone="text-red-300 border-red-500/20 bg-red-500/10" />
             <button
               onClick={() => setOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-200"
+              className="inline-flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-500"
             >
               <ClipboardCheck size={16} />
               View pending / approved list
@@ -103,7 +103,7 @@ export default function ApprovalActivityPanel({ moduleKey, title }) {
 
                       <button
                         onClick={() => setSelectedItem(item)}
-                        className="inline-flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-200"
+                        className="inline-flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-blue-400"
                       >
                         <Eye size={15} />
                         View

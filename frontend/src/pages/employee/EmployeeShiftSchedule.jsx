@@ -22,7 +22,7 @@ export default function EmployeeShiftSchedule() {
           Shift / Duty Schedule
         </h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Aaj ki shift timing, weekly schedule, aur day/night duty info yahin se dekh sakte ho.
+          You can check today's shift timings, weekly schedule, and day/night duty info from here.
         </p>
       </section>
 

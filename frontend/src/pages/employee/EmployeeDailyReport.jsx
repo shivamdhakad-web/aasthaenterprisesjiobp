@@ -100,8 +100,7 @@ export default function EmployeeDailyReport() {
           <div>
             <h1 className="text-2xl font-semibold text-white">My Daily Sheet</h1>
             <p className="mt-2 text-sm text-gray-400">
-              Daily forecourt report mobile-friendly form me fill karo. Entry 2 din tak editable
-              rahegi, uske baad sirf view mode me khulegi.
+              Entries will be editable for 2 days, after which they will open in view-only mode.
             </p>
           </div>
 

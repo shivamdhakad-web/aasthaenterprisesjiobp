@@ -72,8 +72,7 @@ export default function LeaveManagementPage() {
           Leave Management
         </h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Employee leave requests yahin approve ya reject hongi. Approved leave par attendance
-          automatic absent mark hoti hai.
+          Employee leave requests are approved or rejected here. Attendance on approved leave is automatically marked absent.
         </p>
       </section>
 
