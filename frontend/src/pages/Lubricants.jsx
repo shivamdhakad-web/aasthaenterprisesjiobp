@@ -317,14 +317,12 @@ const generatePDF = (reportData) => {
     ]),
   })
 
-  // 🔥 IMPORTANT FIX
+  // 🔥 FINAL FIX
   const blob = doc.output("blob")
+  const url = URL.createObjectURL(blob)
 
-  const file = new File([blob], "Lubricant_Report.pdf", { type: "application/pdf" })
-
-  const url = URL.createObjectURL(file)
-
-  window.location.href = url
+  // 👉 IMPORTANT
+  window.open(url)
 }
 
   const generateExcel = (reportData) => {
