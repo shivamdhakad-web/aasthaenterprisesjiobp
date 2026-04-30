@@ -317,12 +317,8 @@ const generatePDF = (reportData) => {
     ]),
   })
 
-  // 🔥 FINAL FIX
-  const blob = doc.output("blob")
-  const url = URL.createObjectURL(blob)
-
-  // 👉 IMPORTANT
-  window.open(url)
+  // ✅ FINAL FIX (NO BLOB)
+  doc.save("Lubricant_Report.pdf")
 }
 
   const generateExcel = (reportData) => {
