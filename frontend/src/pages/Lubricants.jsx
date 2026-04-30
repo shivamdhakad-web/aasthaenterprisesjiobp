@@ -251,10 +251,51 @@ export default function Lubricants() {
   //   doc.save("Lubricant_Report.pdf")
   // }
 
-  const generatePDF = (reportData) => {
+//   const generatePDF = (reportData) => {
+//   const doc = new jsPDF()
+
+//   // 🔹 HEADER
+//   doc.setFontSize(16)
+//   doc.text("Lubricant Sales Report", 14, 15)
+
+//   doc.setFontSize(10)
+//   doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`, 14, 22)
+//   doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
+//   doc.text(`Total Records: ${reportData.length}`, 14, 34)
+
+//   // 🔹 TABLE
+//   autoTable(doc, {
+//     startY: 40,
+//     head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
+//     body: reportData.map((entry) => [
+//       entry.date,
+//       entry.product,
+//       entry.quantity,
+//       formatCurrency(entry.price),
+//       formatCurrency(entry.total),
+//       entry.soldBy,
+//     ]),
+//     styles: { fontSize: 8 },
+//     headStyles: { fillColor: [22, 163, 74] },
+//   })
+
+//   // 🔥 IMPORTANT FIX (WEBVIEW SUPPORT)
+//   const blob = doc.output("blob")
+//   const url = URL.createObjectURL(blob)
+
+//   // 👉 PDF open होगा (WebView detect करेगा)
+//   window.open(url)
+
+//   // 👉 Optional: auto download भी
+//   const link = document.createElement("a")
+//   link.href = url
+//   link.download = "Lubricant_Report.pdf"
+//   link.click()
+// }
+
+const generatePDF = (reportData) => {
   const doc = new jsPDF()
 
-  // 🔹 HEADER
   doc.setFontSize(16)
   doc.text("Lubricant Sales Report", 14, 15)
 
@@ -263,7 +304,6 @@ export default function Lubricants() {
   doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
   doc.text(`Total Records: ${reportData.length}`, 14, 34)
 
-  // 🔹 TABLE
   autoTable(doc, {
     startY: 40,
     head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
@@ -275,22 +315,16 @@ export default function Lubricants() {
       formatCurrency(entry.total),
       entry.soldBy,
     ]),
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [22, 163, 74] },
   })
 
-  // 🔥 IMPORTANT FIX (WEBVIEW SUPPORT)
+  // 🔥 IMPORTANT FIX
   const blob = doc.output("blob")
-  const url = URL.createObjectURL(blob)
 
-  // 👉 PDF open होगा (WebView detect करेगा)
-  window.open(url)
+  const file = new File([blob], "Lubricant_Report.pdf", { type: "application/pdf" })
 
-  // 👉 Optional: auto download भी
-  const link = document.createElement("a")
-  link.href = url
-  link.download = "Lubricant_Report.pdf"
-  link.click()
+  const url = URL.createObjectURL(file)
+
+  window.location.href = url
 }
 
   const generateExcel = (reportData) => {
