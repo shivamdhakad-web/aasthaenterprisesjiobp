@@ -17,6 +17,16 @@ export default function LeaveManagementPage() {
   const [status, setStatus] = useState("")
   const [response, setResponse] = useState({ items: [], balancesByEmployee: {} })
 
+  // Custom prompt state
+  const [prompt, setPrompt] = useState({
+    open: false,
+    title: "",
+    defaultValue: "",
+    onConfirm: null,
+  })
+
+  const closePrompt = () => setPrompt({ open: false, title: "", defaultValue: "", onConfirm: null })
+
   const load = async () => {
     const [employeeData, leaveData] = await Promise.all([
       getEmployees(),
@@ -48,21 +58,20 @@ export default function LeaveManagementPage() {
   )
 
   const processDecision = async (item, nextStatus) => {
-    const note = window.prompt(
-      `${nextStatus === "approved" ? "Approval" : "Rejection"} note (optional)`,
-      item.adminNote || "",
-    )
-
-    if (note === null) {
-      return
-    }
-
-    await decideLeave(item._id, {
-      status: nextStatus,
-      adminNote: note,
+    const actionText = nextStatus === "approved" ? "Approval" : "Rejection"
+    setPrompt({
+      open: true,
+      title: `${actionText} Note`,
+      defaultValue: item.adminNote || "",
+      onConfirm: async (note) => {
+        await decideLeave(item._id, {
+          status: nextStatus,
+          adminNote: note,
+        })
+        load()
+        closePrompt()
+      },
     })
-
-    load()
   }
 
   return (
@@ -224,6 +233,50 @@ export default function LeaveManagementPage() {
           ))}
         </div>
       </section>
+
+      {/* Custom Prompt Modal */}
+      {prompt.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-xl">
+            <div className="p-5">
+              <h3 className="text-lg font-semibold text-[color:var(--text-strong)]">{prompt.title}</h3>
+              <textarea
+                className="input mt-4 w-full"
+                rows={3}
+                defaultValue={prompt.defaultValue}
+                placeholder="Optional note..."
+                ref={(el) => {
+                  if (el) el.focus()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    prompt.onConfirm?.(e.target.value)
+                  }
+                }}
+              />
+            </div>
+            <div className="flex border-t border-[var(--border-color)]">
+              <button
+                onClick={() => {
+                  const textarea = document.querySelector("#prompt-textarea")
+                  const note = textarea ? textarea.value : ""
+                  prompt.onConfirm?.(note)
+                }}
+                className="flex-1 py-3 text-center text-sm font-semibold text-emerald-600 border-r border-[var(--border-color)]"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={closePrompt}
+                className="flex-1 py-3 text-center text-sm font-semibold text-rose-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

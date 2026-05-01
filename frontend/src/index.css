@@ -199,6 +199,18 @@ textarea {
   color: #ef4444;
 }
 
+@media (max-width: 640px) {
+  .smart-calculator-page .input {
+    border-radius: 0.9rem;
+    padding: 0.72rem 0.85rem;
+    font-size: 0.92rem;
+  }
+
+  .smart-calculator-page textarea.input {
+    min-height: 78px;
+  }
+}
+
 :root[data-theme="day"] .bg-\[\#04060B\],
 :root[data-theme="day"] .bg-\[\#04060b\],
 :root[data-theme="day"] .bg-\[\#0A0D14\],
