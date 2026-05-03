@@ -40,6 +40,7 @@ import ShiftSchedulePage from "./pages/shared/ShiftSchedulePage"
 import TasksPage from "./pages/shared/TasksPage"
 import StorageOverview from "./pages/admin/StorageOverview"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
+import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 
 export default function App() {
   return (
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
+            <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="ttdrivers" element={<TTDrivers />} />
             <Route path="customerdrivers" element={<CustomerDrivers />} />
             <Route path="secure-notes" element={<SecureNotes />} />
@@ -161,6 +163,7 @@ export default function App() {
               }
             />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
+            <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route
               path="ttdrivers"
               element={
@@ -198,6 +201,7 @@ export default function App() {
             <Route path="tasks" element={<EmployeeTasks />} />
             <Route path="expenses" element={<EmployeeExpenses />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
+            <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="lubricants" element={<EmployeeLubricants />} />
             <Route path="performance" element={<EmployeePerformance />} />
             <Route path="salary" element={<EmployeeSalary />} />

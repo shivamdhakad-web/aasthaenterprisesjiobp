@@ -34,6 +34,7 @@ const shiftRoutes = require("./routes/shiftRoutes")
 const taskRoutes = require("./routes/taskRoutes")
 const storageRoutes = require("./routes/storageRoutes")
 const smartCalculatorRoutes = require("./routes/smartCalculatorRoutes")
+const densityCalculatorRoutes = require("./routes/densityCalculatorRoutes")
 const app = express()
 
 app.use(cors())
@@ -88,5 +89,6 @@ app.use("/api/shifts", shiftRoutes)
 app.use("/api/tasks", taskRoutes)
 app.use("/api/storage", storageRoutes)
 app.use("/api/smart-calculator", smartCalculatorRoutes)
+app.use("/api/density-calculator", densityCalculatorRoutes)
 
 module.exports = app
