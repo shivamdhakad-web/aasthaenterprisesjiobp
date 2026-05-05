@@ -1,10 +1,34 @@
 const Employee = require("../models/Employee")
 const Settings = require("../models/Settings")
-const { signAuthToken } = require("../middleware/auth")
+const { SESSION_DURATION_MS, signAuthToken } = require("../middleware/auth")
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "123"
 const MANAGER_PASSWORD = process.env.MANAGER_PASSWORD || "456"
 const EMPLOYEE_PASSWORD = process.env.EMPLOYEE_PASSWORD || "789"
+const MASTER_UNLOCK_PASSWORD = process.env.DASHBOARD_MASTER_PASSWORD || "jiobp"
+
+const defaultSettings = {
+  companyName: "",
+  stationName: "",
+  gstNumber: "",
+  address: "",
+  contacts: [],
+  loginPasswords: {
+    admin: ADMIN_PASSWORD,
+    manager: MANAGER_PASSWORD,
+    employee: EMPLOYEE_PASSWORD,
+  },
+  passwordSecurity: {
+    masterUnlockPassword: MASTER_UNLOCK_PASSWORD,
+    authVersion: 1,
+    lastPasswordChangedAt: null,
+  },
+}
+
+const sanitizeTokenUser = (user) => {
+  const { iat, exp, authVersion, ...safeUser } = user || {}
+  return safeUser
+}
 
 const formatEmployeeUser = (employee) => ({
   role: "Employee",
@@ -12,9 +36,20 @@ const formatEmployeeUser = (employee) => ({
   employeeId: employee._id.toString(),
 })
 
-const createAuthResponse = (user) => ({
-  token: signAuthToken(user),
+const getOrCreateSettings = async () => {
+  const existingSettings = await Settings.findOne()
+
+  if (existingSettings) {
+    return existingSettings
+  }
+
+  return Settings.create(defaultSettings)
+}
+
+const createAuthResponse = (user, authVersion) => ({
+  token: signAuthToken({ ...user, authVersion }),
   user,
+  expiresAt: new Date(Date.now() + SESSION_DURATION_MS).toISOString(),
 })
 
 exports.getEmployeeChoices = async (_req, res) => {
@@ -32,26 +67,33 @@ exports.getEmployeeChoices = async (_req, res) => {
 exports.login = async (req, res) => {
   try {
     const { password, employeeId, employeePassword } = req.body
-    const settings = await Settings.findOne().select("loginPasswords")
+    const settings = await getOrCreateSettings()
+    const authVersion = settings?.passwordSecurity?.authVersion ?? 1
     const adminPassword = settings?.loginPasswords?.admin || ADMIN_PASSWORD
     const managerPassword = settings?.loginPasswords?.manager || MANAGER_PASSWORD
     const employeePasswordMaster = settings?.loginPasswords?.employee || EMPLOYEE_PASSWORD
 
     if (password === adminPassword) {
       return res.json(
-        createAuthResponse({
-          role: "Admin",
-          name: "Admin",
-        }),
+        createAuthResponse(
+          {
+            role: "Admin",
+            name: "Admin",
+          },
+          authVersion,
+        ),
       )
     }
 
     if (password === managerPassword) {
       return res.json(
-        createAuthResponse({
-          role: "Manager",
-          name: "Manager",
-        }),
+        createAuthResponse(
+          {
+            role: "Manager",
+            name: "Manager",
+          },
+          authVersion,
+        ),
       )
     }
 
@@ -84,7 +126,7 @@ exports.login = async (req, res) => {
         return res.status(401).json({ message: "Employee personal password is incorrect" })
       }
 
-      return res.json(createAuthResponse(formatEmployeeUser(employee)))
+      return res.json(createAuthResponse(formatEmployeeUser(employee), authVersion))
     }
 
     return res.status(401).json({ message: "Wrong password" })
@@ -95,21 +137,23 @@ exports.login = async (req, res) => {
 
 exports.me = async (req, res) => {
   try {
-    if (req.user.role !== "Employee") {
-      return res.json({ user: req.user })
+    const safeUser = sanitizeTokenUser(req.user)
+
+    if (safeUser.role !== "Employee") {
+      return res.json({ user: safeUser })
     }
 
-    const employee = await Employee.findById(req.user.employeeId).select(
+    const employee = await Employee.findById(safeUser.employeeId).select(
       "_id name role shift phone status salary",
     )
 
-    if (!employee) {
+    if (!employee || employee.status !== "Active") {
       return res.status(404).json({ message: "Employee not found" })
     }
 
     res.json({
       user: {
-        ...req.user,
+        ...safeUser,
         employee,
       },
     })

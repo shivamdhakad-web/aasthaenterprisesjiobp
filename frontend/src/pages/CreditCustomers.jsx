@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import jsPDF from "jspdf"
 import * as XLSX from "xlsx"
 
 import MobileActionFab from "../components/MobileActionFab"
@@ -13,6 +12,41 @@ import {
 } from "../services/customerApi"
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
+
+const formatBalanceLabel = (value) =>
+  Number(value) < 0
+    ? `Advance ${formatCurrency(Math.abs(value))}`
+    : `Due ${formatCurrency(Math.abs(value))}`
+
+const normalizeWhatsappNumber = (value) => {
+  const digits = String(value || "").replace(/\D/g, "")
+
+  if (!digits) {
+    return ""
+  }
+
+  if (digits.length === 10) {
+    return `91${digits}`
+  }
+
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return `91${digits.slice(1)}`
+  }
+
+  return digits
+}
+
+const openWhatsappChat = (phone, message) => {
+  const whatsappNumber = normalizeWhatsappNumber(phone)
+
+  if (!whatsappNumber) {
+    window.alert("Customer ka valid WhatsApp number available nahi hai")
+    return
+  }
+
+  const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+  window.open(url, "_blank", "noopener,noreferrer")
+}
 
 export default function CreditCustomers() {
   const [customers, setCustomers] = useState([])
@@ -126,41 +160,61 @@ export default function CreditCustomers() {
   }
 
   const generateRowBill = (row) => {
-    const doc = new jsPDF()
+    const amount = row.type === "fuel" ? row.amount : row.payment
+    const message = [
+      `Hello ${selectedCustomer?.name || "Customer"},`,
+      "",
+      "Jio-bp customer ledger update:",
+      `Date: ${new Date(row.date).toLocaleDateString()}`,
+      `Type: ${row.type === "fuel" ? "Fuel Entry" : "Payment Entry"}`,
+      row.fuelType ? `Fuel: ${row.fuelType}` : null,
+      row.liters ? `Liters: ${row.liters}` : null,
+      row.rate ? `Rate: ${row.rate}` : null,
+      `Amount: ${formatCurrency(amount)}`,
+      `Balance: ${formatBalanceLabel(row.balance)}`,
+      "",
+      "Thank you."
+    ]
+      .filter(Boolean)
+      .join("\n")
 
-    doc.setFontSize(16)
-    doc.text("Fuel Bill", 20, 20)
-    doc.setFontSize(12)
-    doc.text(`Customer: ${selectedCustomer.name}`, 20, 40)
-    doc.text(`Fuel: ${row.fuelType}`, 20, 50)
-    doc.text(`Liters: ${row.liters}`, 20, 60)
-    doc.text(`Rate: ${row.rate}`, 20, 70)
-    doc.text(`Amount: ${formatCurrency(row.amount)}`, 20, 80)
-    doc.text(`Date: ${row.date?.slice(0, 10)}`, 20, 90)
-    doc.save(`bill-${row._id}.pdf`)
+    openWhatsappChat(selectedCustomer?.phone, message)
   }
 
   const generateBill = () => {
-    const doc = new jsPDF()
+    if (!selectedCustomer) {
+      return
+    }
+
     const pending = ledger.length ? ledger[ledger.length - 1].balance : 0
+    const recentEntries = ledger.slice(-8).map((item, index) => {
+      const amount = item.type === "fuel" ? item.amount : item.payment
+      const typeLabel = item.type === "fuel"
+        ? `${item.fuelType || "Fuel"}${item.liters ? ` (${item.liters} L)` : ""}`
+        : "Payment"
 
-    doc.setFontSize(16)
-    doc.text("Customer Bill", 20, 20)
-    doc.setFontSize(12)
-    doc.text(`Customer: ${selectedCustomer.name}`, 20, 30)
-    doc.text(`Pending Balance: ${formatCurrency(pending)}`, 20, 38)
-
-    let y = 50
-    ledger.forEach((item) => {
-      doc.text(
-        `${item.date?.slice(0, 10)}   ${item.type}   ${item.fuelType || "-"}   ${formatCurrency(item.amount || item.payment)}`,
-        20,
-        y,
-      )
-      y += 10
+      return `${index + 1}. ${new Date(item.date).toLocaleDateString()} - ${typeLabel} - ${formatCurrency(amount)} - ${formatBalanceLabel(item.balance)}`
     })
 
-    doc.save(`${selectedCustomer.name}-bill.pdf`)
+    const message = [
+      `Hello ${selectedCustomer.name},`,
+      "",
+      "Jio-bp customer ledger summary:",
+      `Customer: ${selectedCustomer.name}`,
+      `Phone: ${selectedCustomer.phone || "-"}`,
+      `Total Fuel: ${formatCurrency(totalFuel)}`,
+      `Total Payment: ${formatCurrency(totalPayment)}`,
+      `Pending Balance: ${formatBalanceLabel(pending)}`,
+      "",
+      recentEntries.length ? "Recent Entries:" : null,
+      recentEntries.length ? recentEntries.join("\n") : null,
+      "",
+      "Thank you."
+    ]
+      .filter(Boolean)
+      .join("\n")
+
+    openWhatsappChat(selectedCustomer.phone, message)
   }
 
   const exportExcel = () => {
@@ -396,8 +450,8 @@ export default function CreditCustomers() {
                 + Payment
               </button>
 
-              <button onClick={generateBill} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)]">
-                Bill
+              <button onClick={generateBill} className="rounded-2xl bg-[#25D366] px-5 py-3 font-medium text-white shadow-sm">
+                WhatsApp Share
               </button>
 
               <button onClick={exportExcel} className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm">
@@ -464,8 +518,8 @@ export default function CreditCustomers() {
                     </td>
                     <td>
                       <div className="flex items-center justify-center gap-3">
-                        <button className="text-yellow-500" onClick={() => generateRowBill(item)}>
-                          Bill
+                        <button className="text-green-600" onClick={() => generateRowBill(item)}>
+                          WhatsApp Share
                         </button>
                       </div>
                     </td>
@@ -527,9 +581,9 @@ export default function CreditCustomers() {
                           event.stopPropagation()
                           generateRowBill(item)
                         }}
-                        className="w-full rounded-xl border border-yellow-500/20 bg-yellow-500/10 py-2 text-sm text-yellow-600"
+                        className="w-full rounded-xl border border-green-500/20 bg-green-500/10 py-2 text-sm text-green-600"
                       >
-                        Bill
+                        WhatsApp Share
                       </button>
                     </div>
                   ) : null}
@@ -704,8 +758,8 @@ export default function CreditCustomers() {
             : null,
           selectedCustomer
             ? {
-                label: "Bill",
-                className: "bg-amber-600",
+                label: "WhatsApp",
+                className: "bg-[#25D366]",
                 onClick: generateBill,
               }
             : null,

@@ -1,10 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { getCurrentUser, login as loginRequest } from "../services/authApi"
-import {
-  clearStoredSession,
-  getStoredSession,
-  storeSession,
-} from "../lib/session"
+import { clearStoredSession, getStoredSession, storeSession } from "../lib/session"
 
 const AuthContext = createContext(null)
 
@@ -19,28 +15,67 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => getStoredSession())
   const [loading, setLoading] = useState(Boolean(getStoredSession()?.token))
 
-  useEffect(() => {
-    const bootstrap = async () => {
-      if (!session?.token) {
-        setLoading(false)
-        return
+  const resetSession = useCallback(() => {
+    clearStoredSession()
+    setSession(null)
+  }, [])
+
+  const refreshSession = useCallback(async () => {
+    const storedSession = getStoredSession()
+
+    if (!storedSession?.token) {
+      setLoading(false)
+      setSession(null)
+      return
+    }
+
+    try {
+      const data = await getCurrentUser()
+      const nextSession = {
+        ...storedSession,
+        user: data.user,
       }
 
-      try {
-        const data = await getCurrentUser()
-        const nextSession = { ...session, user: data.user }
-        setSession(nextSession)
-        storeSession(nextSession)
-      } catch {
-        clearStoredSession()
-        setSession(null)
-      } finally {
-        setLoading(false)
+      setSession(nextSession)
+      storeSession(nextSession)
+    } catch {
+      resetSession()
+    } finally {
+      setLoading(false)
+    }
+  }, [resetSession])
+
+  useEffect(() => {
+    refreshSession()
+  }, [refreshSession])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined
+    }
+
+    const handleExternalLogout = () => {
+      resetSession()
+      setLoading(false)
+    }
+
+    const revalidateSession = () => {
+      if (getStoredSession()?.token) {
+        refreshSession()
       }
     }
 
-    bootstrap()
-  }, [])
+    window.addEventListener("auth:logout", handleExternalLogout)
+    window.addEventListener("focus", revalidateSession)
+
+    const intervalId = window.setInterval(revalidateSession, 60 * 1000)
+
+    return () => {
+      window.removeEventListener("auth:logout", handleExternalLogout)
+      window.removeEventListener("focus", revalidateSession)
+      window.clearInterval(intervalId)
+    }
+  }, [refreshSession, resetSession])
 
   const value = useMemo(
     () => ({
@@ -56,6 +91,7 @@ export function AuthProvider({ children }) {
           const nextSession = {
             token: data.token,
             user: data.user,
+            expiresAt: data.expiresAt,
           }
 
           setSession(nextSession)
@@ -65,11 +101,10 @@ export function AuthProvider({ children }) {
         return data
       },
       logout: () => {
-        clearStoredSession()
-        setSession(null)
+        resetSession()
       },
     }),
-    [session, loading],
+    [loading, resetSession, session],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

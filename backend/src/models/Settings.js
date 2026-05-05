@@ -1,41 +1,89 @@
 const mongoose = require("mongoose")
 
-const contactSchema = new mongoose.Schema({
-  name: String,
-  phone: String
-})
+const contactSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
+  },
+  { _id: false },
+)
 
 const loginPasswordsSchema = new mongoose.Schema(
   {
     admin: {
       type: String,
-      default: "123"
+      default: process.env.ADMIN_PASSWORD || "123",
     },
     manager: {
       type: String,
-      default: "456"
+      default: process.env.MANAGER_PASSWORD || "456",
     },
     employee: {
       type: String,
-      default: "789"
-    }
+      default: process.env.EMPLOYEE_PASSWORD || "789",
+    },
   },
-  { _id: false }
+  { _id: false },
 )
 
-const settingsSchema = new mongoose.Schema({
+const passwordSecuritySchema = new mongoose.Schema(
+  {
+    masterUnlockPassword: {
+      type: String,
+      default: process.env.DASHBOARD_MASTER_PASSWORD || "jiobp",
+    },
+    authVersion: {
+      type: Number,
+      default: 1,
+    },
+    lastPasswordChangedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false },
+)
 
-  companyName: String,
-  stationName: String,
-  gstNumber: String,
-  address: String,
-
-  contacts: [contactSchema],
-  loginPasswords: {
-    type: loginPasswordsSchema,
-    default: () => ({})
-  }
-
-})
+const settingsSchema = new mongoose.Schema(
+  {
+    companyName: {
+      type: String,
+      default: "",
+    },
+    stationName: {
+      type: String,
+      default: "",
+    },
+    gstNumber: {
+      type: String,
+      default: "",
+    },
+    address: {
+      type: String,
+      default: "",
+    },
+    contacts: {
+      type: [contactSchema],
+      default: [],
+    },
+    loginPasswords: {
+      type: loginPasswordsSchema,
+      default: () => ({}),
+    },
+    passwordSecurity: {
+      type: passwordSecuritySchema,
+      default: () => ({}),
+    },
+  },
+  {
+    timestamps: true,
+  },
+)
 
 module.exports = mongoose.model("Settings", settingsSchema)
