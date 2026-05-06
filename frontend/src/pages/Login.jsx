@@ -68,14 +68,28 @@ export default function Login() {
   return (
     <div className="flex h-screen items-center justify-center bg-[var(--bg-main)] px-4 transition-colors duration-300">
       <div className="theme-surface w-full max-w-[420px] rounded-2xl border p-8 text-center">
-        <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Role Based Access</p>
-        <h2 className="theme-text-strong mt-3 text-2xl">
-          {stage === "employee" ? "Select Employee And Enter Personal Password" : "Enter Dashboard Password"}
-        </h2>
+        <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Role-Based Secure Login</p>
+        <h2 className="theme-text-strong mt-3 text-2xl font-semibold leading-tight tracking-tight">
+  {stage === "employee" ? (
+    <span className="flex flex-col items-center gap-1">
+      <span>Employee Verification</span>
+      <span className="text-sm font-normal text-[color:var(--text-secondary)]">
+        Select employee & enter personal password
+      </span>
+    </span>
+  ) : (
+    <span className="flex flex-col items-center gap-1">
+      <span>Admin • Manager • Employee</span>
+      <span className="text-sm font-normal text-[color:var(--text-secondary)] mt-1">
+        Secure Station Access
+      </span>
+    </span>
+  )}
+</h2>
 
         <input
           type="password"
-          placeholder="Enter Password"
+          placeholder="Enter Access Password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="input mt-6 rounded-lg p-3"
@@ -129,11 +143,11 @@ export default function Login() {
           </button>
         ) : null}
 
-        <div className="mt-5 rounded-xl border border-[color:var(--border-strong)] bg-[var(--bg-soft)] p-4 text-left text-sm text-[color:var(--text-secondary)]">
+        {/* <div className="mt-5 rounded-xl border border-[color:var(--border-strong)] bg-[var(--bg-soft)] p-4 text-left text-sm text-[color:var(--text-secondary)]">
           {passwordHints.map((hint) => (
             <p key={hint}>{hint}</p>
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   )
