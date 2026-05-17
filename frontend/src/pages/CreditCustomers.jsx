@@ -45,6 +45,12 @@ const openWhatsappChat = (phone, message) => {
   }
 
   const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+
+  if (typeof window !== "undefined" && window.jiobpDesktop?.openExternal) {
+    window.jiobpDesktop.openExternal(url)
+    return
+  }
+
   window.open(url, "_blank", "noopener,noreferrer")
 }
 
@@ -173,6 +179,8 @@ export default function CreditCustomers() {
       `Amount: ${formatCurrency(amount)}`,
       `Balance: ${formatBalanceLabel(row.balance)}`,
       "",
+      "Please check your updated ledger details.",
+      "",
       "Thank you."
     ]
       .filter(Boolean)
@@ -208,6 +216,8 @@ export default function CreditCustomers() {
       "",
       recentEntries.length ? "Recent Entries:" : null,
       recentEntries.length ? recentEntries.join("\n") : null,
+      "",
+      "Please review your latest customer ledger summary.",
       "",
       "Thank you."
     ]

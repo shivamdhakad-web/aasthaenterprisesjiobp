@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jio-bp Desktop</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(circle at top, rgba(32, 83, 166, 0.32), transparent 45%),
+          linear-gradient(180deg, #09162e 0%, #0f1d3a 100%);
+        color: #f8fbff;
+        padding: 24px;
+      }
+
+      .card {
+        width: min(540px, 100%);
+        border: 1px solid rgba(149, 176, 232, 0.24);
+        background: rgba(11, 24, 50, 0.88);
+        border-radius: 24px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+        padding: 28px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 30px;
+        line-height: 1.15;
+      }
+
+      p {
+        margin: 0;
+        color: #b8c7e6;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        padding: 12px 18px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .primary {
+        background: linear-gradient(135deg, #0f62fe, #215bd0);
+        color: #fff;
+      }
+
+      .secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .meta {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #d7e1f8;
+        font-size: 13px;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Unable to load Jio-bp Desktop</h1>
+      <p>
+        The desktop app could not load the interface. Please check your internet connection
+        or confirm that the hosted API is reachable, then try again.
+      </p>
+
+      <div class="meta" id="attempted-url"></div>
+
+      <div class="actions">
+        <button class="primary" id="retry-button" type="button">Retry</button>
+        <button class="secondary" id="open-web-button" type="button">Open Website</button>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search)
+      const attemptedUrl = params.get("url") || "Unknown source"
+      const webUrl = params.get("webUrl") || "https://aasthaenterprisesjiobp.vercel.app"
+
+      document.getElementById("attempted-url").textContent = `Attempted: ${attemptedUrl}`
+
+      document.getElementById("retry-button").addEventListener("click", () => {
+        if (window.jiobpDesktop?.retryLoad) {
+          window.jiobpDesktop.retryLoad()
+        } else {
+          window.location.reload()
+        }
+      })
+
+      document.getElementById("open-web-button").addEventListener("click", () => {
+        if (window.jiobpDesktop?.openExternal) {
+          window.jiobpDesktop.openExternal(webUrl)
+        } else {
+          window.open(webUrl, "_blank")
+        }
+      })
+    </script>
+  </body>
+</html>

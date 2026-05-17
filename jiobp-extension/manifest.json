@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Jio-bp Side Panel",
+  "description": "Open the hosted Jio-bp dashboard inside a Chrome side panel.",
+  "version": "1.0.0",
+  "minimum_chrome_version": "114",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://aasthaenterprisesjiobp.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "Open Jio-bp Side Panel"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://aasthaenterprisesjiobp.vercel.app"
+  }
+}

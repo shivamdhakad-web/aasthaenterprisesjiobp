@@ -26,17 +26,17 @@ const passwordRoles = [
   {
     key: "admin",
     label: "Admin Password",
-    description: "Admin login password change karne ke liye unlock, current, aur new password required hoga.",
+    description: "Admin login password change karne ke liye master unlock password, current password, aur naya password dena zaroori hoga.",
   },
   {
     key: "manager",
     label: "Manager Password",
-    description: "Manager dashboard ka main login password yahin se securely change hoga.",
+    description: "Manager dashboard ka main login password bhi isi secure flow se update hoga.",
   },
   {
     key: "employee",
     label: "Employee Master Password",
-    description: "Employee master login password ko secure unlock flow ke saath update karo.",
+    description: "Employee master login password ko update karne ke baad saare active sessions logout ho jayenge.",
   },
 ]
 
@@ -168,7 +168,7 @@ export default function Settings() {
       <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Station Settings</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Station details, contacts, and secure dashboard controls will be managed from here.
+          Station details, contacts, aur secure dashboard controls yahin se manage honge.
         </p>
       </section>
 
@@ -187,7 +187,7 @@ export default function Settings() {
           <div>
             <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Dashboard Passwords</h2>
             <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-              To change your password, enter your master unlock password, then your current password, and then your new password. Once saved, all devices will be logged out.
+              Yahan se admin, manager, aur employee dashboard passwords change honge. Save hote hi saare devices logout ho jayenge, aur session waise bhi 5 din me auto-expire hoga.
             </p>
           </div>
 
@@ -198,6 +198,9 @@ export default function Settings() {
                 className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 shadow-[0_12px_24px_rgba(16,24,20,0.05)]"
               >
                 <p className="text-sm font-semibold text-[color:var(--text-strong)]">{role.label}</p>
+                <p className="mt-2 min-h-[72px] text-sm leading-6 text-[color:var(--text-secondary)]">
+                  {role.description}
+                </p>
                 
                 <button
                   type="button"
@@ -285,7 +288,7 @@ export default function Settings() {
               Change {passwordRoles.find((role) => role.key === passwordForm.role)?.label}
             </h3>
             <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-              Enter your master unlock password, current password, and new password. Save and log out all active sessions.
+              Pehle master unlock password do, phir current password, phir new password. Save ke baad saare devices aur active logins logout ho jayenge.
             </p>
 
             <div className="mt-5 grid gap-4">

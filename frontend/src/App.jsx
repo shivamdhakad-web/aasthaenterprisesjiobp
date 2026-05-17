@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom"
 
 import DashboardLayout from "./layouts/DashboardLayout"
 import Home from "./pages/Home"
@@ -43,8 +43,13 @@ import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 
 export default function App() {
+  const AppRouter =
+    typeof window !== "undefined" && window.location.protocol === "file:"
+      ? HashRouter
+      : BrowserRouter
+
   return (
-    <BrowserRouter>
+    <AppRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -212,6 +217,6 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </AppRouter>
   )
 }

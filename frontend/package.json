@@ -2,10 +2,17 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+  "description": "Jio-bp Station frontend and Windows desktop shell",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:desktop": "vite build --mode desktop",
+    "desktop:icon": "node scripts/generate-desktop-icon.mjs",
+    "desktop:dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "desktop:build": "npm run desktop:icon && npm run build:desktop && electron-builder --dir",
+    "desktop:package": "npm run desktop:icon && npm run build:desktop && electron-builder --win nsis",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -34,10 +41,52 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^9.2.1",
+    "electron": "^37.2.6",
+    "electron-builder": "26.0.12",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "png-to-ico": "^2.1.8",
     "vite": "^7.3.1"
+    ,
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.jiobp.station.desktop",
+    "productName": "Jio-bp Station Desktop",
+    "asar": true,
+    "directories": {
+      "buildResources": "build-resources",
+      "output": "desktop-release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false,
+      "icon": "build-resources/app-icon.ico",
+      "artifactName": "Jio-bp-Station-Desktop-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "removeDefaultUninstallWelcomePage": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Jio-bp Station Desktop"
+    }
   }
 }

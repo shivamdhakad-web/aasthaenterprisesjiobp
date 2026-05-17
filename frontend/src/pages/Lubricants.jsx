@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -13,9 +13,24 @@ import {
   getLubricants,
   getProducts,
   updateLubricant,
+  updateProduct,
 } from "../services/lubricantApi"
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
+
+const defaultSaleForm = {
+  date: "",
+  product: "",
+  price: "",
+  quantity: "",
+  soldBy: "Admin",
+}
+
+const defaultProductForm = {
+  name: "",
+  price: "",
+  stock: "",
+}
 
 export default function Lubricants() {
   const [data, setData] = useState([])
@@ -34,20 +49,12 @@ export default function Lubricants() {
   const [openCard, setOpenCard] = useState(null)
   const [openProductCard, setOpenProductCard] = useState(null)
   const [showFilter, setShowFilter] = useState(false)
+  const [productStockOpen, setProductStockOpen] = useState(true)
+  const [productMode, setProductMode] = useState("create")
+  const [activeProduct, setActiveProduct] = useState(null)
 
-  const [form, setForm] = useState({
-    date: "",
-    product: "",
-    price: "",
-    quantity: "",
-    soldBy: "Admin",
-  })
-
-  const [productForm, setProductForm] = useState({
-    name: "",
-    price: "",
-    stock: "",
-  })
+  const [form, setForm] = useState(defaultSaleForm)
+  const [productForm, setProductForm] = useState(defaultProductForm)
 
   useEffect(() => {
     loadSales()
@@ -75,14 +82,14 @@ export default function Lubricants() {
   }
 
   const resetSaleForm = () => {
-    setForm({
-      date: "",
-      product: "",
-      price: "",
-      quantity: "",
-      soldBy: "Admin",
-    })
+    setForm(defaultSaleForm)
     setEdit(null)
+  }
+
+  const resetProductForm = () => {
+    setProductForm(defaultProductForm)
+    setProductMode("create")
+    setActiveProduct(null)
   }
 
   const openSaleModal = (entry = null) => {
@@ -100,6 +107,39 @@ export default function Lubricants() {
     }
 
     setOpen(true)
+  }
+
+  const openCreateProductModal = () => {
+    resetProductForm()
+    setProductMode("create")
+    setProductModal(true)
+  }
+
+  const openEditProductModal = (product) => {
+    setActiveProduct(product)
+    setProductMode("edit")
+    setProductForm({
+      name: product.name || "",
+      price: String(product.price ?? ""),
+      stock: String(product.stock ?? ""),
+    })
+    setProductModal(true)
+  }
+
+  const openAddStockModal = (product) => {
+    setActiveProduct(product)
+    setProductMode("stock")
+    setProductForm({
+      name: product.name || "",
+      price: String(product.price ?? ""),
+      stock: "",
+    })
+    setProductModal(true)
+  }
+
+  const closeProductModal = () => {
+    setProductModal(false)
+    resetProductForm()
   }
 
   const save = async () => {
@@ -135,23 +175,51 @@ export default function Lubricants() {
   }
 
   const saveProduct = async () => {
-    if (!productForm.name || !productForm.price) {
-      alert("Enter product details")
-      return
+    if (productMode === "create") {
+      if (!productForm.name || !productForm.price) {
+        alert("Enter product details")
+        return
+      }
+
+      await addProduct({
+        ...productForm,
+        price: Number(productForm.price),
+        stock: Number(productForm.stock || 0),
+      })
     }
 
-    await addProduct({
-      ...productForm,
-      price: Number(productForm.price),
-      stock: Number(productForm.stock),
-    })
+    if (productMode === "edit") {
+      if (!activeProduct?._id || !productForm.name || !productForm.price) {
+        alert("Enter product details")
+        return
+      }
 
-    setProductModal(false)
-    setProductForm({
-      name: "",
-      price: "",
-      stock: "",
-    })
+      await updateProduct(activeProduct._id, {
+        name: productForm.name,
+        price: Number(productForm.price),
+        stock: Number(productForm.stock || 0),
+      })
+    }
+
+    if (productMode === "stock") {
+      if (!activeProduct?._id) {
+        alert("Product not found")
+        return
+      }
+
+      if (!productForm.stock || Number(productForm.stock) <= 0) {
+        alert("Enter stock quantity to add")
+        return
+      }
+
+      await updateProduct(activeProduct._id, {
+        name: activeProduct.name,
+        price: Number(activeProduct.price || 0),
+        stock: Number(activeProduct.stock || 0) + Number(productForm.stock || 0),
+      })
+    }
+
+    closeProductModal()
     loadProducts()
   }
 
@@ -192,22 +260,22 @@ export default function Lubricants() {
   let totalAll = 0
 
   filtered.forEach((entry) => {
-    const total = Number(entry.total || 0)
+    const entryTotal = Number(entry.total || 0)
     const entryDate = new Date(entry.date)
 
-    totalAll += total
+    totalAll += entryTotal
 
     if (entry.date === todayString) {
-      todayTotal += total
+      todayTotal += entryTotal
     }
 
     const diffDays = (today - entryDate) / (1000 * 60 * 60 * 24)
     if (diffDays <= 7) {
-      weekTotal += total
+      weekTotal += entryTotal
     }
 
     if (entryDate.getMonth() === today.getMonth() && entryDate.getFullYear() === today.getFullYear()) {
-      monthTotal += total
+      monthTotal += entryTotal
     }
   })
 
@@ -223,103 +291,32 @@ export default function Lubricants() {
     })
   }
 
-  // const generatePDF = (reportData) => {
-  //   const doc = new jsPDF()
+  const generatePDF = (reportData) => {
+    const doc = new jsPDF()
 
-  //   doc.setFontSize(16)
-  //   doc.text("Lubricant Sales Report", 14, 15)
-  //   doc.setFontSize(10)
-  //   doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`, 14, 22)
-  //   doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
-  //   doc.text(`Total Records: ${reportData.length}`, 14, 34)
+    doc.setFontSize(16)
+    doc.text("Lubricant Sales Report", 14, 15)
 
-  //   autoTable(doc, {
-  //     startY: 40,
-  //     head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
-  //     body: reportData.map((entry) => [
-  //       entry.date,
-  //       entry.product,
-  //       entry.quantity,
-  //       formatCurrency(entry.price),
-  //       formatCurrency(entry.total),
-  //       entry.soldBy,
-  //     ]),
-  //     styles: { fontSize: 8 },
-  //     headStyles: { fillColor: [22, 163, 74] },
-  //   })
+    doc.setFontSize(10)
+    doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`, 14, 22)
+    doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
+    doc.text(`Total Records: ${reportData.length}`, 14, 34)
 
-  //   doc.save("Lubricant_Report.pdf")
-  // }
+    autoTable(doc, {
+      startY: 40,
+      head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
+      body: reportData.map((entry) => [
+        entry.date,
+        entry.product,
+        entry.quantity,
+        formatCurrency(entry.price),
+        formatCurrency(entry.total),
+        entry.soldBy,
+      ]),
+    })
 
-//   const generatePDF = (reportData) => {
-//   const doc = new jsPDF()
-
-//   // 🔹 HEADER
-//   doc.setFontSize(16)
-//   doc.text("Lubricant Sales Report", 14, 15)
-
-//   doc.setFontSize(10)
-//   doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`, 14, 22)
-//   doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
-//   doc.text(`Total Records: ${reportData.length}`, 14, 34)
-
-//   // 🔹 TABLE
-//   autoTable(doc, {
-//     startY: 40,
-//     head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
-//     body: reportData.map((entry) => [
-//       entry.date,
-//       entry.product,
-//       entry.quantity,
-//       formatCurrency(entry.price),
-//       formatCurrency(entry.total),
-//       entry.soldBy,
-//     ]),
-//     styles: { fontSize: 8 },
-//     headStyles: { fillColor: [22, 163, 74] },
-//   })
-
-//   // 🔥 IMPORTANT FIX (WEBVIEW SUPPORT)
-//   const blob = doc.output("blob")
-//   const url = URL.createObjectURL(blob)
-
-//   // 👉 PDF open होगा (WebView detect करेगा)
-//   window.open(url)
-
-//   // 👉 Optional: auto download भी
-//   const link = document.createElement("a")
-//   link.href = url
-//   link.download = "Lubricant_Report.pdf"
-//   link.click()
-// }
-
-const generatePDF = (reportData) => {
-  const doc = new jsPDF()
-
-  doc.setFontSize(16)
-  doc.text("Lubricant Sales Report", 14, 15)
-
-  doc.setFontSize(10)
-  doc.text(`From: ${fromDate || "All"} To: ${toDate || "All"}`, 14, 22)
-  doc.text(`Product: ${reportProduct || "All"}`, 14, 28)
-  doc.text(`Total Records: ${reportData.length}`, 14, 34)
-
-  autoTable(doc, {
-    startY: 40,
-    head: [["Date", "Product", "Qty", "Price", "Total", "Sold By"]],
-    body: reportData.map((entry) => [
-      entry.date,
-      entry.product,
-      entry.quantity,
-      formatCurrency(entry.price),
-      formatCurrency(entry.total),
-      entry.soldBy,
-    ]),
-  })
-
-  // ✅ FINAL FIX (NO BLOB)
-  doc.save("Lubricant_Report.pdf")
-}
+    doc.save("Lubricant_Report.pdf")
+  }
 
   const generateExcel = (reportData) => {
     const formatted = reportData.map((entry, index) => ({
@@ -357,6 +354,18 @@ const generatePDF = (reportData) => {
   }
 
   const total = Number(form.price || 0) * Number(form.quantity || 0) || 0
+
+  const productModalTitle = useMemo(() => {
+    if (productMode === "edit") {
+      return "Edit Product"
+    }
+
+    if (productMode === "stock") {
+      return "Add Stock"
+    }
+
+    return "Add Product"
+  }, [productMode])
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
@@ -401,7 +410,7 @@ const generatePDF = (reportData) => {
         />
 
         <button
-          onClick={() => setProductModal(true)}
+          onClick={openCreateProductModal}
           className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
         >
           + Add Product
@@ -472,81 +481,136 @@ const generatePDF = (reportData) => {
         </div>
       </div>
 
-      <section className="mb-6">
-        <h2 className="mb-3 text-lg font-semibold text-[color:var(--text-strong)]">Product Stock</h2>
+      <section className="mb-6 rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] sm:p-6">
+        <button
+          type="button"
+          onClick={() => setProductStockOpen((current) => !current)}
+          className="flex w-full items-center justify-between gap-3 text-left"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">Product Stock</h2>
+            <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+              Existing product ka stock yahin se add ya edit karo.
+            </p>
+          </div>
 
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="table min-w-[720px]">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+          <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-1 text-sm font-medium text-[color:var(--text-primary)]">
+            {productStockOpen ? "Hide" : "Show"}
+          </span>
+        </button>
 
-            <tbody>
+        {productStockOpen ? (
+          <>
+            <div className="mt-4 hidden overflow-x-auto sm:block">
+              <table className="table min-w-[900px]">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {products.map((product) => (
+                    <tr key={product._id}>
+                      <td>{product.name}</td>
+                      <td>{formatCurrency(product.price)}</td>
+                      <td className="text-green-500">{product.stock}</td>
+                      <td>
+                        <div className="flex items-center justify-center gap-3">
+                          <button
+                            onClick={() => openAddStockModal(product)}
+                            className="text-green-500"
+                          >
+                            Add Stock
+                          </button>
+
+                          <button
+                            onClick={() => openEditProductModal(product)}
+                            className="text-blue-500"
+                          >
+                            Edit
+                          </button>
+
+                          <button onClick={() => removeProduct(product._id)} className="text-red-500">
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 space-y-4 sm:hidden">
               {products.map((product) => (
-                <tr key={product._id}>
-                  <td>{product.name}</td>
-                  <td>{formatCurrency(product.price)}</td>
-                  <td className="text-green-500">{product.stock}</td>
-                  <td>
-                    <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => removeProduct(product._id)} className="text-red-500">
+                <div
+                  key={product._id}
+                  onClick={() =>
+                    setOpenProductCard((current) => (current === product._id ? null : product._id))
+                  }
+                  className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-[color:var(--text-strong)]">{product.name}</p>
+                      <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+                        {formatCurrency(product.price)}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                        Number(product.stock) < 5
+                          ? "border border-red-500/20 bg-red-500/10 text-red-500"
+                          : "border border-green-500/20 bg-green-500/10 text-green-500"
+                      }`}
+                    >
+                      Stock: {product.stock}
+                    </div>
+                  </div>
+
+                  {openProductCard === product._id ? (
+                    <div className="mt-4 grid gap-2 border-t border-[var(--border-color)] pt-3">
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openAddStockModal(product)
+                        }}
+                        className="w-full rounded-xl border border-green-500/20 bg-green-500/10 py-2 text-sm text-green-500"
+                      >
+                        Add Stock
+                      </button>
+
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openEditProductModal(product)
+                        }}
+                        className="w-full rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                      >
+                        Edit Product
+                      </button>
+
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          removeProduct(product._id)
+                        }}
+                        className="w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                      >
                         Delete
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  ) : null}
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="space-y-4 sm:hidden">
-          {products.map((product) => (
-            <div
-              key={product._id}
-              onClick={() =>
-                setOpenProductCard((current) => (current === product._id ? null : product._id))
-              }
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-[color:var(--text-strong)]">{product.name}</p>
-                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-                    {formatCurrency(product.price)}
-                  </p>
-                </div>
-
-                <div
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    Number(product.stock) < 5
-                      ? "border border-red-500/20 bg-red-500/10 text-red-500"
-                      : "border border-green-500/20 bg-green-500/10 text-green-500"
-                  }`}
-                >
-                  Stock: {product.stock}
-                </div>
-              </div>
-
-              {openProductCard === product._id ? (
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    removeProduct(product._id)
-                  }}
-                  className="mt-4 w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                >
-                  Delete
-                </button>
-              ) : null}
             </div>
-          ))}
-        </div>
+          </>
+        ) : null}
       </section>
 
       <section>
@@ -728,34 +792,53 @@ const generatePDF = (reportData) => {
       {productModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6">
-            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">Add Product</h2>
+            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">{productModalTitle}</h2>
 
             <div className="grid gap-3">
-              <input
-                placeholder="Product Name"
-                value={productForm.name}
-                onChange={(event) => setProductForm({ ...productForm, name: event.target.value })}
-                className="input"
-              />
+              {productMode === "stock" ? (
+                <>
+                  <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 text-sm text-[color:var(--text-secondary)]">
+                    Product: <span className="font-semibold text-[color:var(--text-strong)]">{activeProduct?.name}</span>
+                    <br />
+                    Current Stock: <span className="font-semibold text-green-500">{activeProduct?.stock ?? 0}</span>
+                  </div>
 
-              <input
-                placeholder="Price"
-                value={productForm.price}
-                onChange={(event) => setProductForm({ ...productForm, price: event.target.value })}
-                className="input"
-              />
+                  <input
+                    placeholder="Add Stock Quantity"
+                    value={productForm.stock}
+                    onChange={(event) => setProductForm({ ...productForm, stock: event.target.value })}
+                    className="input"
+                  />
+                </>
+              ) : (
+                <>
+                  <input
+                    placeholder="Product Name"
+                    value={productForm.name}
+                    onChange={(event) => setProductForm({ ...productForm, name: event.target.value })}
+                    className="input"
+                  />
 
-              <input
-                placeholder="Stock"
-                value={productForm.stock}
-                onChange={(event) => setProductForm({ ...productForm, stock: event.target.value })}
-                className="input"
-              />
+                  <input
+                    placeholder="Price"
+                    value={productForm.price}
+                    onChange={(event) => setProductForm({ ...productForm, price: event.target.value })}
+                    className="input"
+                  />
+
+                  <input
+                    placeholder={productMode === "edit" ? "Current Stock" : "Stock"}
+                    value={productForm.stock}
+                    onChange={(event) => setProductForm({ ...productForm, stock: event.target.value })}
+                    className="input"
+                  />
+                </>
+              )}
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
               <button
-                onClick={() => setProductModal(false)}
+                onClick={closeProductModal}
                 className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
               >
                 Cancel
@@ -834,7 +917,7 @@ const generatePDF = (reportData) => {
           {
             label: "Add Product",
             className: "bg-blue-600",
-            onClick: () => setProductModal(true),
+            onClick: openCreateProductModal,
           },
           {
             label: "Generate Report",

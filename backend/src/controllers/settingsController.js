@@ -79,6 +79,10 @@ exports.changeDashboardPassword = async (req, res) => {
     const { role, unlockPassword, currentPassword, newPassword } = req.body || {}
     const allowedRoles = ["admin", "manager", "employee"]
 
+    if (req.user?.role !== "Admin") {
+      return res.status(403).json({ message: "Only admin can change dashboard passwords" })
+    }
+
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "Please choose a valid dashboard role" })
     }
@@ -118,6 +122,8 @@ exports.changeDashboardPassword = async (req, res) => {
     settings.loginPasswords[role] = String(newPassword).trim()
     settings.passwordSecurity.authVersion = (settings.passwordSecurity.authVersion || 1) + 1
     settings.passwordSecurity.lastPasswordChangedAt = new Date()
+    settings.markModified("loginPasswords")
+    settings.markModified("passwordSecurity")
 
     await settings.save()
 
