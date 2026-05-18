@@ -360,7 +360,7 @@ export default function SmartCalculatorPage() {
           </div>
 
           {/* Metric Cards */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* <div className="grid grid-cols-3 gap-2">
             <div className="rounded-2xl border border-[var(--border-strong)] bg-gradient-to-br from-[#fff2dd] to-[#fffaf0] p-2.5">
               <p className="text-[10px] text-[color:var(--text-secondary)]">Notes</p>
               <p className="mt-1 text-xl font-semibold text-[color:var(--text-strong)]">{cashMetrics.notesCount}</p>
@@ -373,7 +373,32 @@ export default function SmartCalculatorPage() {
               <p className="text-[10px] text-[color:var(--text-secondary)]">Total Amount</p>
               <p className="mt-1 text-xl font-semibold text-[color:var(--text-strong)]">{formatCurrency(cashMetrics.totalAmount)}</p>
             </div>
-          </div>
+          </div> */}
+          <div className="grid grid-cols-3 gap-2">
+  {/* Notes Card */}
+  <div className="rounded-2xl border border-amber-400 bg-amber-300 p-2.5 dark:border-amber-700 dark:bg-amber-900/40">
+    <p className="text-[10px] font-medium !text-black dark:!text-white">Notes</p>
+    <p className="mt-1 text-xl font-semibold !text-black dark:!text-white">
+      {cashMetrics.notesCount}
+    </p>
+  </div>
+
+  {/* Cash Total Card */}
+  <div className="rounded-2xl border border-green-400 bg-green-300 p-2.5 dark:border-green-700 dark:bg-green-900/40">
+    <p className="text-[10px] font-medium !text-black dark:!text-white">Cash Total</p>
+    <p className="mt-1 text-xl font-semibold !text-black dark:!text-white">
+      {formatCurrency(cashMetrics.cashTotal)}
+    </p>
+  </div>
+
+  {/* Total Amount Card */}
+  <div className="rounded-2xl border border-blue-400 bg-blue-300 p-2.5 dark:border-blue-700 dark:bg-blue-900/40">
+    <p className="text-[10px] font-medium !text-black dark:!text-white">Total Amount</p>
+    <p className="mt-1 text-xl font-semibold !text-black dark:!text-white">
+      {formatCurrency(cashMetrics.totalAmount)}
+    </p>
+  </div>
+</div>
 
           {/* Credit / Debit + Online + Tally */}
           <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-1 space-y-1">

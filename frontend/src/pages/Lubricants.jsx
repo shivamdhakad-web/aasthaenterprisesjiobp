@@ -490,7 +490,7 @@ export default function Lubricants() {
           <div>
             <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">Product Stock</h2>
             <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-              Existing product ka stock yahin se add ya edit karo.
+              Add or edit stock of existing products from here.
             </p>
           </div>
 
