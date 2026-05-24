@@ -168,7 +168,7 @@ export default function Settings() {
       <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Station Settings</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Station details, contacts, aur secure dashboard controls yahin se manage honge.
+         Station details, contacts, and secure dashboard controls will be managed from here.
         </p>
       </section>
 
@@ -187,7 +187,7 @@ export default function Settings() {
           <div>
             <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Dashboard Passwords</h2>
             <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-              Yahan se admin, manager, aur employee dashboard passwords change honge. Save hote hi saare devices logout ho jayenge, aur session waise bhi 5 din me auto-expire hoga.
+              From here, the admin, manager, and employee dashboard passwords will change. All devices will be logged out as soon as they are saved, and the session will auto-expire in 5 days anyway.
             </p>
           </div>
 
@@ -198,9 +198,9 @@ export default function Settings() {
                 className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 shadow-[0_12px_24px_rgba(16,24,20,0.05)]"
               >
                 <p className="text-sm font-semibold text-[color:var(--text-strong)]">{role.label}</p>
-                <p className="mt-2 min-h-[72px] text-sm leading-6 text-[color:var(--text-secondary)]">
+                {/* <p className="mt-2 min-h-[72px] text-sm leading-6 text-[color:var(--text-secondary)]">
                   {role.description}
-                </p>
+                </p> */}
                 
                 <button
                   type="button"

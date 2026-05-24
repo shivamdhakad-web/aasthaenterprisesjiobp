@@ -10,10 +10,11 @@ import {
   toDailyReportPayload,
 } from "../../lib/dailyReport"
 import { ChevronDown } from "lucide-react"
+import OtpVerificationModal from "../../components/OtpVerificationModal"
 
 export default function DailyReportsPage() {
   const { user } = useAuth()
-  const isAdmin = user?.role === "Admin"
+  const canUpdate = user?.role === "Admin" || user?.role === "Manager"
   const [employees, setEmployees] = useState([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
   const [reports, setReports] = useState([])
@@ -21,6 +22,13 @@ export default function DailyReportsPage() {
   const [form, setForm] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [isReportsOpen, setIsReportsOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [otpState, setOtpState] = useState({
+    open: false,
+    code: "",
+    input: "",
+    error: "",
+  })
 
   const load = async (employeeId = selectedEmployeeId) => {
     const data = await getDailyReports(employeeId ? { employeeId } : {})
@@ -63,22 +71,96 @@ export default function DailyReportsPage() {
     setForm(hydrateDailyReport(report))
   }
 
+  const closeOtpModal = () => {
+    setOtpState({
+      open: false,
+      code: "",
+      input: "",
+      error: "",
+    })
+  }
+
+  const persistReport = async () => {
+    if (!selectedReport || !canUpdate) {
+      return false
+    }
+
+    try {
+      await updateDailyReport(
+        selectedReport._id,
+        toDailyReportPayload(form, selectedReport.employeeName),
+      )
+      await load()
+      setFeedback({
+        title: "Report update ho gayi",
+        message:
+          user?.role === "Manager"
+            ? "Manager update successfully save ho gaya."
+            : "Admin changes successfully save ho gaye.",
+      })
+      return true
+    } catch (error) {
+      setFeedback({
+        title: "Report update nahi ho payi",
+        message: error?.response?.data?.message || "Please dobara try karo.",
+      })
+      return false
+    }
+  }
+
   const handleSave = async () => {
-    if (!selectedReport || !isAdmin) {
+    if (!selectedReport || !canUpdate) {
       return
     }
 
-    await updateDailyReport(selectedReport._id, toDailyReportPayload(form, selectedReport.employeeName))
-    await load()
-    setFeedback({
-      title: "Report update ho gayi",
-      message: "Admin changes successfully save ho gaye.",
+    setOtpState({
+      open: true,
+      code: String(Math.floor(1000 + Math.random() * 9000)),
+      input: "",
+      error: "",
     })
+  }
+
+  const confirmOtpSave = async () => {
+    if (otpState.input !== otpState.code) {
+      setOtpState((current) => ({
+        ...current,
+        error: "OTP match nahi hua. Same 4-digit OTP enter karo.",
+      }))
+      return
+    }
+
+    setSubmitting(true)
+    const success = await persistReport()
+    setSubmitting(false)
+
+    if (success) {
+      closeOtpModal()
+    }
   }
 
   return (
     <div className="space-y-4 px-3 pb-6 pt-4 sm:space-y-6 sm:p-6">
       {feedback ? <AdminNotice feedback={feedback} onClose={() => setFeedback(null)} /> : null}
+      <OtpVerificationModal
+        open={otpState.open}
+        title="Update OTP Verification"
+        description="To confirm daily report update, enter the 4-digit hotkey shown below."
+        otpCode={otpState.code}
+        otpInput={otpState.input}
+        error={otpState.error}
+        confirmLabel="Verify & Update"
+        submitting={submitting}
+        onChange={(value) =>
+          setOtpState((current) => ({
+            ...current,
+            input: value,
+            error: "",
+          }))
+        }
+        onConfirm={confirmOtpSave}
+        onClose={closeOtpModal}
+      />
 
       <div className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -174,9 +256,9 @@ export default function DailyReportsPage() {
               form={form}
               setForm={setForm}
               employeeName={selectedReport.employeeName}
-              readOnly={!isAdmin}
-              submitLabel={isAdmin ? "Update Report" : undefined}
-              onSubmit={isAdmin ? handleSave : undefined}
+              readOnly={!canUpdate}
+              submitLabel={canUpdate ? "Update Report" : undefined}
+              onSubmit={canUpdate ? handleSave : undefined}
               onExportPdf={() => exportDailyReportPdf(form, selectedReport.employeeName)}
             />
           </div>

@@ -15,6 +15,7 @@ export default function LeaveManagementPage() {
   const [employees, setEmployees] = useState([])
   const [employeeId, setEmployeeId] = useState("")
   const [status, setStatus] = useState("")
+  const [showFilter, setShowFilter] = useState(false)
   const [response, setResponse] = useState({ items: [], balancesByEmployee: {} })
 
   // Custom prompt state
@@ -93,7 +94,16 @@ export default function LeaveManagementPage() {
       </div>
 
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mb-3 md:hidden">
+          <button
+            onClick={() => setShowFilter((current) => !current)}
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+          >
+            {showFilter ? "Hide Filters" : "Filters"}
+          </button>
+        </div>
+
+        <div className={`gap-3 md:grid md:grid-cols-2 xl:grid-cols-3 ${showFilter ? "grid" : "hidden md:grid"}`}>
           <select value={employeeId} onChange={(event) => setEmployeeId(event.target.value)} className="input">
             <option value="">All employees</option>
             {employees.map((employee) => (
@@ -241,6 +251,7 @@ export default function LeaveManagementPage() {
             <div className="p-5">
               <h3 className="text-lg font-semibold text-[color:var(--text-strong)]">{prompt.title}</h3>
               <textarea
+                id="prompt-textarea"
                 className="input mt-4 w-full"
                 rows={3}
                 defaultValue={prompt.defaultValue}

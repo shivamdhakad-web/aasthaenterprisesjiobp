@@ -1,9 +1,10 @@
 import { Bell, Menu, MoonStar, Search, SunMedium } from "lucide-react"
-import { Link } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
 import { getNotifications } from "../../services/notificationApi"
+import { navigationByRole } from "../../config/navigation"
 
 const notificationPathByRole = {
   Admin: "/admin/notifications",
@@ -11,15 +12,62 @@ const notificationPathByRole = {
   Employee: "/employee/notifications",
 }
 
+const tokenizeRoute = (entry) => {
+  const tokens = new Set(
+    `${entry.label} ${entry.path}`
+      .toLowerCase()
+      .split(/[\s/-]+/)
+      .filter(Boolean),
+  )
+
+  return [...tokens]
+}
+
+const getRouteScore = (entry, query) => {
+  const normalizedLabel = entry.label.toLowerCase()
+  const normalizedPath = entry.path.toLowerCase()
+  const tokens = tokenizeRoute(entry)
+
+  if (normalizedLabel.startsWith(query)) {
+    return 60
+  }
+
+  const matchingToken = tokens.find((token) => token.startsWith(query))
+  if (matchingToken) {
+    return 50 - matchingToken.length / 100
+  }
+
+  if (normalizedLabel.includes(query)) {
+    return 30
+  }
+
+  if (normalizedPath.includes(query)) {
+    return 20
+  }
+
+  return -1
+}
+
 export default function Topbar({ toggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false)
   const [notifyCount, setNotifyCount] = useState(0)
+  const [searchText, setSearchText] = useState("")
   const { user, logout } = useAuth()
   const { theme, isDayTheme, toggleTheme } = useTheme()
+  const navigate = useNavigate()
+  const location = useLocation()
   const displayName =
     user?.role === "Employee"
       ? (user?.name || user?.role || "").split(" ")[0]
       : user?.name || user?.role
+  const searchableRoutes = useMemo(() => {
+    const roleEntries = navigationByRole[user?.role] || []
+
+    return roleEntries.map((entry, index) => ({
+      ...entry,
+      order: index,
+    }))
+  }, [location.pathname, user?.role])
 
   useEffect(() => {
     const load = async () => {
@@ -60,6 +108,40 @@ export default function Topbar({ toggleSidebar }) {
     window.location.href = "/"
   }
 
+  useEffect(() => {
+    const query = searchText.trim().toLowerCase()
+
+    if (!query) {
+      return undefined
+    }
+
+    const bestMatch = searchableRoutes
+      .map((entry) => ({
+        entry,
+        score: getRouteScore(entry, query),
+      }))
+      .filter((item) => item.score >= 0)
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score
+        }
+
+        return left.entry.order - right.entry.order
+      })[0]
+
+    if (!bestMatch) {
+      return undefined
+    }
+
+    const timer = window.setTimeout(() => {
+      if (bestMatch.entry.path !== location.pathname) {
+        navigate(bestMatch.entry.path)
+      }
+    }, 180)
+
+    return () => window.clearTimeout(timer)
+  }, [location.pathname, navigate, searchText, searchableRoutes])
+
   const ThemeIcon = theme === "day" ? MoonStar : SunMedium
 
   return (
@@ -75,6 +157,8 @@ export default function Topbar({ toggleSidebar }) {
         <div className="flex h-12 w-full max-w-[430px] items-center gap-3 rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-soft)] px-4 shadow-[0_10px_24px_rgba(16,24,20,0.04)]">
           <Search size={18} className="text-[color:var(--text-muted)]" />
           <input
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
             placeholder="Search dashboards, approvals, notifications..."
             className="w-full border-0 bg-transparent p-0 text-sm text-[color:var(--text-strong)] placeholder:text-[color:var(--text-muted)] focus:ring-0"
           />

@@ -30,6 +30,7 @@ export default function Expenses() {
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [showFilter, setShowFilter] = useState(false)
   const [openCard, setOpenCard] = useState(null)
   const [reportOpen, setReportOpen] = useState(false)
   const [fromDate, setFromDate] = useState("")
@@ -256,7 +257,16 @@ export default function Expenses() {
         </button>
       </div>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto]">
+      <div className="mb-3 sm:hidden">
+        <button
+          onClick={() => setShowFilter((current) => !current)}
+          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+        >
+          {showFilter ? "Hide Filters" : "Filters"}
+        </button>
+      </div>
+
+      <div className={`mb-4 gap-3 sm:grid sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden sm:grid"}`}>
         <select value={category} onChange={(event) => setCategory(event.target.value)} className="input">
           <option value="">All Category</option>
           {categories.map((item) => (

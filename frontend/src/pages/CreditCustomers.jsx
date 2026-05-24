@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react"
 import * as XLSX from "xlsx"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 import MobileActionFab from "../components/MobileActionFab"
 import {
@@ -273,6 +275,48 @@ export default function CreditCustomers() {
     win.print()
   }
 
+  const exportCustomersPdf = () => {
+    const doc = new jsPDF()
+
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(18)
+    doc.text("Aastha Enterprises", 14, 18)
+
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(12)
+    doc.text("Credit Customers List", 14, 26)
+    doc.setFontSize(10)
+    doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, 14, 34)
+    doc.text(`Total Customers: ${filteredCustomers.length}`, 14, 40)
+
+    autoTable(doc, {
+      startY: 48,
+      head: [["Name", "Phone", "Address", "Balance", "Created"]],
+      body: filteredCustomers.map((customer) => [
+        customer.name || "-",
+        customer.phone || "-",
+        customer.address || "-",
+        Number(customer.baki) < 0
+          ? `Advance ${formatCurrency(Math.abs(customer.baki))}`
+          : `Due ${formatCurrency(customer.baki)}`,
+        customer.createdAt ? new Date(customer.createdAt).toLocaleDateString("en-IN") : "-",
+      ]),
+      styles: {
+        fontSize: 9,
+        cellPadding: 4,
+      },
+      headStyles: {
+        fillColor: [37, 99, 235],
+        textColor: 255,
+      },
+      alternateRowStyles: {
+        fillColor: [245, 247, 250],
+      },
+    })
+
+    doc.save("Credit_Customers_List.pdf")
+  }
+
   const filteredCustomers = customers.filter((customer) =>
     [customer.name, customer.phone, customer.address].join(" ").toLowerCase().includes(search.toLowerCase()),
   )
@@ -304,6 +348,13 @@ export default function CreditCustomers() {
           className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
         >
           + Add Customer
+        </button>
+
+        <button
+          onClick={exportCustomersPdf}
+          className="hidden rounded-2xl bg-red-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+        >
+          PDF List
         </button>
       </div>
 
@@ -466,6 +517,10 @@ export default function CreditCustomers() {
 
               <button onClick={exportExcel} className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm">
                 Excel
+              </button>
+
+              <button onClick={exportCustomersPdf} className="rounded-2xl bg-red-500 px-5 py-3 font-medium text-white shadow-sm">
+                PDF List
               </button>
 
               <button onClick={printBill} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)]">
@@ -751,6 +806,11 @@ export default function CreditCustomers() {
             label: "Add Customer",
             className: "bg-blue-600",
             onClick: () => setShowModal(true),
+          },
+          {
+            label: "PDF List",
+            className: "bg-red-500",
+            onClick: exportCustomersPdf,
           },
           selectedCustomer
             ? {

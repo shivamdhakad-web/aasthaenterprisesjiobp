@@ -14,6 +14,7 @@ import {
   hydrateDailyReport,
   toDailyReportPayload,
 } from "../../lib/dailyReport"
+import OtpVerificationModal from "../../components/OtpVerificationModal"
 
 export default function EmployeeDailyReport() {
   const { user } = useAuth()
@@ -22,6 +23,15 @@ export default function EmployeeDailyReport() {
   const [editing, setEditing] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [otpState, setOtpState] = useState({
+    open: false,
+    code: "",
+    input: "",
+    error: "",
+    title: "",
+    description: "",
+  })
 
   const load = async () => {
     const data = await getMyDailyReports()
@@ -51,7 +61,18 @@ export default function EmployeeDailyReport() {
     return () => window.clearTimeout(timer)
   }, [feedback])
 
-  const handleSubmit = async () => {
+  const closeOtpModal = () => {
+    setOtpState({
+      open: false,
+      code: "",
+      input: "",
+      error: "",
+      title: "",
+      description: "",
+    })
+  }
+
+  const persistReport = async () => {
     try {
       const payload = toDailyReportPayload(form, user?.name)
 
@@ -69,12 +90,50 @@ export default function EmployeeDailyReport() {
       setEditing(null)
       setForm(createDailyReportForm(user?.name || ""))
       load()
+      return true
     } catch (error) {
       setFeedback({
         tone: "error",
         title: "Submit nahi ho paya",
         message: error?.response?.data?.message || "Please dobara try karo.",
       })
+      return false
+    }
+  }
+
+  const requestOtpSubmit = () => {
+    const code = String(Math.floor(1000 + Math.random() * 9000))
+    setOtpState({
+      open: true,
+      code,
+      input: "",
+      error: "",
+      title: editing ? "Update OTP Verification" : "Submit OTP Verification",
+      description: editing
+        ? "To confirm the daily sheet update, enter the same 4 digit OTP shown on the top right corner."
+        : "To submit the daily sheet, enter the same 4-digit hotkey shown below.",
+    })
+  }
+
+  const handleSubmit = async () => {
+    requestOtpSubmit()
+  }
+
+  const confirmOtpSubmit = async () => {
+    if (otpState.input !== otpState.code) {
+      setOtpState((current) => ({
+        ...current,
+        error: "OTP did not match. Please enter the same 4-digit IOTP.",
+      }))
+      return
+    }
+
+    setSubmitting(true)
+    const success = await persistReport()
+    setSubmitting(false)
+
+    if (success) {
+      closeOtpModal()
     }
   }
 
@@ -94,6 +153,25 @@ export default function EmployeeDailyReport() {
   return (
     <div className="space-y-4 px-3 pb-6 pt-4 sm:space-y-6 sm:p-6">
       {feedback ? <FloatingNotice feedback={feedback} onClose={() => setFeedback(null)} /> : null}
+      <OtpVerificationModal
+        open={otpState.open}
+        title={otpState.title}
+        description={otpState.description}
+        otpCode={otpState.code}
+        otpInput={otpState.input}
+        error={otpState.error}
+        confirmLabel={editing ? "Verify & Update" : "Verify & Submit"}
+        submitting={submitting}
+        onChange={(value) =>
+          setOtpState((current) => ({
+            ...current,
+            input: value,
+            error: "",
+          }))
+        }
+        onConfirm={confirmOtpSubmit}
+        onClose={closeOtpModal}
+      />
 
       <div className="rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

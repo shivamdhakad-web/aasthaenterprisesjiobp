@@ -1,6 +1,12 @@
 const mongoose = require("mongoose")
 
 const MAX_CAPACITY_BYTES = 512 * 1024 * 1024
+const DEFAULT_RUNTIME_MEMORY_MB = Number(
+  process.env.RENDER_RAM_LIMIT_MB ||
+    process.env.RENDER_MEMORY_MB ||
+    process.env.BACKEND_MEMORY_LIMIT_MB ||
+    512,
+)
 
 exports.getStorageOverview = async (_req, res) => {
   try {
@@ -36,6 +42,10 @@ exports.getStorageOverview = async (_req, res) => {
     const dataBytes = Number(stats.dataSize || 0)
     const indexBytes = Number(stats.indexSize || 0)
     const remainingBytes = Math.max(MAX_CAPACITY_BYTES - usedBytes, 0)
+    const runtimeMemoryStats = process.memoryUsage()
+    const runtimeCapacityBytes = DEFAULT_RUNTIME_MEMORY_MB * 1024 * 1024
+    const runtimeUsedBytes = Number(runtimeMemoryStats.rss || 0)
+    const runtimeRemainingBytes = Math.max(runtimeCapacityBytes - runtimeUsedBytes, 0)
 
     const cleanupPreview = collectionStats.slice(0, 6).map((item) => ({
       name: item.name,
@@ -60,6 +70,18 @@ exports.getStorageOverview = async (_req, res) => {
       indexBytes,
       remainingBytes,
       usedPercentage: Number(((usedBytes / MAX_CAPACITY_BYTES) * 100).toFixed(2)),
+      runtimeMemory: {
+        provider: process.env.RENDER ? "Render" : "Node Process",
+        capacityBytes: runtimeCapacityBytes,
+        usedBytes: runtimeUsedBytes,
+        remainingBytes: runtimeRemainingBytes,
+        usedPercentage: Number(((runtimeUsedBytes / runtimeCapacityBytes) * 100).toFixed(2)),
+        rssBytes: runtimeUsedBytes,
+        heapUsedBytes: Number(runtimeMemoryStats.heapUsed || 0),
+        heapTotalBytes: Number(runtimeMemoryStats.heapTotal || 0),
+        externalBytes: Number(runtimeMemoryStats.external || 0),
+        arrayBuffersBytes: Number(runtimeMemoryStats.arrayBuffers || 0),
+      },
       collections: collectionStats,
       cleanupPreview,
       generatedAt: new Date().toISOString(),

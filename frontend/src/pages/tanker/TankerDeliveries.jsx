@@ -23,6 +23,7 @@ export default function TankerDeliveries() {
   const [search, setSearch] = useState("")
   const [fuelFilter, setFuelFilter] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [showFilter, setShowFilter] = useState(false)
   const [open, setOpen] = useState(false)
   const [edit, setEdit] = useState(null)
   // const [densityOpen, setDensityOpen] = useState(false)
@@ -131,7 +132,16 @@ export default function TankerDeliveries() {
         </button>
       </div>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+      <div className="mb-3 sm:hidden">
+        <button
+          onClick={() => setShowFilter((current) => !current)}
+          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+        >
+          {showFilter ? "Hide Filters" : "Filters"}
+        </button>
+      </div>
+
+      <div className={`mb-4 gap-3 sm:grid sm:grid-cols-3 ${showFilter ? "grid" : "hidden sm:grid"}`}>
         <select value={fuelFilter} onChange={(event) => setFuelFilter(event.target.value)} className="input">
           <option value="">All Fuel</option>
           <option value="Petrol">Petrol</option>

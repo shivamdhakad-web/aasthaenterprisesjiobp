@@ -18,20 +18,60 @@ export default function StorageOverview() {
 
   useEffect(() => {
     const load = async () => {
-      const response = await getStorageOverview()
-      setData(response)
+      try {
+        const response = await getStorageOverview()
+        setData(response)
+      } catch {
+        setData(null)
+      }
     }
 
     load()
+    const interval = window.setInterval(load, 15000)
+
+    return () => window.clearInterval(interval)
   }, [])
 
   const collectionUsageMax = useMemo(
     () => Math.max(...(data?.collections || []).map((item) => item.storageBytes), 1),
     [data],
   )
+  const runtimeMemory = data?.runtimeMemory
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
+      <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
+        <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Render Backend RAM</h1>
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+          Real-time backend process memory usage is shown here against the 512 MB Render limit.
+        </p>
+
+        <div className="mt-5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+          <div
+            className="h-4 rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500"
+            style={{ width: `${Math.min(runtimeMemory?.usedPercentage || 0, 100)}%` }}
+          />
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--text-secondary)]">
+          <span>Used {formatBytes(runtimeMemory?.usedBytes)}</span>
+          <span>{runtimeMemory?.usedPercentage || 0}% of 512 MB</span>
+          <span>Free {formatBytes(runtimeMemory?.remainingBytes)}</span>
+        </div>
+
+        <p className="mt-3 text-xs text-[color:var(--text-secondary)]">
+          Source: {runtimeMemory?.provider || "Node Process"} - refresh every 15 seconds - last sync{" "}
+          {data?.generatedAt ? new Date(data.generatedAt).toLocaleTimeString("en-IN") : "-"}
+        </p>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StorageCard label="RAM Capacity" value={formatBytes(runtimeMemory?.capacityBytes)} />
+        <StorageCard label="RAM Used (RSS)" value={formatBytes(runtimeMemory?.rssBytes)} />
+        <StorageCard label="Heap Used" value={formatBytes(runtimeMemory?.heapUsedBytes)} />
+        <StorageCard label="Heap Total" value={formatBytes(runtimeMemory?.heapTotalBytes)} />
+      </div>
+
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">MongoDB Storage</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">

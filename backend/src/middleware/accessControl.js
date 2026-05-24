@@ -16,7 +16,7 @@ const policyRules = [
    { pattern: /^\/density-calculator(?:\/|$)/, methods: ["GET", "POST", "DELETE"], roles: ["Admin", "Manager", "Employee"] },
   { pattern: /^\/employee(?:\/|$)/, methods: ["GET", "POST", "PUT"], roles: ["Employee"] },
   { pattern: /^\/daily-reports(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
-  { pattern: /^\/daily-reports(?:\/|$)/, methods: ["PUT"], roles: ["Admin"] },
+  { pattern: /^\/daily-reports(?:\/|$)/, methods: ["PUT"], roles: ["Admin", "Manager"] },
 
   { pattern: /^\/users(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/reminders(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin", "Manager"] },
