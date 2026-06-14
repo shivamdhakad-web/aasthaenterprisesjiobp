@@ -23,6 +23,23 @@ body {
   overflow-x: hidden;
 }
 
+@media (max-width: 768px) {
+  .app-shell {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding-top: max(env(safe-area-inset-top), 28px);
+    padding-bottom: max(env(safe-area-inset-bottom), 22px);
+    background: var(--bg-main);
+  }
+
+  .webview-safe-screen {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding-top: max(env(safe-area-inset-top), 28px);
+    padding-bottom: max(env(safe-area-inset-bottom), 22px);
+  }
+}
+
 body,
 button,
 input,
