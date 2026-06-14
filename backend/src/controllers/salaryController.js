@@ -67,12 +67,14 @@ exports.getSalarySummary = async (req, res) => {
     let halfShift = 0
     let shortage = 0
     let advance = 0
+    let bonus = 0
 
     attendance.forEach((entry) => {
       if (entry.status === "present") present += 1
       if (entry.status === "absent") absent += 1
       if (entry.status === "double") doubleShift += 1
       if (entry.status === "half") halfShift += 1
+      if (entry.status === "bonus") bonus += Number(entry.bonusAmount || 0)
 
       shortage += Number(entry.shortage || 0)
       advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
@@ -99,8 +101,9 @@ exports.getSalarySummary = async (req, res) => {
         half: halfShift,
         shortage,
         advance,
+        bonus,
         earned: Math.round(earned),
-        final: Math.round(earned + shortage - advance),
+        final: Math.round(earned + bonus + shortage - advance),
       },
       entries: attendance,
     })

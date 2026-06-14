@@ -39,6 +39,8 @@ advanceCash:Number(req.body.advanceCash || 0),
 
 advancePetrol:Number(req.body.advancePetrol || 0),
 
+bonusAmount:Number(req.body.bonusAmount || 0),
+
 remark:req.body.remark
 
 ,
@@ -78,6 +80,7 @@ status:req.body.status,
 shortage:Number(req.body.shortage || 0),
 advanceCash:Number(req.body.advanceCash || 0),
 advancePetrol:Number(req.body.advancePetrol || 0),
+bonusAmount:Number(req.body.bonusAmount || 0),
 remark:req.body.remark
 
 ,

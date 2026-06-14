@@ -9,6 +9,7 @@ const buildEmptyRow = (employeeId = "") => ({
   shortage: "",
   advanceCash: "",
   advancePetrol: "",
+  bonusAmount: "",
   remark: "",
 })
 
@@ -42,6 +43,7 @@ export default function AttendanceModal({
         shortage: editData.shortage ?? "",
         advanceCash: editData.advanceCash ?? "",
         advancePetrol: editData.advancePetrol ?? "",
+        bonusAmount: editData.bonusAmount ?? "",
         remark: editData.remark ?? "",
       }
     }
@@ -213,6 +215,7 @@ export default function AttendanceModal({
                         <option value="half">Half Shift</option>
                         <option value="absent">Absent</option>
                         <option value="double">Double Shift</option>
+                        <option value="bonus">Bonus</option>
                       </select>
                     </label>
 
@@ -250,6 +253,19 @@ export default function AttendanceModal({
                         type="number"
                         value={entry.advancePetrol}
                         onChange={(event) => updateBulkRow(index, "advancePetrol", event.target.value)}
+                        placeholder="0"
+                        className="input"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                        Bonus Amount
+                      </span>
+                      <input
+                        type="number"
+                        value={entry.bonusAmount}
+                        onChange={(event) => updateBulkRow(index, "bonusAmount", event.target.value)}
                         placeholder="0"
                         className="input"
                       />
@@ -318,6 +334,7 @@ export default function AttendanceModal({
                 <option value="half">Half Shift</option>
                 <option value="absent">Absent</option>
                 <option value="double">Double Shift</option>
+                <option value="bonus">Bonus</option>
               </select>
             </label>
 
@@ -340,6 +357,13 @@ export default function AttendanceModal({
                 Advance Petrol
               </span>
               <input type="number" name="advancePetrol" placeholder="0" value={form.advancePetrol} onChange={handleChange} className="input" />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Bonus Amount
+              </span>
+              <input type="number" name="bonusAmount" placeholder="0" value={form.bonusAmount} onChange={handleChange} className="input" />
             </label>
 
             <label className="block sm:col-span-2">

@@ -115,6 +115,7 @@ export default function EmployeeSalary() {
           <div className="mt-4 space-y-3">
             <LineItem label="Base Salary" value={`Rs. ${summary?.employee?.salary || 0}`} />
             <LineItem label="Earned" value={`Rs. ${summary?.breakdown?.earned || 0}`} />
+            <LineItem label="Bonus" value={`Rs. ${summary?.breakdown?.bonus || 0}`} />
             <LineItem label="Shortage" value={`Rs. ${summary?.breakdown?.shortage || 0}`} />
             <LineItem label="Advance" value={`Rs. ${summary?.breakdown?.advance || 0}`} />
           </div>

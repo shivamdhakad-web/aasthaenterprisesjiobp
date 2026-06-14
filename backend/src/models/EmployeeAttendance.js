@@ -12,7 +12,7 @@ date:{type:Date,required:true},
 
 status:{
 type:String,
-enum:["present","absent","double","half"],
+enum:["present","absent","double","half","bonus"],
 default:"present"
 },
 
@@ -21,6 +21,8 @@ shortage:{type:Number,default:0},
 advanceCash:{type:Number,default:0},
 
 advancePetrol:{type:Number,default:0},
+
+bonusAmount:{type:Number,default:0},
 
 remark:{type:String},
 

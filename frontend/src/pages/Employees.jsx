@@ -45,6 +45,11 @@ const statusMeta = {
     numberClass: "text-sky-500",
     cardClass: "border-sky-200 bg-sky-50/80",
   },
+  bonus: {
+    label: "Bonus",
+    numberClass: "text-violet-500",
+    cardClass: "border-violet-200 bg-violet-50/80",
+  },
 }
 
 const getReportEntries = (entries, fromDate, toDate) => {
@@ -73,6 +78,7 @@ const calculateAttendanceSummary = (employee, entries) => {
   let doubleShift = 0
   let shortage = 0
   let advance = 0
+  let bonus = 0
 
   entries.forEach((entry) => {
     if (entry.status === "present") {
@@ -87,13 +93,16 @@ const calculateAttendanceSummary = (employee, entries) => {
     if (entry.status === "double") {
       doubleShift += 1
     }
+    if (entry.status === "bonus") {
+      bonus += Number(entry.bonusAmount || 0)
+    }
 
     shortage += Number(entry.shortage || 0)
     advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
   })
 
   const earned = Math.round(present * perDay + half * halfPay + doubleShift * doublePay)
-  const final = Math.round(earned + shortage - advance)
+  const final = Math.round(earned + bonus + shortage - advance)
 
   return {
     present,
@@ -103,6 +112,7 @@ const calculateAttendanceSummary = (employee, entries) => {
     earned,
     shortage,
     advance,
+    bonus,
     final,
   }
 }
@@ -133,17 +143,19 @@ const buildAttendanceReportPdf = ({ employee, entries, fromDate, toDate }) => {
   doc.text(`Absent: ${summary.absent}`, 112, 76)
   doc.text(`Double Shift: ${summary.doubleShift}`, 155, 76)
   doc.text(`Earned: ${formatCurrency(summary.earned)}`, 14, 84)
-  doc.text(`Shortage: ${formatCurrency(summary.shortage)}`, 78, 84)
-  doc.text(`Advance: ${formatCurrency(summary.advance)}`, 140, 84)
+  doc.text(`Bonus: ${formatCurrency(summary.bonus)}`, 78, 84)
+  doc.text(`Shortage: ${formatCurrency(summary.shortage)}`, 140, 84)
+  doc.text(`Advance: ${formatCurrency(summary.advance)}`, 14, 92)
   doc.setFont("helvetica", "bold")
-  doc.text(`Final Balance: ${formatCurrency(summary.final)}`, 14, 92)
+  doc.text(`Final Balance: ${formatCurrency(summary.final)}`, 78, 92)
 
   autoTable(doc, {
     startY: 100,
-    head: [["Date", "Status", "Shortage", "Cash", "Petrol", "Remark"]],
+    head: [["Date", "Status", "Bonus", "Shortage", "Cash", "Petrol", "Remark"]],
     body: entries.map((entry) => [
       entry.date ? String(entry.date).slice(0, 10) : "-",
       statusMeta[entry.status]?.label || entry.status,
+      entry.bonusAmount || 0,
       entry.shortage || 0,
       entry.advanceCash || 0,
       entry.advancePetrol || 0,
@@ -173,6 +185,7 @@ const buildAttendanceReportExcel = ({ employee, entries, fromDate, toDate }) => 
       Absent: summary.absent,
       DoubleShift: summary.doubleShift,
       Earned: summary.earned,
+      Bonus: summary.bonus,
       Shortage: summary.shortage,
       Advance: summary.advance,
       FinalBalance: summary.final,
@@ -183,6 +196,7 @@ const buildAttendanceReportExcel = ({ employee, entries, fromDate, toDate }) => 
     entries.map((entry) => ({
       Date: entry.date ? String(entry.date).slice(0, 10) : "-",
       Status: statusMeta[entry.status]?.label || entry.status,
+      Bonus: entry.bonusAmount || 0,
       Shortage: entry.shortage || 0,
       AdvanceCash: entry.advanceCash || 0,
       AdvancePetrol: entry.advancePetrol || 0,
@@ -256,6 +270,15 @@ export default function Employees() {
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [reportFormat, setReportFormat] = useState("pdf")
+  const [bonusModalOpen, setBonusModalOpen] = useState(false)
+  const [bonusSaving, setBonusSaving] = useState(false)
+  const [bonusForm, setBonusForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    employeeTarget: "selected",
+    employeeId: "",
+    payment: "",
+    remark: "",
+  })
 
   useEffect(() => {
     fetchEmployees()
@@ -360,6 +383,13 @@ export default function Employees() {
         ring: "border-amber-200 bg-amber-50/80",
       },
       {
+        key: "bonus",
+        label: "Bonus",
+        value: formatCurrency(summary.bonus),
+        accent: "text-violet-600",
+        ring: "border-violet-200 bg-violet-50/80",
+      },
+      {
         key: "final",
         label: "Final Balance",
         value: formatCurrency(summary.final),
@@ -443,6 +473,76 @@ export default function Employees() {
       employeeId: employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "",
       allowEmployeeSelect,
     })
+  }
+
+  const openBonusModal = (employeeId = "") => {
+    const defaultEmployeeId = employeeId || selectedEmployee?._id || employees[0]?._id || ""
+    setBonusForm({
+      date: new Date().toISOString().slice(0, 10),
+      employeeTarget: employeeId || selectedEmployee?._id ? "selected" : "single",
+      employeeId: defaultEmployeeId,
+      payment: "",
+      remark: "",
+    })
+    setBonusModalOpen(true)
+  }
+
+  const saveBonus = async () => {
+    if (!bonusForm.date || !bonusForm.payment) {
+      setNotice({ type: "error", message: "Please enter bonus date and payment amount." })
+      return
+    }
+
+    const amount = Number(bonusForm.payment || 0)
+
+    if (amount <= 0) {
+      setNotice({ type: "error", message: "Bonus payment must be greater than zero." })
+      return
+    }
+
+    const targetEmployees =
+      bonusForm.employeeTarget === "all"
+        ? employees
+        : employees.filter((employee) => employee._id === bonusForm.employeeId)
+
+    if (!targetEmployees.length) {
+      setNotice({ type: "error", message: "Please select an employee for bonus entry." })
+      return
+    }
+
+    setBonusSaving(true)
+
+    try {
+      for (const employee of targetEmployees) {
+        await addAttendance(employee._id, {
+          date: bonusForm.date,
+          status: "bonus",
+          shortage: 0,
+          advanceCash: 0,
+          advancePetrol: 0,
+          bonusAmount: amount,
+          remark: bonusForm.remark || "Bonus",
+          createdByRole: user?.role || "Admin",
+        })
+      }
+
+      setNotice({
+        type: "success",
+        message: `Bonus entry saved for ${targetEmployees.length} employee${targetEmployees.length === 1 ? "" : "s"}.`,
+      })
+      setBonusModalOpen(false)
+
+      if (selectedEmployee && targetEmployees.some((employee) => employee._id === selectedEmployee._id)) {
+        await openLedger(selectedEmployee)
+      }
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error?.response?.data?.message || "Unable to save bonus entry.",
+      })
+    } finally {
+      setBonusSaving(false)
+    }
   }
 
   const confirmAttendanceMode = (mode) => {
@@ -729,6 +829,13 @@ export default function Employees() {
             >
               + Add Entry
             </button>
+
+            <button
+              className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
+              onClick={() => openBonusModal()}
+            >
+              + Add Bonus
+            </button>
           </div>
         </div>
       </div>
@@ -888,6 +995,13 @@ export default function Employees() {
                       + Add
                     </button>
                   </div>
+
+                  <button
+                    onClick={() => openBonusModal(employee._id)}
+                    className="w-full rounded-xl border border-violet-200 bg-violet-50 py-2 text-sm font-medium text-violet-600"
+                  >
+                    + Add Bonus
+                  </button>
                 </div>
               </div>
             </div>
@@ -933,6 +1047,12 @@ export default function Employees() {
                 + Add
               </button>
               <button
+                className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
+                onClick={() => openBonusModal(selectedEmployee._id)}
+              >
+                + Bonus
+              </button>
+              <button
                 className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
                 onClick={() => openReportModal(selectedEmployee._id)}
               >
@@ -947,17 +1067,17 @@ export default function Employees() {
             </div>
           </div>
 
-          {/* <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {summaryCards.map((card) => (
-              <SummaryCard
-                key={card.key}
-                label={card.label}
-                value={card.value}
-                accent={card.accent}
-                ring={card.ring}
-              />
-            ))}
-          </div> */}
+        <div className="mt-5 hidden gap-4 lg:grid sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => (
+            <SummaryCard
+              key={card.key}
+              label={card.label}
+              value={card.value}
+              accent={card.accent}
+              ring={card.ring}
+            />
+          ))}
+        </div>
 
           <div className="mt-6 hidden max-h-[620px] overflow-x-auto overflow-y-auto rounded-[24px] border border-[var(--border-strong)] sm:block">
             <table className="table min-w-[900px]">
@@ -968,6 +1088,7 @@ export default function Employees() {
                   <th>Short</th>
                   <th>Cash</th>
                   <th>Petrol</th>
+                  <th>Bonus</th>
                   <th>Remark</th>
                   <th>Audit</th>
                   <th>Action</th>
@@ -987,6 +1108,7 @@ export default function Employees() {
                     </td>
                     <td>{entry.advanceCash || 0}</td>
                     <td>{entry.advancePetrol || 0}</td>
+                    <td className="text-violet-500">{entry.bonusAmount || 0}</td>
                     <td>{entry.remark || "-"}</td>
                     <td className="text-left text-xs leading-6 text-[color:var(--text-secondary)]">
                       {entry.lastEditedAt ? (
@@ -1086,7 +1208,7 @@ export default function Employees() {
                         </p>
                       </div>
                       <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                        Cash {entry.advanceCash || 0} | Petrol {entry.advancePetrol || 0}
+                        Cash {entry.advanceCash || 0} | Petrol {entry.advancePetrol || 0} | Bonus {entry.bonusAmount || 0}
                       </p>
                     </div>
 
@@ -1226,6 +1348,21 @@ export default function Employees() {
         editData={editEmployee}
       />
 
+      {bonusModalOpen ? (
+        <BonusModal
+          form={bonusForm}
+          employees={employees}
+          saving={bonusSaving}
+          onChange={(patch) => setBonusForm((current) => ({ ...current, ...patch }))}
+          onClose={() => {
+            if (!bonusSaving) {
+              setBonusModalOpen(false)
+            }
+          }}
+          onSave={saveBonus}
+        />
+      ) : null}
+
       <AttendanceModal
         key={`${editAttendance?._id || "new"}-${attendanceContext.employeeId || "none"}-${
           attendanceModalOpen ? "open" : "closed"
@@ -1296,6 +1433,11 @@ export default function Employees() {
             className: "bg-green-600",
             onClick: () => openAttendanceModePrompt({ allowEmployeeSelect: true }),
           },
+          {
+            label: "Add Bonus",
+            className: "bg-violet-600",
+            onClick: () => openBonusModal(),
+          },
           selectedEmployee
             ? {
                 label: "Delete Month",
@@ -1328,6 +1470,116 @@ function SummaryCard({ label, value, accent, ring, compact = false }) {
       >
         {value}
       </p>
+    </div>
+  )
+}
+
+function BonusModal({ form, employees, saving, onChange, onClose, onSave }) {
+  const isAllEmployees = form.employeeTarget === "all"
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-xl rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_24px_48px_rgba(15,23,42,0.24)] sm:p-6">
+        <div>
+          <h3 className="text-xl font-semibold text-[color:var(--text-strong)]">Add Bonus</h3>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
+            Save an extra payment entry and include it in the selected employee salary.
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <label className="block sm:col-span-2">
+            <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+              Bonus Target
+            </span>
+            <select
+              value={form.employeeTarget}
+              onChange={(event) => onChange({ employeeTarget: event.target.value })}
+              className="input"
+            >
+              <option value="single">Selected Employee</option>
+              <option value="all">All Employees</option>
+            </select>
+          </label>
+
+          {!isAllEmployees ? (
+            <label className="block sm:col-span-2">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Employee
+              </span>
+              <select
+                value={form.employeeId}
+                onChange={(event) => onChange({ employeeId: event.target.value })}
+                className="input"
+              >
+                <option value="">Select employee</option>
+                {employees.map((employee) => (
+                  <option key={employee._id} value={employee._id}>
+                    {employee.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+              Date
+            </span>
+            <input
+              type="date"
+              value={form.date}
+              onChange={(event) => onChange({ date: event.target.value })}
+              className="input"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+              Payment
+            </span>
+            <input
+              type="number"
+              min="0"
+              value={form.payment}
+              onChange={(event) => onChange({ payment: event.target.value })}
+              placeholder="Enter bonus amount"
+              className="input"
+            />
+          </label>
+
+          <label className="block sm:col-span-2">
+            <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+              Remark
+            </span>
+            <input
+              value={form.remark}
+              onChange={(event) => onChange({ remark: event.target.value })}
+              placeholder="Bonus remark"
+              className="input"
+            />
+          </label>
+        </div>
+
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium text-[color:var(--text-primary)] disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={saving}
+            className="rounded-2xl bg-violet-600 px-4 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Saving..." : "Save Bonus"}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
