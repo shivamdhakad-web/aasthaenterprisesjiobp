@@ -9,7 +9,7 @@ const { isAuthenticated, defaultRoute } = useAuth()
 return(
 
 <div
-className="webview-safe-screen h-screen w-full bg-cover bg-center relative"
+className="h-screen w-full bg-cover bg-center relative"
 style={{
 backgroundImage:"url('/locate-station-fuel.jpeg')"
 }}

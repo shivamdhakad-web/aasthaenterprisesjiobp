@@ -7,7 +7,7 @@ const AuthContext = createContext(null)
 const getDefaultRoute = (role) => {
   if (role === "Admin") return "/admin"
   if (role === "Manager") return "/manager"
-  if (role === "Employee") return "/employee"
+  if (role === "Employee") return "/employee/salary"
   return "/login"
 }
 

@@ -947,7 +947,7 @@ export default function Employees() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summaryCards.map((card) => (
               <SummaryCard
                 key={card.key}
@@ -957,7 +957,7 @@ export default function Employees() {
                 ring={card.ring}
               />
             ))}
-          </div>
+          </div> */}
 
           <div className="mt-6 hidden max-h-[620px] overflow-x-auto overflow-y-auto rounded-[24px] border border-[var(--border-strong)] sm:block">
             <table className="table min-w-[900px]">

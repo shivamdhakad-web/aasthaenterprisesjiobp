@@ -86,6 +86,20 @@ export default function EmployeeSalary() {
         )}
       </div>
 
+      <section className="rounded-2xl border border-green-500/20 bg-green-500/10 p-4 sm:p-5">
+          <p className="text-sm text-green-700">Final Estimated Salary</p>
+          <p className="mt-3 text-3xl font-semibold text-[color:var(--text-strong)] sm:text-4xl">
+            Rs. {summary?.breakdown?.final?.toLocaleString?.() || 0}
+          </p>
+          <p className="mt-4 text-sm text-green-700">
+            {summary?.scope === "all"
+              ? "Showing all salary entries"
+              : summary?.scope === "date"
+              ? `Date: ${summary?.selectedDate || selectedDate}`
+              : `Month: ${summary?.month || month}`}
+          </p>
+      </section>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <SalaryCard label="Present" value={summary?.breakdown?.present || 0} accent="text-green-300" />
@@ -106,19 +120,7 @@ export default function EmployeeSalary() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-green-500/20 bg-green-500/10 p-4 sm:p-5">
-          <p className="text-sm text-green-700">Final Estimated Salary</p>
-          <p className="mt-3 text-3xl font-semibold text-[color:var(--text-strong)] sm:text-4xl">
-            Rs. {summary?.breakdown?.final?.toLocaleString?.() || 0}
-          </p>
-          <p className="mt-4 text-sm text-green-700">
-            {summary?.scope === "all"
-              ? "Showing all salary entries"
-              : summary?.scope === "date"
-              ? `Date: ${summary?.selectedDate || selectedDate}`
-              : `Month: ${summary?.month || month}`}
-          </p>
-        </section>
+
       </div>
 
       {/* Attendance Data Table */}

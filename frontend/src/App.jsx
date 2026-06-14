@@ -200,7 +200,7 @@ export default function App() {
 
         <Route element={<ProtectedRoute roles={["Employee"]} />}>
           <Route path="/employee" element={<DashboardLayout />}>
-            <Route index element={<EmployeeOverview />} />
+            <Route index element={<Navigate to="salary" replace />} />
             <Route path="info" element={<EmployeeInfo />} />
             <Route path="attendance" element={<EmployeeAttendance />} />
             <Route path="leaves" element={<EmployeeLeave />} />
