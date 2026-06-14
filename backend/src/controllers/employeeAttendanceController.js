@@ -41,6 +41,14 @@ advancePetrol:Number(req.body.advancePetrol || 0),
 
 remark:req.body.remark
 
+,
+
+createdByRole:req.body.createdByRole || "Admin"
+
+,
+
+createdByEmployeeId:req.body.createdByEmployeeId
+
 })
 
 await record.save()
@@ -71,7 +79,19 @@ shortage:Number(req.body.shortage || 0),
 advanceCash:Number(req.body.advanceCash || 0),
 advancePetrol:Number(req.body.advancePetrol || 0),
 remark:req.body.remark
-},
+
+,
+
+lastEditedAt:req.body.lastEditedAt || new Date()
+
+,
+
+lastEditedBy:req.body.lastEditedBy || ""
+
+,
+
+lastEditedByRole:req.body.lastEditedByRole || ""
+}, 
 
 {new:true}
 

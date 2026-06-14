@@ -51,6 +51,27 @@ enum:["station","employee"],
 default:"station"
 }
 
+,
+
+lastEditedAt:{
+type:Date,
+default:null
+}
+
+,
+
+lastEditedBy:{
+type:String,
+default:""
+}
+
+,
+
+lastEditedByRole:{
+type:String,
+default:""
+}
+
 },{
 timestamps:true
 })

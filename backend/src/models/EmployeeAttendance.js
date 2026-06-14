@@ -38,6 +38,18 @@ createdByEmployeeId:{
 type:String
 }
 
+,
+
+lastEditedAt:{type:Date,default:null}
+
+,
+
+lastEditedBy:{type:String,default:""}
+
+,
+
+lastEditedByRole:{type:String,default:""}
+
 },{timestamps:true})
 
 module.exports = mongoose.model("EmployeeAttendance",attendanceSchema)

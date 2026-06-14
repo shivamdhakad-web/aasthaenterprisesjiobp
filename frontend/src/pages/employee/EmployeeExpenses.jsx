@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings";
 import {
   addMyExpense,
   getMyExpenses,
@@ -20,6 +21,7 @@ const baseForm = {
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 
 export default function EmployeeExpenses() {
+  const { canUse } = useEmployeeDashboardSettings("expenses");
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(baseForm);
   const [editing, setEditing] = useState(null);
@@ -59,7 +61,7 @@ export default function EmployeeExpenses() {
   };
 
   const submit = async () => {
-    if (editing && !editing.canEdit) {
+    if (editing && (!editing.canEdit || !canUse("editExpense"))) {
       setConfirmDialog({ open: true, message: "You cannot edit this expense entry." });
       return;
     }
@@ -82,7 +84,9 @@ export default function EmployeeExpenses() {
     }
   };
 
-  const readOnlyMode = Boolean(editing && !editing.canEdit);
+  const canAddExpense = canUse("newExpense");
+  const canEditExpense = canUse("editExpense");
+  const readOnlyMode = Boolean(editing && (!editing.canEdit || !canEditExpense));
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
@@ -95,11 +99,13 @@ export default function EmployeeExpenses() {
       </section>
 
       {/* Desktop Add Button */}
+      {canAddExpense ? (
       <div className="hidden sm:flex sm:justify-end">
         <button onClick={() => openForm()} className="btn btn-green">
           + New Expense
         </button>
       </div>
+      ) : null}
 
       {/* Expenses Table */}
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4">
@@ -125,7 +131,7 @@ export default function EmployeeExpenses() {
                   <td>{item.paymentMode}</td>
                   <td>
                     <button onClick={() => openForm(item)} className="text-blue-500">
-                      {item.canEdit ? "Edit" : "View"}
+                      {item.canEdit && canEditExpense ? "Edit" : "View"}
                     </button>
                   </td>
                 </tr>
@@ -158,7 +164,7 @@ export default function EmployeeExpenses() {
         onClick={() => openForm(item)}
         className="ml-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
       >
-        {item.canEdit ? "Edit expense" : "View expense"}
+        {item.canEdit && canEditExpense ? "Edit expense" : "View expense"}
       </button>
     </div>
   ))}
@@ -267,6 +273,7 @@ export default function EmployeeExpenses() {
       )}
 
       {/* Mobile FAB */}
+      {canAddExpense ? (
       <MobileActionFab
         actions={[
           {
@@ -276,6 +283,7 @@ export default function EmployeeExpenses() {
           },
         ]}
       />
+      ) : null}
     </div>
   );
 }

@@ -12,6 +12,16 @@ const schema = new mongoose.Schema({
 
  total:Number,
 
+ unitProfit:{
+  type:Number,
+  default:0
+ },
+
+ totalProfit:{
+  type:Number,
+  default:0
+ },
+
  soldBy:String,
 
  createdByRole:{
@@ -22,6 +32,23 @@ const schema = new mongoose.Schema({
  createdByEmployeeId:String,
 
  createdByName:String
+
+,
+
+ lastEditedAt:{
+  type:Date,
+  default:null
+ },
+
+ lastEditedBy:{
+  type:String,
+  default:""
+ },
+
+ lastEditedByRole:{
+  type:String,
+  default:""
+ }
 
 },{timestamps:true})
 

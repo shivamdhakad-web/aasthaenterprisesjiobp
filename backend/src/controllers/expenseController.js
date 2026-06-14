@@ -24,7 +24,10 @@ exports.addExpense = async(req,res)=>{
 
 try{
 
-const expense = new Expense(req.body)
+const expense = new Expense({
+ ...req.body,
+ amount:Number(req.body.amount || 0)
+})
 
 await expense.save()
 
@@ -63,7 +66,13 @@ try{
 
 const updated = await Expense.findByIdAndUpdate(
 req.params.id,
-req.body,
+{
+ ...req.body,
+ amount:Number(req.body.amount || 0),
+ lastEditedAt:req.body.lastEditedAt || new Date(),
+ lastEditedBy:req.body.lastEditedBy || "",
+ lastEditedByRole:req.body.lastEditedByRole || ""
+},
 {new:true}
 )
 

@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import { getSalarySummary } from "../../services/salaryApi";
 
 export default function EmployeeSalary() {
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [month, setMonth] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [summary, setSummary] = useState(null);
-  const [showFilters, setShowFilters] = useState(true); // Toggle ke liye state
+  const [showFilters, setShowFilters] = useState(false);
 
   const load = async ({ targetMonth = month, targetDate = selectedDate } = {}) => {
-    const data = await getSalarySummary(
-      null,
-      targetDate ? { date: targetDate } : { month: targetMonth }
-    );
+    const params = targetDate
+      ? { date: targetDate }
+      : targetMonth
+        ? { month: targetMonth }
+        : { scope: "all" };
+    const data = await getSalarySummary(null, params);
     setSummary(data);
   };
 
@@ -23,9 +25,10 @@ export default function EmployeeSalary() {
     load();
   };
 
-  const handleClearDate = () => {
+  const handleClearFilters = () => {
+    setMonth("");
     setSelectedDate("");
-    load({ targetMonth: month, targetDate: "" });
+    load({ targetMonth: "", targetDate: "" });
   };
 
   return (
@@ -36,18 +39,18 @@ export default function EmployeeSalary() {
           <div>
             <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">My Salary</h1>
             <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-              Salary report is auto calculated on the basis of attendance, shortfall and advance.
+            Salary report is auto calculated on the basis of attendance, shortfall and advance.
             </p>
           </div>
           <button
             onClick={() => setShowFilters((prev) => !prev)}
             className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-sm font-medium text-[color:var(--text-primary)] sm:w-auto"
           >
-            {showFilters ? "Hide Month Filter" : "Show Month Filter"}
+            {showFilters ? "Hide Filters" : "Filter Salary"}
           </button>
         </div>
 
-        {/* Filters Section - Toggle hota hai */}
+        {/* Filters Section */}
         {showFilters && (
           <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4 sm:flex-row sm:flex-wrap sm:items-end">
             <div className="flex flex-col gap-1 sm:flex-1">
@@ -69,15 +72,14 @@ export default function EmployeeSalary() {
               />
             </div>
             <div className="flex gap-2 sm:flex-none">
-              
               <button
-                onClick={handleClearDate}
+                onClick={handleClearFilters}
                 className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-[color:var(--text-primary)]"
               >
-                Clear Date
+                Show All
               </button>
               <button onClick={handleLoad} className="btn btn-green flex-1 sm:flex-none">
-                {selectedDate ? "Load Date" : "Load Month"}
+                {selectedDate ? "Load Date" : month ? "Load Month" : "Load All"}
               </button>
             </div>
           </div>
@@ -110,7 +112,9 @@ export default function EmployeeSalary() {
             Rs. {summary?.breakdown?.final?.toLocaleString?.() || 0}
           </p>
           <p className="mt-4 text-sm text-green-700">
-            {summary?.scope === "date"
+            {summary?.scope === "all"
+              ? "Showing all salary entries"
+              : summary?.scope === "date"
               ? `Date: ${summary?.selectedDate || selectedDate}`
               : `Month: ${summary?.month || month}`}
           </p>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { useAuth } from "../../contexts/AuthContext"
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings"
 import DailyReportEditor from "../../components/daily-report/DailyReportEditor"
 import {
   addMyDailyReport,
@@ -18,6 +19,7 @@ import OtpVerificationModal from "../../components/OtpVerificationModal"
 
 export default function EmployeeDailyReport() {
   const { user } = useAuth()
+  const { canUse } = useEmployeeDashboardSettings("dailyReport")
   const [reports, setReports] = useState([])
   const [form, setForm] = useState(createDailyReportForm(user?.name || ""))
   const [editing, setEditing] = useState(null)
@@ -84,8 +86,8 @@ export default function EmployeeDailyReport() {
 
       setFeedback({
         tone: "success",
-        title: editing ? "Daily sheet update ho gayi" : "Daily sheet submit ho gayi",
-        message: "Report save ho kar admin aur manager view me ready hai.",
+        title: editing ? "Daily sheet updated" : "Daily sheet submitted",
+        message: "The report is saved and ready for admin and manager review.",
       })
       setEditing(null)
       setForm(createDailyReportForm(user?.name || ""))
@@ -94,8 +96,8 @@ export default function EmployeeDailyReport() {
     } catch (error) {
       setFeedback({
         tone: "error",
-        title: "Submit nahi ho paya",
-        message: error?.response?.data?.message || "Please dobara try karo.",
+        title: "Daily sheet could not be saved",
+        message: error?.response?.data?.message || "Please try again.",
       })
       return false
     }
@@ -116,6 +118,15 @@ export default function EmployeeDailyReport() {
   }
 
   const handleSubmit = async () => {
+    if (!canUse("submitDailySheet")) {
+      setFeedback({
+        tone: "error",
+        title: "Access disabled",
+        message: "Daily sheet submit access is currently disabled.",
+      })
+      return
+    }
+
     requestOtpSubmit()
   }
 
@@ -182,6 +193,7 @@ export default function EmployeeDailyReport() {
             </p>
           </div>
 
+          {canUse("newDailySheet") ? (
           <button
             onClick={() => {
               setEditing(null)
@@ -191,6 +203,7 @@ export default function EmployeeDailyReport() {
           >
             New Daily Sheet
           </button>
+          ) : null}
         </div>
       </div>
 
@@ -259,9 +272,15 @@ export default function EmployeeDailyReport() {
             employeeName={user?.name || "Employee"}
             readOnly={readOnly}
             submitLabel={
-              editing ? (readOnly ? "View Only" : "Update Daily Sheet") : "Submit Daily Sheet"
+              editing
+                ? readOnly || !canUse("submitDailySheet")
+                  ? "View Only"
+                  : "Update Daily Sheet"
+                : canUse("submitDailySheet")
+                  ? "Submit Daily Sheet"
+                  : "Submit Disabled"
             }
-            onSubmit={readOnly ? undefined : handleSubmit}
+            onSubmit={readOnly || !canUse("submitDailySheet") ? undefined : handleSubmit}
             onExportPdf={() => exportDailyReportPdf(form, user?.name || "Employee")}
           />
         </div>

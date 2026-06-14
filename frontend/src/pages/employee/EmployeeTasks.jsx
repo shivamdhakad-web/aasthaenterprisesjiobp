@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings";
 import { getMyTasks, updateMyTaskStatus } from "../../services/employeeSelfApi";
 
 const statusOptions = [
@@ -16,6 +17,7 @@ const priorityTone = {
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-");
 
 export default function EmployeeTasks() {
+  const { canUse } = useEmployeeDashboardSettings("tasks");
   const [tasks, setTasks] = useState([]);
   const [counts, setCounts] = useState({ total: 0, pending: 0, inProgress: 0, completed: 0 });
   const [notes, setNotes] = useState({});
@@ -41,6 +43,11 @@ export default function EmployeeTasks() {
 
   // Jab "Save" click ho – confirm dialog dikhao
   const askToSave = (taskId) => {
+    if (!canUse("updateStatus")) {
+      setInfoModal({ open: true, message: "Task update access is currently disabled." });
+      return;
+    }
+
     setConfirmModal({
       open: true,
       taskId,
@@ -122,6 +129,7 @@ export default function EmployeeTasks() {
                 </div>
               </div>
 
+              {canUse("updateStatus") ? (
               <div className="mt-4 grid gap-3 lg:grid-cols-[220px_1fr_auto]">
                 <select
                   value={statuses[task._id] || task.status}
@@ -144,6 +152,11 @@ export default function EmployeeTasks() {
                   Save
                 </button>
               </div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-3 text-sm text-[color:var(--text-secondary)]">
+                  Status update access is disabled by admin.
+                </div>
+              )}
             </div>
           ))}
         </div>

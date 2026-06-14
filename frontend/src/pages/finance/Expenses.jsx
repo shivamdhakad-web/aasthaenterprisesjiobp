@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react"
+import { Download, FileSpreadsheet, FileText, Plus, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import * as XLSX from "xlsx"
 
 import MobileActionFab from "../../components/MobileActionFab"
+import { useAuth } from "../../contexts/AuthContext"
 import {
   addExpense,
   deleteExpense,
@@ -10,8 +13,11 @@ import {
   updateExpense,
 } from "../../services/expenseApi"
 
-const categories = ["Electricity", "Maintenance", "Salary", "Cleaning", "Misc"]
-const paymentModes = ["Cash", "UPI", "Bank"]
+const defaultCategories = ["Electricity", "Maintenance", "Salary", "Cleaning", "Miscellaneous"]
+const defaultPaymentModes = ["Cash", "UPI", "Bank"]
+const defaultAddedByOptions = ["Admin", "Manager", "Account Team"]
+
+const getToday = () => new Date().toISOString().slice(0, 10)
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -20,50 +26,111 @@ const formatDate = (value) => {
     return "-"
   }
 
-  return new Date(value).toLocaleDateString()
+  return new Date(value).toLocaleDateString("en-IN")
 }
 
+const formatDateTime = (value) => {
+  if (!value) {
+    return "-"
+  }
+
+  return new Date(value).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+const buildOptionList = (defaults, values = []) =>
+  [...new Set([...defaults, ...values.filter(Boolean).map((item) => String(item).trim())])]
+
+const defaultForm = (user) => ({
+  date: getToday(),
+  category: defaultCategories[0],
+  description: "",
+  amount: "",
+  paymentMode: defaultPaymentModes[0],
+  addedBy: user?.name || defaultAddedByOptions[0],
+})
+
+const defaultBulkExpenseRow = (user) => ({
+  date: getToday(),
+  category: defaultCategories[0],
+  description: "",
+  amount: "",
+  paymentMode: defaultPaymentModes[0],
+  addedBy: user?.name || defaultAddedByOptions[0],
+})
+
 export default function Expenses() {
+  const { user } = useAuth()
   const [data, setData] = useState([])
-  const [open, setOpen] = useState(false)
-  const [editId, setEditId] = useState(null)
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
   const [dateFilter, setDateFilter] = useState("")
   const [showFilter, setShowFilter] = useState(false)
   const [openCard, setOpenCard] = useState(null)
+  const [open, setOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
-  const [fromDate, setFromDate] = useState("")
-  const [toDate, setToDate] = useState("")
-
-  const [form, setForm] = useState({
-    date: "",
-    category: "Electricity",
-    description: "",
-    amount: "",
-    paymentMode: "Cash",
-    addedBy: "Admin",
+  const [editId, setEditId] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [notice, setNotice] = useState({ type: "", text: "" })
+  const [confirmState, setConfirmState] = useState(null)
+  const [reportForm, setReportForm] = useState({
+    fromDate: "",
+    toDate: "",
+    category: "",
+    format: "pdf",
   })
+  const [optionBuilder, setOptionBuilder] = useState({ field: "", value: "" })
+  const [entryModePrompt, setEntryModePrompt] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkSaving, setBulkSaving] = useState(false)
+  const [bulkEntries, setBulkEntries] = useState([defaultBulkExpenseRow(user)])
+  const [form, setForm] = useState(defaultForm(user))
 
   useEffect(() => {
     load()
   }, [])
 
+  useEffect(() => {
+    if (!notice.text) {
+      return undefined
+    }
+
+    const timeout = window.setTimeout(() => {
+      setNotice({ type: "", text: "" })
+    }, 2400)
+
+    return () => window.clearTimeout(timeout)
+  }, [notice])
+
   const load = async () => {
     const res = await getExpenses()
-    setData(res)
+    setData(Array.isArray(res) ? res : [])
   }
 
+  const categoryOptions = useMemo(
+    () => buildOptionList(defaultCategories, data.map((item) => item.category)),
+    [data],
+  )
+
+  const paymentModeOptions = useMemo(
+    () => buildOptionList(defaultPaymentModes, data.map((item) => item.paymentMode)),
+    [data],
+  )
+
+  const addedByOptions = useMemo(
+    () => buildOptionList(defaultAddedByOptions, data.map((item) => item.addedBy)),
+    [data],
+  )
+
   const resetForm = () => {
-    setForm({
-      date: "",
-      category: "Electricity",
-      description: "",
-      amount: "",
-      paymentMode: "Cash",
-      addedBy: "Admin",
-    })
+    setForm(defaultForm(user))
     setEditId(null)
+    setOptionBuilder({ field: "", value: "" })
   }
 
   const openCreateModal = () => {
@@ -71,111 +138,230 @@ export default function Expenses() {
     setOpen(true)
   }
 
+  const openEntryModePrompt = () => {
+    setEntryModePrompt(true)
+  }
+
+  const openBulkModal = () => {
+    setBulkEntries([defaultBulkExpenseRow(user)])
+    setBulkOpen(true)
+  }
+
   const openEditModal = (expense) => {
     setForm({
-      date: expense.date || "",
-      category: expense.category || "Electricity",
+      date: expense.date || getToday(),
+      category: expense.category || categoryOptions[0] || defaultCategories[0],
       description: expense.description || "",
-      amount: expense.amount || "",
-      paymentMode: expense.paymentMode || "Cash",
-      addedBy: expense.addedBy || "Admin",
+      amount: String(expense.amount ?? ""),
+      paymentMode: expense.paymentMode || paymentModeOptions[0] || defaultPaymentModes[0],
+      addedBy: expense.addedBy || addedByOptions[0] || user?.name || "Admin",
     })
     setEditId(expense._id)
+    setOptionBuilder({ field: "", value: "" })
     setOpen(true)
   }
 
-  const saveExpense = async () => {
-    if (editId) {
-      await updateExpense(editId, form)
-    } else {
-      await addExpense(form)
-    }
-
+  const closeModal = () => {
     setOpen(false)
     resetForm()
-    load()
   }
 
-  const remove = async (id) => {
-    await deleteExpense(id)
-    load()
+  const saveExpense = async () => {
+    if (!form.date || !form.category || !form.amount || !form.paymentMode || !form.addedBy) {
+      setNotice({ type: "error", text: "Please complete all expense fields." })
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      const payload = {
+        ...form,
+        description: form.description?.trim() || "",
+        amount: Number(form.amount || 0),
+      }
+
+      if (editId) {
+        await updateExpense(editId, {
+          ...payload,
+          lastEditedAt: new Date().toISOString(),
+          lastEditedBy: user?.name || "Admin",
+          lastEditedByRole: user?.role || "Admin",
+        })
+        setNotice({ type: "success", text: "Expense updated successfully." })
+      } else {
+        await addExpense(payload)
+        setNotice({ type: "success", text: "Expense saved successfully." })
+      }
+
+      closeModal()
+      await load()
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to save expense right now.",
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const filteredData = data.filter((expense) => {
-    const target = [expense.description, expense.category, expense.paymentMode, expense.addedBy, expense.date]
-      .join(" ")
-      .toLowerCase()
+  const askDelete = (expense) => {
+    setConfirmState({
+      title: "Delete Expense",
+      description: `Delete the expense "${expense.description}"? This action cannot be undone.`,
+      actionLabel: "Delete",
+      variant: "danger",
+      onConfirm: async () => {
+        await deleteExpense(expense._id)
+        await load()
+        setNotice({ type: "success", text: "Expense deleted successfully." })
+      },
+    })
+  }
 
-    return (
-      target.includes(search.toLowerCase()) &&
-      (!category || expense.category === category) &&
-      (!dateFilter || expense.date === dateFilter)
+  const updateBulkEntry = (index, key, value) => {
+    setBulkEntries((current) =>
+      current.map((entry, entryIndex) =>
+        entryIndex === index ? { ...entry, [key]: value } : entry,
+      ),
     )
-  })
+  }
 
-  const today = new Date()
-  const todayString = today.toISOString().slice(0, 10)
-  const currentMonth = today.getMonth()
-  const currentYear = today.getFullYear()
+  const addBulkEntryRow = () => {
+    setBulkEntries((current) => [...current, defaultBulkExpenseRow(user)])
+  }
 
-  let todayTotal = 0
-  let weekTotal = 0
-  let monthTotal = 0
-  let grandTotal = 0
+  const removeBulkEntryRow = (index) => {
+    setBulkEntries((current) => current.filter((_, entryIndex) => entryIndex !== index))
+  }
 
-  filteredData.forEach((expense) => {
-    const amount = Number(expense.amount || 0)
-    const expenseDate = new Date(expense.date)
+  const saveBulkExpenses = async () => {
+    const validEntries = bulkEntries.filter(
+      (entry) => entry.date && entry.category && entry.amount && entry.paymentMode && entry.addedBy,
+    )
 
-    grandTotal += amount
-
-    if (expense.date === todayString) {
-      todayTotal += amount
+    if (!validEntries.length) {
+      setNotice({ type: "error", text: "Please complete at least one expense row." })
+      return
     }
 
-    const diffDays = (today - expenseDate) / (1000 * 60 * 60 * 24)
-    if (diffDays <= 7) {
-      weekTotal += amount
-    }
+    setBulkSaving(true)
 
-    if (expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear) {
-      monthTotal += amount
-    }
-  })
+    try {
+      for (const entry of validEntries) {
+        await addExpense({
+          ...entry,
+          description: entry.description?.trim() || "",
+          amount: Number(entry.amount || 0),
+        })
+      }
 
-  const generateExpensePDF = () => {
-    const reportData = filteredData.filter((expense) => {
+      setBulkOpen(false)
+      setBulkEntries([defaultBulkExpenseRow(user)])
+      setNotice({
+        type: "success",
+        text: `${validEntries.length} expense entries saved successfully.`,
+      })
+      await load()
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to save multiple expense entries.",
+      })
+    } finally {
+      setBulkSaving(false)
+    }
+  }
+
+  const filteredData = useMemo(
+    () =>
+      data.filter((expense) => {
+        const target = [
+          expense.description,
+          expense.category,
+          expense.paymentMode,
+          expense.addedBy,
+          expense.date,
+        ]
+          .join(" ")
+          .toLowerCase()
+
+        return (
+          target.includes(search.toLowerCase()) &&
+          (!category || expense.category === category) &&
+          (!dateFilter || expense.date === dateFilter)
+        )
+      }),
+    [category, data, dateFilter, search],
+  )
+
+  const summary = useMemo(() => {
+    const today = new Date()
+    const todayString = today.toISOString().slice(0, 10)
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
+
+    let todayTotal = 0
+    let weekTotal = 0
+    let monthTotal = 0
+    let grandTotal = 0
+
+    filteredData.forEach((expense) => {
+      const amount = Number(expense.amount || 0)
       const expenseDate = new Date(expense.date)
-      return (
-        (!fromDate || expenseDate >= new Date(fromDate)) &&
-        (!toDate || expenseDate <= new Date(toDate)) &&
-        (!category || expense.category === category)
-      )
+
+      grandTotal += amount
+
+      if (expense.date === todayString) {
+        todayTotal += amount
+      }
+
+      const diffDays = (today - expenseDate) / (1000 * 60 * 60 * 24)
+      if (diffDays <= 7) {
+        weekTotal += amount
+      }
+
+      if (
+        expenseDate.getMonth() === currentMonth &&
+        expenseDate.getFullYear() === currentYear
+      ) {
+        monthTotal += amount
+      }
     })
 
+    return { todayTotal, weekTotal, monthTotal, grandTotal }
+  }, [filteredData])
+
+  const reportData = useMemo(
+    () =>
+      filteredData.filter((expense) => {
+        const expenseDate = new Date(expense.date)
+        return (
+          (!reportForm.fromDate || expenseDate >= new Date(reportForm.fromDate)) &&
+          (!reportForm.toDate || expenseDate <= new Date(reportForm.toDate)) &&
+          (!reportForm.category || expense.category === reportForm.category)
+        )
+      }),
+    [filteredData, reportForm.category, reportForm.fromDate, reportForm.toDate],
+  )
+
+  const exportPdf = () => {
     const total = reportData.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
     const doc = new jsPDF()
 
     doc.setFont("helvetica", "bold")
     doc.setFontSize(18)
-    doc.text("Aastha Enterprises", 14, 18)
-
-    doc.setFontSize(12)
-    doc.setFont("helvetica", "normal")
-    doc.text("Expense Report", 14, 26)
+    doc.text("Expense Report", 14, 18)
     doc.setFontSize(10)
-    doc.text(`From: ${fromDate || "All"}   To: ${toDate || "All"}`, 14, 36)
-    doc.text(`Total Records: ${reportData.length}`, 14, 42)
-    doc.setDrawColor(200)
-    doc.line(14, 46, 196, 46)
-    doc.setFont("helvetica", "bold")
-    doc.text("Summary", 14, 54)
     doc.setFont("helvetica", "normal")
-    doc.text(`Total Expense: ${formatCurrency(total)}`, 14, 62)
+    doc.text(`From: ${reportForm.fromDate || "All"}  To: ${reportForm.toDate || "All"}`, 14, 28)
+    doc.text(`Category: ${reportForm.category || "All Categories"}`, 14, 34)
+    doc.text(`Total Amount: ${formatCurrency(total)}`, 14, 40)
 
     autoTable(doc, {
-      startY: 70,
-      head: [["Date", "Category", "Description", "Amount", "Mode", "Added By"]],
+      startY: 48,
+      head: [["Date", "Category", "Description", "Amount", "Payment Mode", "Added By"]],
       body: reportData.map((expense) => [
         expense.date,
         expense.category,
@@ -184,80 +370,102 @@ export default function Expenses() {
         expense.paymentMode,
         expense.addedBy,
       ]),
-      styles: {
-        fontSize: 9,
-        cellPadding: 4,
-      },
-      headStyles: {
-        fillColor: [59, 130, 246],
-        textColor: 255,
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
+      headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+      styles: { fontSize: 9, cellPadding: 3.6 },
     })
 
-    doc.save("Expense_Report.pdf")
+    doc.save("expense-report.pdf")
+  }
+
+  const exportExcel = () => {
+    const workbookData = reportData.map((expense) => ({
+      Date: expense.date,
+      Category: expense.category,
+      Description: expense.description,
+      Amount: Number(expense.amount || 0),
+      Payment_Mode: expense.paymentMode,
+      Added_By: expense.addedBy,
+      Edited_At: expense.lastEditedAt ? formatDateTime(expense.lastEditedAt) : "",
+      Edited_By: expense.lastEditedBy || "",
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(workbookData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses")
+    XLSX.writeFile(workbook, "expense-report.xlsx")
+  }
+
+  const handleGenerateReport = () => {
+    if (!reportData.length) {
+      setNotice({ type: "error", text: "No report data found for the selected filters." })
+      return
+    }
+
+    if (reportForm.format === "pdf") {
+      exportPdf()
+    } else {
+      exportExcel()
+    }
+
+    setReportOpen(false)
+    setNotice({ type: "success", text: "Report downloaded successfully." })
+  }
+
+  const addInlineOption = (field) => {
+    const value = optionBuilder.value.trim()
+
+    if (!value) {
+      setNotice({ type: "error", text: "Please enter an option name first." })
+      return
+    }
+
+    setForm((current) => ({ ...current, [field]: value }))
+    setOptionBuilder({ field: "", value: "" })
+    setNotice({ type: "success", text: "Option added to the form." })
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
-      <h1 className="mb-4 text-3xl font-bold text-[color:var(--text-strong)]">Expenses</h1>
-
-      <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Today</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {formatCurrency(todayTotal)}
-          </p>
-        </div>
-
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Week</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {formatCurrency(weekTotal)}
-          </p>
-        </div>
-
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Month</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {formatCurrency(monthTotal)}
-          </p>
-        </div>
-
-        <div className="card">
-          <p className="text-sm text-[color:var(--text-secondary)]">Total</p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-            {formatCurrency(grandTotal)}
-          </p>
-        </div>
+    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
+      <div className="mb-5 rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
+        <h1 className="text-3xl font-bold text-[color:var(--text-strong)]">Expenses</h1>
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+          Track expense entries, reports, filters, and edit history in one place.
+        </p>
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+      {notice.text ? <InlineNotice notice={notice} /> : null}
+
+      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <SummaryCard label="Today Expense" value={formatCurrency(summary.todayTotal)} tone="rose" />
+        <SummaryCard label="Week Expense" value={formatCurrency(summary.weekTotal)} tone="amber" />
+        <SummaryCard label="Month Expense" value={formatCurrency(summary.monthTotal)} tone="blue" />
+        <SummaryCard label="Total Expense" value={formatCurrency(summary.grandTotal)} tone="violet" />
+      </div>
+
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row">
         <input
           placeholder="Search expense"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="input w-full sm:max-w-[420px]"
+          className="input w-full lg:max-w-[420px]"
         />
 
         <button
-          onClick={openCreateModal}
-          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+          onClick={openEntryModePrompt}
+          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
         >
           + Add Expense
         </button>
 
         <button
           onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
         >
           Generate Report
         </button>
       </div>
 
-      <div className="mb-3 sm:hidden">
+      <div className="mb-3 lg:hidden">
         <button
           onClick={() => setShowFilter((current) => !current)}
           className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
@@ -266,10 +474,10 @@ export default function Expenses() {
         </button>
       </div>
 
-      <div className={`mb-4 gap-3 sm:grid sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden sm:grid"}`}>
+      <div className={`mb-5 gap-3 lg:grid lg:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden lg:grid"}`}>
         <select value={category} onChange={(event) => setCategory(event.target.value)} className="input">
-          <option value="">All Category</option>
-          {categories.map((item) => (
+          <option value="">All Categories</option>
+          {categoryOptions.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
@@ -288,22 +496,23 @@ export default function Expenses() {
             setCategory("")
             setDateFilter("")
           }}
-          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] sm:justify-self-start"
+          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] lg:justify-self-start"
         >
           Clear Filters
         </button>
       </div>
 
-      <div className="hidden overflow-x-auto sm:block">
-        <table className="table min-w-[980px]">
+      <div className="hidden max-h-[620px] overflow-x-auto overflow-y-auto rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-[0_16px_32px_rgba(16,24,20,0.05)] lg:block">
+        <table className="table min-w-[1080px]">
           <thead>
             <tr>
               <th>Date</th>
               <th>Category</th>
               <th>Description</th>
               <th>Amount</th>
-              <th>Mode</th>
+              <th>Payment Mode</th>
               <th>Added By</th>
+              <th>Audit</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -314,16 +523,27 @@ export default function Expenses() {
                 <td>{formatDate(expense.date)}</td>
                 <td>{expense.category}</td>
                 <td>{expense.description}</td>
-                <td className="text-red-500">{formatCurrency(expense.amount)}</td>
+                <td className="font-semibold text-rose-500">{formatCurrency(expense.amount)}</td>
                 <td>{expense.paymentMode}</td>
                 <td>{expense.addedBy}</td>
+                <td className="text-left text-xs leading-6 text-[color:var(--text-secondary)]">
+                  {expense.lastEditedAt ? (
+                    <>
+                      <div>Edited: {formatDateTime(expense.lastEditedAt)}</div>
+                      <div>
+                        By: {expense.lastEditedBy || "-"} {expense.lastEditedByRole ? `(${expense.lastEditedByRole})` : ""}
+                      </div>
+                    </>
+                  ) : (
+                    <span>Not edited yet</span>
+                  )}
+                </td>
                 <td>
                   <div className="flex items-center justify-center gap-3">
                     <button onClick={() => openEditModal(expense)} className="text-blue-500">
                       Edit
                     </button>
-
-                    <button onClick={() => remove(expense._id)} className="text-red-500">
+                    <button onClick={() => askDelete(expense)} className="text-red-500">
                       Delete
                     </button>
                   </div>
@@ -334,7 +554,7 @@ export default function Expenses() {
         </table>
       </div>
 
-      <div className="space-y-4 sm:hidden">
+      <div className="max-h-[640px] space-y-4 overflow-y-auto pr-1 lg:hidden">
         {filteredData.map((expense) => {
           const isOpen = openCard === expense._id
 
@@ -342,7 +562,7 @@ export default function Expenses() {
             <div
               key={expense._id}
               onClick={() => setOpenCard(isOpen ? null : expense._id)}
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] active:scale-[0.98] transition"
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] transition active:scale-[0.98]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -367,7 +587,21 @@ export default function Expenses() {
               {isOpen ? (
                 <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
                   <p className="text-sm text-[color:var(--text-secondary)]">
-                    Added by: <span className="text-[color:var(--text-strong)]">{expense.addedBy}</span>
+                    Added by: <span className="font-medium text-[color:var(--text-strong)]">{expense.addedBy}</span>
+                  </p>
+
+                  <p className="text-sm text-[color:var(--text-secondary)]">
+                    Last edited:{" "}
+                    <span className="font-medium text-[color:var(--text-strong)]">
+                      {expense.lastEditedAt ? formatDateTime(expense.lastEditedAt) : "Not edited yet"}
+                    </span>
+                  </p>
+
+                  <p className="text-sm text-[color:var(--text-secondary)]">
+                    Edited by:{" "}
+                    <span className="font-medium text-[color:var(--text-strong)]">
+                      {expense.lastEditedBy || "-"} {expense.lastEditedByRole ? `(${expense.lastEditedByRole})` : ""}
+                    </span>
                   </p>
 
                   <div className="flex gap-2">
@@ -380,11 +614,10 @@ export default function Expenses() {
                     >
                       Edit
                     </button>
-
                     <button
                       onClick={(event) => {
                         event.stopPropagation()
-                        remove(expense._id)
+                        askDelete(expense)
                       }}
                       className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
                     >
@@ -399,128 +632,282 @@ export default function Expenses() {
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6">
-            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">
-              {editId ? "Edit Expense" : "Add Expense"}
-            </h2>
+        <ModalShell title={editId ? "Edit Expense" : "Add Expense"} onClose={closeModal}>
+          <div className="grid gap-3">
+            <input
+              type="date"
+              value={form.date}
+              onChange={(event) => setForm({ ...form, date: event.target.value })}
+              className="input"
+            />
 
-            <div className="grid gap-3">
-              <input
-                type="date"
-                value={form.date}
-                onChange={(event) => setForm({ ...form, date: event.target.value })}
-                className="input"
-              />
+            <InlineOptionSelect
+              label="Category"
+              value={form.category}
+              options={categoryOptions}
+              onChange={(value) => setForm({ ...form, category: value })}
+              optionBuilder={optionBuilder}
+              setOptionBuilder={setOptionBuilder}
+              field="category"
+              onAdd={() => addInlineOption("category")}
+            />
 
-              <select
-                value={form.category}
-                onChange={(event) => setForm({ ...form, category: event.target.value })}
-                className="input"
-              >
-                {categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+            <input
+              placeholder="Description"
+              value={form.description}
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
+              className="input"
+            />
 
-              <input
-                placeholder="Description"
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-                className="input"
-              />
+            <input
+              placeholder="Amount"
+              value={form.amount}
+              onChange={(event) => setForm({ ...form, amount: event.target.value })}
+              className="input"
+            />
 
-              <input
-                placeholder="Amount"
-                value={form.amount}
-                onChange={(event) => setForm({ ...form, amount: event.target.value })}
-                className="input"
-              />
+            <InlineOptionSelect
+              label="Payment Mode"
+              value={form.paymentMode}
+              options={paymentModeOptions}
+              onChange={(value) => setForm({ ...form, paymentMode: value })}
+              optionBuilder={optionBuilder}
+              setOptionBuilder={setOptionBuilder}
+              field="paymentMode"
+              onAdd={() => addInlineOption("paymentMode")}
+            />
 
-              <select
-                value={form.paymentMode}
-                onChange={(event) => setForm({ ...form, paymentMode: event.target.value })}
-                className="input"
-              >
-                {paymentModes.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                placeholder="Added By"
-                value={form.addedBy}
-                onChange={(event) => setForm({ ...form, addedBy: event.target.value })}
-                className="input"
-              />
-            </div>
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setOpen(false)
-                  resetForm()
-                }}
-                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
-              >
-                Cancel
-              </button>
-
-              <button onClick={saveExpense} className="rounded-xl bg-blue-600 px-4 py-2 text-white">
-                Save
-              </button>
-            </div>
+            <InlineOptionSelect
+              label="Added By"
+              value={form.addedBy}
+              options={addedByOptions}
+              onChange={(value) => setForm({ ...form, addedBy: value })}
+              optionBuilder={optionBuilder}
+              setOptionBuilder={setOptionBuilder}
+              field="addedBy"
+              onAdd={() => addInlineOption("addedBy")}
+            />
           </div>
-        </div>
+
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              onClick={closeModal}
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={saveExpense}
+              disabled={saving}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </ModalShell>
+      ) : null}
+
+      {bulkOpen ? (
+        <ModalShell title="Add Multiple Expenses" onClose={() => setBulkOpen(false)}>
+          <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+            {bulkEntries.map((entry, index) => (
+              <div key={`${index}-${entry.date}`} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold text-[color:var(--text-strong)]">
+                    Entry {index + 1}
+                  </h3>
+                  {bulkEntries.length > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => removeBulkEntryRow(index)}
+                      className="rounded-xl border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-600"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3">
+                  <input
+                    type="date"
+                    value={entry.date}
+                    onChange={(event) => updateBulkEntry(index, "date", event.target.value)}
+                    className="input"
+                  />
+                  <select
+                    value={entry.category}
+                    onChange={(event) => updateBulkEntry(index, "category", event.target.value)}
+                    className="input"
+                  >
+                    {categoryOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    placeholder="Description (optional)"
+                    value={entry.description}
+                    onChange={(event) => updateBulkEntry(index, "description", event.target.value)}
+                    className="input"
+                  />
+                  <input
+                    placeholder="Amount"
+                    value={entry.amount}
+                    onChange={(event) => updateBulkEntry(index, "amount", event.target.value)}
+                    className="input"
+                  />
+                  <select
+                    value={entry.paymentMode}
+                    onChange={(event) => updateBulkEntry(index, "paymentMode", event.target.value)}
+                    className="input"
+                  >
+                    {paymentModeOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={entry.addedBy}
+                    onChange={(event) => updateBulkEntry(index, "addedBy", event.target.value)}
+                    className="input"
+                  >
+                    {addedByOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={addBulkEntryRow}
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-600"
+            >
+              + Add Another Row
+            </button>
+          </div>
+
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              onClick={() => setBulkOpen(false)}
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={saveBulkExpenses}
+              disabled={bulkSaving}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {bulkSaving ? "Saving..." : "Save All"}
+            </button>
+          </div>
+        </ModalShell>
       ) : null}
 
       {reportOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-[color:var(--text-primary)]">
-            <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">
-              Generate Expense Report
-            </h2>
+        <ModalShell title="Generate Expense Report" onClose={() => setReportOpen(false)}>
+          <div className="grid gap-3">
+            <input
+              type="date"
+              value={reportForm.fromDate}
+              onChange={(event) => setReportForm((current) => ({ ...current, fromDate: event.target.value }))}
+              className="input"
+            />
 
-            <div className="flex flex-col gap-3">
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(event) => setFromDate(event.target.value)}
-                className="input"
-              />
+            <input
+              type="date"
+              value={reportForm.toDate}
+              onChange={(event) => setReportForm((current) => ({ ...current, toDate: event.target.value }))}
+              className="input"
+            />
 
-              <input
-                type="date"
-                value={toDate}
-                onChange={(event) => setToDate(event.target.value)}
-                className="input"
-              />
-            </div>
+            <select
+              value={reportForm.category}
+              onChange={(event) => setReportForm((current) => ({ ...current, category: event.target.value }))}
+              className="input"
+            >
+              <option value="">All Categories</option>
+              {categoryOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
 
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                onClick={() => setReportOpen(false)}
-                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={() => {
-                  generateExpensePDF()
-                  setReportOpen(false)
-                }}
-                className="rounded-xl bg-green-600 px-4 py-2 text-white"
-              >
-                Download
-              </button>
-            </div>
+            <select
+              value={reportForm.format}
+              onChange={(event) => setReportForm((current) => ({ ...current, format: event.target.value }))}
+              className="input"
+            >
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+            </select>
           </div>
-        </div>
+
+          <div className="mt-5 flex justify-end gap-3">
+            <button
+              onClick={() => setReportOpen(false)}
+              className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+            >
+              Cancel
+            </button>
+
+            <button onClick={handleGenerateReport} className="rounded-xl bg-green-600 px-4 py-2 text-white">
+              Download
+            </button>
+          </div>
+        </ModalShell>
+      ) : null}
+
+      {confirmState ? (
+        <ConfirmDialog
+          title={confirmState.title}
+          description={confirmState.description}
+          actionLabel={confirmState.actionLabel}
+          variant={confirmState.variant}
+          onCancel={() => setConfirmState(null)}
+          onConfirm={async () => {
+            try {
+              await confirmState.onConfirm?.()
+            } catch (error) {
+              setNotice({
+                type: "error",
+                text: error?.response?.data?.message || "Unable to complete this action.",
+              })
+            } finally {
+              setConfirmState(null)
+            }
+          }}
+        />
+      ) : null}
+
+      {entryModePrompt ? (
+        <ConfirmDialog
+          title="Choose Expense Entry Mode"
+          description="Select whether you want to add one expense or save multiple expense rows in one action."
+          actionLabel="Single Entry"
+          secondaryLabel="Multiple Entry"
+          variant="primary"
+          onCancel={() => setEntryModePrompt(false)}
+          onConfirm={() => {
+            setEntryModePrompt(false)
+            openCreateModal()
+          }}
+          onSecondaryAction={() => {
+            setEntryModePrompt(false)
+            openBulkModal()
+          }}
+        />
       ) : null}
 
       <MobileActionFab
@@ -528,7 +915,7 @@ export default function Expenses() {
           {
             label: "Add Expense",
             className: "bg-blue-600",
-            onClick: openCreateModal,
+            onClick: openEntryModePrompt,
           },
           {
             label: "Generate Report",
@@ -537,6 +924,157 @@ export default function Expenses() {
           },
         ]}
       />
+    </div>
+  )
+}
+
+function SummaryCard({ label, value, tone }) {
+  const tones = {
+    rose: { panel: "border-rose-200/70 bg-rose-50/80", value: "text-rose-600" },
+    amber: { panel: "border-amber-200/70 bg-amber-50/80", value: "text-amber-600" },
+    blue: { panel: "border-blue-200/70 bg-blue-50/80", value: "text-blue-600" },
+    violet: { panel: "border-violet-200/70 bg-violet-50/80", value: "text-violet-600" },
+  }
+  const current = tones[tone] || tones.blue
+
+  return (
+    <div className={`rounded-3xl border p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] ${current.panel}`}>
+      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">{label}</p>
+      <p className={`mt-3 text-2xl font-extrabold ${current.value}`}>{value}</p>
+    </div>
+  )
+}
+
+function InlineNotice({ notice }) {
+  return (
+    <div
+      className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-medium ${
+        notice.type === "error"
+          ? "border-red-200 bg-red-50 text-red-600"
+          : "border-green-200 bg-green-50 text-green-700"
+      }`}
+    >
+      {notice.text}
+    </div>
+  )
+}
+
+function ModalShell({ title, onClose, children }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-2 text-[color:var(--text-primary)]"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function InlineOptionSelect({
+  label,
+  value,
+  options,
+  onChange,
+  field,
+  optionBuilder,
+  setOptionBuilder,
+  onAdd,
+}) {
+  const isActive = optionBuilder.field === field
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <select value={value} onChange={(event) => onChange(event.target.value)} className="input flex-1">
+          {options.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+
+        <button
+          type="button"
+          onClick={() =>
+            setOptionBuilder((current) => ({
+              field: current.field === field ? "" : field,
+              value: current.field === field ? "" : "",
+            }))
+          }
+          className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-primary)]"
+          title={`Add ${label}`}
+        >
+          <Plus size={18} />
+        </button>
+      </div>
+
+      {isActive ? (
+        <div className="flex gap-2">
+          <input
+            placeholder={`New ${label}`}
+            value={optionBuilder.value}
+            onChange={(event) => setOptionBuilder({ field, value: event.target.value })}
+            className="input flex-1"
+          />
+          <button type="button" onClick={onAdd} className="rounded-xl bg-blue-600 px-4 py-2 text-white">
+            Add
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function ConfirmDialog({
+  title,
+  description,
+  actionLabel,
+  variant,
+  secondaryLabel = "",
+  onCancel,
+  onConfirm,
+  onSecondaryAction,
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-sm rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_20px_48px_rgba(15,23,42,0.22)]">
+        <h3 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">{description}</p>
+        <div className="mt-5 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+          >
+            Cancel
+          </button>
+          {secondaryLabel ? (
+            <button
+              type="button"
+              onClick={onSecondaryAction}
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-600"
+            >
+              {secondaryLabel}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={`rounded-xl px-4 py-2 text-white ${variant === "danger" ? "bg-red-600" : "bg-blue-600"}`}
+          >
+            {actionLabel}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

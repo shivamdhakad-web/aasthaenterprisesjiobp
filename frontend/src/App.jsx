@@ -39,6 +39,7 @@ import LeaveManagementPage from "./pages/shared/LeaveManagementPage"
 import ShiftSchedulePage from "./pages/shared/ShiftSchedulePage"
 import TasksPage from "./pages/shared/TasksPage"
 import StorageOverview from "./pages/admin/StorageOverview"
+import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="meter-readings" element={<MeterReadings />} />
             <Route path="tanker-deliveries" element={<TankerDeliveries />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="employee-dashboard-editor" element={<EmployeeDashboardEditor />} />
             <Route path="leaves" element={<LeaveManagementPage />} />
             <Route path="shifts" element={<ShiftSchedulePage />} />
             <Route path="tasks" element={<TasksPage />} />

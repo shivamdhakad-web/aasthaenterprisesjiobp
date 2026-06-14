@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings";
 import {
   addMyLubricant,
   getEmployeeProducts,
@@ -15,6 +16,7 @@ const baseForm = {
 };
 
 export default function EmployeeLubricants() {
+  const { canUse } = useEmployeeDashboardSettings("lubricants");
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [form, setForm] = useState(baseForm);
@@ -64,7 +66,7 @@ export default function EmployeeLubricants() {
   };
 
   const submit = async () => {
-    if (editing && !editing.canEdit) {
+    if (editing && (!editing.canEdit || !canUse("editSale"))) {
       setConfirmDialog({ open: true, message: "You cannot edit this sale entry." });
       return;
     }
@@ -82,12 +84,14 @@ export default function EmployeeLubricants() {
     } catch (error) {
       setConfirmDialog({
         open: true,
-        message: error?.response?.data?.message || "Sale save nahi ho payi",
+        message: error?.response?.data?.message || "Sale could not be saved.",
       });
     }
   };
 
-  const readOnlyMode = Boolean(editing && !editing.canEdit);
+  const canAddSale = canUse("newSale");
+  const canEditSale = canUse("editSale");
+  const readOnlyMode = Boolean(editing && (!editing.canEdit || !canEditSale));
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
@@ -100,11 +104,13 @@ export default function EmployeeLubricants() {
       </section>
 
       {/* Desktop Add Button */}
+      {canAddSale ? (
       <div className="hidden sm:flex sm:justify-end">
         <button onClick={() => openForm()} className="btn btn-green">
           + New Sale
         </button>
       </div>
+      ) : null}
 
       {/* Sales Table */}
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4">
@@ -130,7 +136,7 @@ export default function EmployeeLubricants() {
                   <td>Rs. {sale.total}</td>
                   <td>
                     <button onClick={() => openForm(sale)} className="text-blue-500">
-                      {sale.canEdit ? "Edit" : "View"}
+                      {sale.canEdit && canEditSale ? "Edit" : "View"}
                     </button>
                   </td>
                 </tr>
@@ -159,7 +165,7 @@ export default function EmployeeLubricants() {
         onClick={() => openForm(sale)}
         className="ml-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
       >
-        {sale.canEdit ? "Edit sale" : "View sale"}
+        {sale.canEdit && canEditSale ? "Edit sale" : "View sale"}
       </button>
     </div>
   ))}
@@ -257,6 +263,7 @@ export default function EmployeeLubricants() {
       )}
 
       {/* Mobile FAB */}
+      {canAddSale ? (
       <MobileActionFab
         actions={[
           {
@@ -266,6 +273,7 @@ export default function EmployeeLubricants() {
           },
         ]}
       />
+      ) : null}
     </div>
   );
 }

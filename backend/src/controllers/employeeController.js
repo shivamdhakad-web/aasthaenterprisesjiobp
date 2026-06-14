@@ -10,6 +10,8 @@ const normalizeEmployeePayload = (payload = {}) => ({
   pant: payload.pant?.trim?.() || payload.pant,
   shoes: payload.shoes?.trim?.() || payload.shoes,
   loginPassword: payload.loginPassword?.trim?.() || payload.loginPassword,
+  lastEditedBy: payload.lastEditedBy?.trim?.() || payload.lastEditedBy,
+  lastEditedByRole: payload.lastEditedByRole?.trim?.() || payload.lastEditedByRole,
 })
 
 exports.getEmployees = async(req,res)=>{
@@ -28,6 +30,10 @@ exports.addEmployee = async(req,res)=>{
 try{
 
 const payload = normalizeEmployeePayload(req.body)
+
+delete payload.lastEditedAt
+delete payload.lastEditedBy
+delete payload.lastEditedByRole
 
 if(!payload.loginPassword){
 return res.status(400).json({error:"Employee login password is required"})
@@ -50,6 +56,8 @@ try{
 const {id}=req.params
 
 const payload = normalizeEmployeePayload(req.body)
+
+payload.lastEditedAt = payload.lastEditedAt || new Date()
 
 const emp = await Employee.findByIdAndUpdate(id,payload,{new:true})
 

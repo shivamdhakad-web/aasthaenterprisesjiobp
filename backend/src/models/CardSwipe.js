@@ -9,7 +9,7 @@ required:true
 
 time:{
 type:String,
-required:true
+default:""
 },
 
 amount:{
@@ -28,18 +28,37 @@ type:String
 
 machine:{
 type:String,
-enum:["Self","DSM"],
 required:true
 },
 
 paymentMethod:{
 type:String,
-enum:["Cash","Online"],
 required:true
 },
 
 remark:{
 type:String
+}
+
+,
+
+lastEditedAt:{
+type:Date,
+default:null
+}
+
+,
+
+lastEditedBy:{
+type:String,
+default:""
+}
+
+,
+
+lastEditedByRole:{
+type:String,
+default:""
 }
 
 },{timestamps:true})

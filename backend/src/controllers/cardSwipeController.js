@@ -45,9 +45,9 @@ try{
 const entry = new CardSwipe({
 
 date:req.body.date,
-time:req.body.time,
-amount:req.body.amount,
-charges:req.body.charges,
+time:req.body.time || "",
+amount:Number(req.body.amount || 0),
+charges:Number(req.body.charges || 0),
 txnDetails:req.body.txnDetails,
 machine:req.body.machine,
 paymentMethod:req.body.paymentMethod,
@@ -74,9 +74,23 @@ try{
 
 const {id} = req.params
 
+const payload = {
+date:req.body.date,
+time:req.body.time || "",
+amount:Number(req.body.amount || 0),
+charges:Number(req.body.charges || 0),
+txnDetails:req.body.txnDetails,
+machine:req.body.machine,
+paymentMethod:req.body.paymentMethod,
+remark:req.body.remark,
+lastEditedAt:req.body.lastEditedAt || new Date(),
+lastEditedBy:req.body.lastEditedBy || "",
+lastEditedByRole:req.body.lastEditedByRole || ""
+}
+
 const updated = await CardSwipe.findByIdAndUpdate(
 id,
-req.body,
+payload,
 {new:true}
 )
 

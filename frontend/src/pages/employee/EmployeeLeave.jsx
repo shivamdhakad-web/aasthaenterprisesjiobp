@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings";
 import { applyMyLeave, getMyLeaves } from "../../services/employeeSelfApi";
 
 const leaveTypes = ["CL", "SL", "PL", "LOP"];
@@ -20,6 +21,7 @@ const baseForm = {
 };
 
 export default function EmployeeLeave() {
+  const { canUse } = useEmployeeDashboardSettings("leaves");
   const [form, setForm] = useState(baseForm);
   const [items, setItems] = useState([]);
   const [balances, setBalances] = useState([]);
@@ -47,8 +49,14 @@ export default function EmployeeLeave() {
   };
 
   const submit = async () => {
+    if (!canUse("applyLeave")) {
+      setSuccessMessage("Leave application access is currently disabled.");
+      setShowSuccessPopup(true);
+      return;
+    }
+
     await applyMyLeave(form);
-    setSuccessMessage("Leave Submitted ✅");
+    setSuccessMessage("Leave submitted successfully.");
     setShowSuccessPopup(true);
     closeModal();
     load();
@@ -65,11 +73,13 @@ Apply for leave from here. After admin approval, that date will automatically be
       </section>
 
       {/* Desktop Apply Button */}
+      {canUse("applyLeave") ? (
       <div className="hidden sm:flex sm:justify-end">
         <button onClick={openForm} className="btn btn-green">
           + Apply Leave
         </button>
       </div>
+      ) : null}
 
       {/* Leave Balances */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -158,6 +168,7 @@ Apply for leave from here. After admin approval, that date will automatically be
       </section>
 
       {/* Mobile FAB */}
+      {canUse("applyLeave") ? (
       <MobileActionFab
         actions={[
           {
@@ -167,6 +178,7 @@ Apply for leave from here. After admin approval, that date will automatically be
           },
         ]}
       />
+      ) : null}
 
       {/* Modal for Leave Application Form */}
       {isModalOpen && (
@@ -213,9 +225,11 @@ Apply for leave from here. After admin approval, that date will automatically be
               />
 
               <div className="flex gap-3 pt-4">
+                {canUse("applyLeave") ? (
                 <button onClick={submit} className="btn btn-green flex-1">
                   Apply Leave
                 </button>
+                ) : null}
                 <button
                   onClick={closeModal}
                   className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings";
 import {
   addMyAttendance,
   getMyAttendance,
@@ -15,6 +16,7 @@ const initialForm = {
 const getDateKey = (value) => new Date(value).toISOString().slice(0, 10);
 
 export default function EmployeeAttendance() {
+  const { canUse } = useEmployeeDashboardSettings("attendance");
   const [entries, setEntries] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [editing, setEditing] = useState(null);
@@ -52,7 +54,7 @@ export default function EmployeeAttendance() {
   };
 
   const submit = async () => {
-    if (editing && !editing.canEdit) {
+    if (editing && (!editing.canEdit || !canUse("editEntry"))) {
       setConfirmDialog({ open: true, message: "You cannot edit this attendance entry." });
       return;
     }
@@ -85,7 +87,9 @@ export default function EmployeeAttendance() {
     }
   };
 
-  const readOnlyMode = Boolean(editing && !editing.canEdit);
+  const canAddEntry = canUse("newEntry");
+  const canEditEntry = canUse("editEntry");
+  const readOnlyMode = Boolean(editing && (!editing.canEdit || !canEditEntry));
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
@@ -98,11 +102,13 @@ export default function EmployeeAttendance() {
       </div>
 
       {/* Desktop Add Button */}
+      {canAddEntry ? (
       <div className="hidden sm:flex sm:justify-end">
         <button onClick={() => openForm()} className="btn btn-green">
           + New Entry
         </button>
       </div>
+      ) : null}
 
       {/* Attendance List Table */}
       <div className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4">
@@ -124,7 +130,7 @@ export default function EmployeeAttendance() {
                   <td>{entry.remark || "-"}</td>
                   <td>
                     <button onClick={() => openForm(entry)} className="text-blue-500">
-                      {entry.canEdit ? "Edit" : "View"}
+                      {entry.canEdit && canEditEntry ? "Edit" : "View"}
                     </button>
                   </td>
                 </tr>
@@ -156,7 +162,7 @@ export default function EmployeeAttendance() {
         onClick={() => openForm(entry)}
         className="ml-4 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-sm text-blue-500"
       >
-        {entry.canEdit ? "Edit entry" : "View entry"}
+        {entry.canEdit && canEditEntry ? "Edit entry" : "View entry"}
       </button>
     </div>
   ))}
@@ -245,6 +251,7 @@ export default function EmployeeAttendance() {
       )}
 
       {/* Mobile FAB */}
+      {canAddEntry ? (
       <MobileActionFab
         actions={[
           {
@@ -254,6 +261,7 @@ export default function EmployeeAttendance() {
           },
         ]}
       />
+      ) : null}
     </div>
   );
 }

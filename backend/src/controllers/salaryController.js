@@ -44,16 +44,19 @@ exports.getSalarySummary = async (req, res) => {
     }
 
     const isDateMode = Boolean(req.query.date)
+    const isAllMode = req.query.scope === "all"
     const range = isDateMode ? buildDayRange(req.query.date) : buildMonthRange(req.query.month)
-    const { start, end } = range
 
-    const attendance = await EmployeeAttendance.find({
-      employeeId,
-      date: {
-        $gte: start,
-        $lt: end,
-      },
-    }).sort({ date: 1 })
+    const attendanceQuery = { employeeId }
+
+    if (!isAllMode) {
+      attendanceQuery.date = {
+        $gte: range.start,
+        $lt: range.end,
+      }
+    }
+
+    const attendance = await EmployeeAttendance.find(attendanceQuery).sort({ date: 1 })
 
     const monthlySalary = Number(employee.salary || 0)
     const perDay = monthlySalary / 30
@@ -86,9 +89,9 @@ exports.getSalarySummary = async (req, res) => {
         shift: employee.shift,
         salary: monthlySalary,
       },
-      month: isDateMode ? req.query.date?.slice?.(0, 7) : range.monthKey,
+      month: isAllMode ? null : isDateMode ? req.query.date?.slice?.(0, 7) : range.monthKey,
       selectedDate: isDateMode ? range.dayKey : null,
-      scope: isDateMode ? "date" : "month",
+      scope: isAllMode ? "all" : isDateMode ? "date" : "month",
       breakdown: {
         present,
         absent,

@@ -2,12 +2,18 @@ import { Link, useLocation } from "react-router-dom"
 import { navigationByRole, roleBadges } from "../../config/navigation"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
+import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings"
 
 export default function Sidebar({ open, setOpen }) {
   const location = useLocation()
   const { user } = useAuth()
   const { isDayTheme } = useTheme()
-  const items = navigationByRole[user?.role] || []
+  const employeeDashboardSettings = useEmployeeDashboardSettings()
+  const baseItems = navigationByRole[user?.role] || []
+  const items =
+    user?.role === "Employee"
+      ? mergeEmployeeNavigation(baseItems, employeeDashboardSettings.pages)
+      : baseItems
   const badge = roleBadges[user?.role]
   const BadgeIcon = badge?.icon
   const badgeTone = isDayTheme ? badge?.dayTone : badge?.tone
@@ -114,6 +120,32 @@ lg:static lg:translate-x-0
       </div>
     </>
   )
+}
+
+function mergeEmployeeNavigation(baseItems, pages = []) {
+  if (!pages.length) {
+    return baseItems
+  }
+
+  const baseByKey = new Map(baseItems.map((item) => [item.key, item]))
+
+  return pages
+    .map((page) => {
+      const baseItem = baseByKey.get(page.key)
+
+      if (!baseItem || page.hidden) {
+        return null
+      }
+
+      return {
+        ...baseItem,
+        label: page.label || baseItem.label,
+        path: page.path || baseItem.path,
+        order: Number(page.order || 0),
+      }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.order - b.order)
 }
 
 function SidebarItem({ icon, text, active, isDayTheme }) {
