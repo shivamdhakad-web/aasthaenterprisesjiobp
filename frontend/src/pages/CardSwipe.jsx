@@ -452,9 +452,9 @@ export default function CardSwipe() {
       <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-5">
         <SummaryCard label="Total Swipe" value={formatCurrency(summary.totalAmount)} tone="blue" />
         <SummaryCard label="Total Charges" value={formatCurrency(summary.totalCharges)} tone="amber" />
-        <SummaryCard label="Cash" value={formatCurrency(summary.cash)} tone="emerald" />
+        {/* <SummaryCard label="Cash" value={formatCurrency(summary.cash)} tone="emerald" /> */}
         <SummaryCard label="Cash Profit" value={formatCurrency(summary.cashProfit)} tone="green" />
-        <SummaryCard label="Online" value={formatCurrency(summary.online)} tone="indigo" />
+        {/* <SummaryCard label="Online" value={formatCurrency(summary.online)} tone="indigo" /> */}
         <SummaryCard label="Online Profit" value={formatCurrency(summary.onlineProfit)} tone="violet" />
         <SummaryCard label="Self Total" value={formatCurrency(summary.self)} tone="sky" />
         <SummaryCard label="Self Charges" value={formatCurrency(summary.selfCharges)} tone="cyan" />
