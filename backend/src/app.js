@@ -36,6 +36,7 @@ const storageRoutes = require("./routes/storageRoutes")
 const smartCalculatorRoutes = require("./routes/smartCalculatorRoutes")
 const densityCalculatorRoutes = require("./routes/densityCalculatorRoutes")
 const employeeDashboardSettingRoutes = require("./routes/employeeDashboardSettingRoutes")
+const managerDashboardSettingRoutes = require("./routes/managerDashboardSettingRoutes")
 const app = express()
 
 app.use(cors())
@@ -92,5 +93,6 @@ app.use("/api/storage", storageRoutes)
 app.use("/api/smart-calculator", smartCalculatorRoutes)
 app.use("/api/density-calculator", densityCalculatorRoutes)
 app.use("/api/employee-dashboard-settings", employeeDashboardSettingRoutes)
+app.use("/api/manager-dashboard-settings", managerDashboardSettingRoutes)
 
 module.exports = app

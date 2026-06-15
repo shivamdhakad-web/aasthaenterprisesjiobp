@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { getEmployeeDashboardSettings } from "../services/employeeDashboardSettingsApi"
+import { getManagerDashboardSettings } from "../services/managerDashboardSettingsApi"
 
 const DEFAULT_STATE = {
   pages: [],
@@ -8,7 +8,7 @@ const DEFAULT_STATE = {
   error: "",
 }
 
-export default function useEmployeeDashboardSettings(pageKey = "", enabled = true) {
+export default function useManagerDashboardSettings(pageKey = "", enabled = true) {
   const [state, setState] = useState(DEFAULT_STATE)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function useEmployeeDashboardSettings(pageKey = "", enabled = tru
 
     const load = async () => {
       try {
-        const data = await getEmployeeDashboardSettings()
+        const data = await getManagerDashboardSettings()
 
         if (active) {
           setState({
@@ -35,7 +35,7 @@ export default function useEmployeeDashboardSettings(pageKey = "", enabled = tru
           setState({
             pages: [],
             loading: false,
-            error: error?.response?.data?.message || "Unable to load employee dashboard settings.",
+            error: error?.response?.data?.message || "Unable to load manager dashboard settings.",
           })
         }
       }

@@ -18,6 +18,7 @@ import CustomerDrivers from "./pages/CustomerDrivers"
 import SecureNotes from "./pages/SecureNotes"
 import ProtectedRoute from "./components/auth/ProtectedRoute"
 import RoleRedirect from "./components/auth/RoleRedirect"
+import ManagerPageAccessGate from "./components/auth/ManagerPageAccessGate"
 import AdminOverview from "./pages/admin/AdminOverview"
 import ManagerOverview from "./pages/manager/ManagerOverview"
 import EmployeeOverview from "./pages/employee/EmployeeOverview"
@@ -40,6 +41,7 @@ import ShiftSchedulePage from "./pages/shared/ShiftSchedulePage"
 import TasksPage from "./pages/shared/TasksPage"
 import StorageOverview from "./pages/admin/StorageOverview"
 import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
+import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 
@@ -48,6 +50,9 @@ export default function App() {
     typeof window !== "undefined" && window.location.protocol === "file:"
       ? HashRouter
       : BrowserRouter
+  const managerPage = (pageKey, element) => (
+    <ManagerPageAccessGate pageKey={pageKey}>{element}</ManagerPageAccessGate>
+  )
 
   return (
     <AppRouter>
@@ -66,6 +71,7 @@ export default function App() {
             <Route path="tanker-deliveries" element={<TankerDeliveries />} />
             <Route path="employees" element={<Employees />} />
             <Route path="employee-dashboard-editor" element={<EmployeeDashboardEditor />} />
+            <Route path="manager-dashboard-editor" element={<ManagerDashboardEditor />} />
             <Route path="leaves" element={<LeaveManagementPage />} />
             <Route path="shifts" element={<ShiftSchedulePage />} />
             <Route path="tasks" element={<TasksPage />} />
@@ -88,112 +94,124 @@ export default function App() {
         <Route element={<ProtectedRoute roles={["Manager"]} />}>
           <Route path="/manager" element={<DashboardLayout />}>
             <Route index element={<ManagerOverview />} />
-            <Route path="approvals" element={<ApprovalsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="daily-reports" element={<DailyReportsPage />} />
-            <Route path="shifts" element={<ShiftSchedulePage />} />
-            <Route path="tasks" element={<TasksPage />} />
+            <Route path="approvals" element={managerPage("approvals", <ApprovalsPage />)} />
+            <Route path="notifications" element={managerPage("notifications", <NotificationsPage />)} />
+            <Route path="daily-reports" element={managerPage("dailyReports", <DailyReportsPage />)} />
+            <Route path="shifts" element={managerPage("shifts", <ShiftSchedulePage />)} />
+            <Route path="tasks" element={managerPage("tasks", <TasksPage />)} />
             <Route
               path="meter-readings"
-              element={
+              element={managerPage(
+                "meterReadings",
                 <ApprovalWrappedPage moduleKey="meter-readings" title="Meter Readings">
                   <MeterReadings />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="tanker-deliveries"
-              element={
+              element={managerPage(
+                "tankerDeliveries",
                 <ApprovalWrappedPage moduleKey="tanker-deliveries" title="Tanker Deliveries">
                   <TankerDeliveries />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="employees"
-              element={
+              element={managerPage(
+                "employees",
                 <ApprovalWrappedPage moduleKey="employees" title="Employees">
                   <Employees />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="credit-customers"
-              element={
+              element={managerPage(
+                "creditCustomers",
                 <ApprovalWrappedPage moduleKey="customers" title="Credit Customers">
                   <CreditCustomers />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="expenses"
-              element={
+              element={managerPage(
+                "expenses",
                 <ApprovalWrappedPage moduleKey="expenses" title="Expenses">
                   <Expenses />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
-            <Route path="reminder" element={<ReminderBox />} />
+            <Route path="reminder" element={managerPage("reminder", <ReminderBox />)} />
             <Route
               path="settings"
-              element={
+              element={managerPage(
+                "settings",
                 <ApprovalWrappedPage moduleKey="settings" title="Station Settings">
                   <SettingsPage />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="lubricants"
-              element={
+              element={managerPage(
+                "lubricants",
                 <ApprovalWrappedPage moduleKey="lubricant-sales" title="Lubricant Sales">
                   <Lubricants />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="mobile-dispenser"
-              element={
+              element={managerPage(
+                "mobileDispenser",
                 <ApprovalWrappedPage
                   moduleKey="mobile-dispenser-entries"
                   title="Mobile Dispenser"
                 >
                   <MobileDispenser />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="card-swipe"
-              element={
+              element={managerPage(
+                "cardSwipe",
                 <ApprovalWrappedPage moduleKey="card-swipe" title="Card Swipe">
                   <CardSwipe />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
-            <Route path="smart-calculator" element={<SmartCalculatorPage />} />
-            <Route path="density-calculator" element={<DensityCalculatorPage />} />
+            <Route path="smart-calculator" element={managerPage("smartCalculator", <SmartCalculatorPage />)} />
+            <Route path="density-calculator" element={managerPage("densityCalculator", <DensityCalculatorPage />)} />
             <Route
               path="ttdrivers"
-              element={
+              element={managerPage(
+                "ttDrivers",
                 <ApprovalWrappedPage moduleKey="tt-drivers" title="TT Drivers">
                   <TTDrivers />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="customerdrivers"
-              element={
+              element={managerPage(
+                "customerDrivers",
                 <ApprovalWrappedPage moduleKey="customer-drivers" title="Customer Drivers">
                   <CustomerDrivers />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
             <Route
               path="secure-notes"
-              element={
+              element={managerPage(
+                "secureNotes",
                 <ApprovalWrappedPage moduleKey="secure-notes" title="Secure Notes">
                   <SecureNotes />
-                </ApprovalWrappedPage>
-              }
+                </ApprovalWrappedPage>,
+              )}
             />
           </Route>
         </Route>

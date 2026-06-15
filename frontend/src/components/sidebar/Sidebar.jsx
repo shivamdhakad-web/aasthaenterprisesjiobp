@@ -3,17 +3,25 @@ import { navigationByRole, roleBadges } from "../../config/navigation"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
 import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings"
+import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
 
 export default function Sidebar({ open, setOpen }) {
   const location = useLocation()
   const { user } = useAuth()
   const { isDayTheme } = useTheme()
-  const employeeDashboardSettings = useEmployeeDashboardSettings()
+  const employeeDashboardSettings = useEmployeeDashboardSettings("", user?.role === "Employee")
+  const managerDashboardSettings = useManagerDashboardSettings("", user?.role === "Manager")
   const baseItems = navigationByRole[user?.role] || []
   const items =
     user?.role === "Employee"
-      ? mergeEmployeeNavigation(baseItems, employeeDashboardSettings.pages)
-      : baseItems
+      ? employeeDashboardSettings.loading
+        ? []
+        : mergeNavigation(baseItems, employeeDashboardSettings.pages)
+      : user?.role === "Manager"
+        ? managerDashboardSettings.loading
+          ? []
+          : mergeNavigation(baseItems, managerDashboardSettings.pages)
+        : baseItems
   const badge = roleBadges[user?.role]
   const BadgeIcon = badge?.icon
   const badgeTone = isDayTheme ? badge?.dayTone : badge?.tone
@@ -122,7 +130,7 @@ lg:static lg:translate-x-0
   )
 }
 
-function mergeEmployeeNavigation(baseItems, pages = []) {
+function mergeNavigation(baseItems, pages = []) {
   if (!pages.length) {
     return baseItems
   }
