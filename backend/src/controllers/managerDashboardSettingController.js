@@ -50,6 +50,9 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     path: "/manager/employees",
     order: 7,
     buttons: [
+      { key: "addEmployee", label: "Add Employee", enabled: true },
+      { key: "editEmployee", label: "Edit Employee", enabled: true },
+      { key: "deleteEmployee", label: "Delete Employee", enabled: true },
       { key: "addEntry", label: "Add Attendance Entry", enabled: true },
       { key: "addBonus", label: "Add Bonus", enabled: true },
       { key: "editEntry", label: "Edit Attendance", enabled: true },

@@ -7,6 +7,7 @@ import EmployeeModal from "../components/EmployeeModal"
 import AttendanceModal from "../components/AttendanceModal"
 import MobileActionFab from "../components/MobileActionFab"
 import { useAuth } from "../contexts/AuthContext"
+import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
 import {
   addAttendance,
   deleteAttendance,
@@ -245,6 +246,9 @@ const buildEmployeesDirectoryPdf = (employees) => {
 
 export default function Employees() {
   const { user } = useAuth()
+  const isManager = user?.role === "Manager"
+  const { canUse } = useManagerDashboardSettings("employees", isManager)
+  const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
   const [employees, setEmployees] = useState([])
   const [search, setSearch] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -426,6 +430,16 @@ export default function Employees() {
   }
 
   const saveEmployee = async (data) => {
+    if (editEmployee && !canManagerUse("editEmployee")) {
+      setNotice({ type: "error", message: "You do not have access to edit employees." })
+      return
+    }
+
+    if (!editEmployee && !canManagerUse("addEmployee")) {
+      setNotice({ type: "error", message: "You do not have access to add employees." })
+      return
+    }
+
     try {
       if (editEmployee) {
         await updateEmployee(editEmployee._id, {
@@ -456,6 +470,11 @@ export default function Employees() {
     allowEmployeeSelect = false,
     mode = "single",
   } = {}) => {
+    if (!canManagerUse(editAttendance ? "editEntry" : "addEntry")) {
+      setNotice({ type: "error", message: "You do not have access to this attendance action." })
+      return
+    }
+
     setEditAttendance(null)
     setAttendanceEntryMode(mode)
     setAttendanceContext({
@@ -469,6 +488,11 @@ export default function Employees() {
     employeeId = "",
     allowEmployeeSelect = false,
   } = {}) => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", message: "You do not have access to add attendance entries." })
+      return
+    }
+
     setAttendanceModePrompt({
       employeeId: employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "",
       allowEmployeeSelect,
@@ -476,6 +500,11 @@ export default function Employees() {
   }
 
   const openBonusModal = (employeeId = "") => {
+    if (!canManagerUse("addBonus")) {
+      setNotice({ type: "error", message: "You do not have access to add bonus entries." })
+      return
+    }
+
     const defaultEmployeeId = employeeId || selectedEmployee?._id || employees[0]?._id || ""
     setBonusForm({
       date: new Date().toISOString().slice(0, 10),
@@ -559,6 +588,16 @@ export default function Employees() {
   }
 
   const saveAttendance = async (formData) => {
+    if (editAttendance && !canManagerUse("editEntry")) {
+      setNotice({ type: "error", message: "You do not have access to edit attendance entries." })
+      return
+    }
+
+    if (!editAttendance && !canManagerUse("addEntry")) {
+      setNotice({ type: "error", message: "You do not have access to add attendance entries." })
+      return
+    }
+
     const { mode, employeeId, entries = [], ...payload } = formData
     const targetEmployeeId =
       editAttendance
@@ -642,6 +681,11 @@ export default function Employees() {
   }
 
   const requestDeleteEmployee = (employee) => {
+    if (!canManagerUse("deleteEmployee")) {
+      setNotice({ type: "error", message: "You do not have access to delete employees." })
+      return
+    }
+
     setConfirmModal({
       title: "Delete Employee",
       description: `Do you want to permanently delete ${employee.name}?`,
@@ -661,6 +705,11 @@ export default function Employees() {
   }
 
   const requestDeleteAttendance = (entry) => {
+    if (!canManagerUse("deleteEntry")) {
+      setNotice({ type: "error", message: "You do not have access to delete attendance entries." })
+      return
+    }
+
     setConfirmModal({
       title: "Delete Attendance Entry",
       description: `Do you want to delete the attendance entry dated ${String(entry.date).slice(0, 10)} for ${selectedEmployee?.name || "this employee"}?`,
@@ -677,6 +726,11 @@ export default function Employees() {
   }
 
   const requestDeleteMonth = () => {
+    if (!canManagerUse("deleteEntry")) {
+      setNotice({ type: "error", message: "You do not have access to delete attendance entries." })
+      return
+    }
+
     if (!selectedEmployee) {
       setNotice({ type: "error", message: "Please select an employee first." })
       return
@@ -720,6 +774,11 @@ export default function Employees() {
   }
 
   const openReportModal = (employeeId = "") => {
+    if (!canManagerUse("exportPdf")) {
+      setNotice({ type: "error", message: "You do not have access to export reports." })
+      return
+    }
+
     setReportEmployeeId(employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "")
     setReportModalOpen(true)
   }
@@ -806,36 +865,44 @@ export default function Employees() {
           />
 
           <div className="hidden flex-wrap gap-3 sm:flex">
-            <button
-              className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
-              onClick={() => {
-                setEditEmployee(null)
-                setModalOpen(true)
-              }}
-            >
-              + Add Employee
-            </button>
+            {canManagerUse("addEmployee") ? (
+              <button
+                className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
+                onClick={() => {
+                  setEditEmployee(null)
+                  setModalOpen(true)
+                }}
+              >
+                + Add Employee
+              </button>
+            ) : null}
 
-            <button
-              className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
-              onClick={() => buildEmployeesDirectoryPdf(filteredEmployees)}
-            >
-              PDF
-            </button>
+            {canManagerUse("exportPdf") ? (
+              <button
+                className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
+                onClick={() => buildEmployeesDirectoryPdf(filteredEmployees)}
+              >
+                PDF
+              </button>
+            ) : null}
 
-            <button
-              className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm"
-              onClick={() => openAttendanceModePrompt({ allowEmployeeSelect: true })}
-            >
-              + Add Entry
-            </button>
+            {canManagerUse("addEntry") ? (
+              <button
+                className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm"
+                onClick={() => openAttendanceModePrompt({ allowEmployeeSelect: true })}
+              >
+                + Add Entry
+              </button>
+            ) : null}
 
-            <button
-              className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
-              onClick={() => openBonusModal()}
-            >
-              + Add Bonus
-            </button>
+            {canManagerUse("addBonus") ? (
+              <button
+                className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
+                onClick={() => openBonusModal()}
+              >
+                + Add Bonus
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -881,25 +948,29 @@ export default function Employees() {
                 </td>
                 <td>
                   <div className="flex items-center justify-center gap-3">
-                    <button
-                      className="text-blue-500"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        setEditEmployee(employee)
-                        setModalOpen(true)
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-500"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        requestDeleteEmployee(employee)
-                      }}
-                    >
-                      Delete
-                    </button>
+                    {canManagerUse("editEmployee") ? (
+                      <button
+                        className="text-blue-500"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setEditEmployee(employee)
+                          setModalOpen(true)
+                        }}
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {canManagerUse("deleteEmployee") ? (
+                      <button
+                        className="text-red-500"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          requestDeleteEmployee(employee)
+                        }}
+                      >
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>
@@ -958,50 +1029,64 @@ export default function Employees() {
                 }`}
               >
                 <div className="space-y-3 border-t border-[var(--border-color)] pt-3">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setEditEmployee(employee)
-                        setModalOpen(true)
-                      }}
-                      className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => requestDeleteEmployee(employee)}
-                      className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-600"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {canManagerUse("editEmployee") || canManagerUse("deleteEmployee") ? (
+                    <div className="flex gap-3">
+                      {canManagerUse("editEmployee") ? (
+                        <button
+                          onClick={() => {
+                            setEditEmployee(employee)
+                            setModalOpen(true)
+                          }}
+                          className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      {canManagerUse("deleteEmployee") ? (
+                        <button
+                          onClick={() => requestDeleteEmployee(employee)}
+                          className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-600"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => openReportModal(employee._id)}
-                      className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600"
-                    >
-                      Generate Report
-                    </button>
-                    <button
-                      onClick={() =>
-                        openAttendanceModePrompt({
-                          employeeId: employee._id,
-                          allowEmployeeSelect: false,
-                        })
-                      }
-                      className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 py-2 text-sm font-medium text-emerald-600"
-                    >
-                      + Add
-                    </button>
-                  </div>
+                  {canManagerUse("exportPdf") || canManagerUse("addEntry") ? (
+                    <div className="flex gap-3">
+                      {canManagerUse("exportPdf") ? (
+                        <button
+                          onClick={() => openReportModal(employee._id)}
+                          className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600"
+                        >
+                          Generate Report
+                        </button>
+                      ) : null}
+                      {canManagerUse("addEntry") ? (
+                        <button
+                          onClick={() =>
+                            openAttendanceModePrompt({
+                              employeeId: employee._id,
+                              allowEmployeeSelect: false,
+                            })
+                          }
+                          className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 py-2 text-sm font-medium text-emerald-600"
+                        >
+                          + Add
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
 
-                  <button
-                    onClick={() => openBonusModal(employee._id)}
-                    className="w-full rounded-xl border border-violet-200 bg-violet-50 py-2 text-sm font-medium text-violet-600"
-                  >
-                    + Add Bonus
-                  </button>
+                  {canManagerUse("addBonus") ? (
+                    <button
+                      onClick={() => openBonusModal(employee._id)}
+                      className="w-full rounded-xl border border-violet-200 bg-violet-50 py-2 text-sm font-medium text-violet-600"
+                    >
+                      + Add Bonus
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -1035,35 +1120,43 @@ export default function Employees() {
                 onChange={(event) => setSelectedMonth(event.target.value)}
                 className="input w-full sm:w-[180px]"
               />
-              <button
-                className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm"
-                onClick={() =>
-                  openAttendanceModePrompt({
-                    employeeId: selectedEmployee._id,
-                    allowEmployeeSelect: false,
-                  })
-                }
-              >
-                + Add
-              </button>
-              <button
-                className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
-                onClick={() => openBonusModal(selectedEmployee._id)}
-              >
-                + Bonus
-              </button>
-              <button
-                className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
-                onClick={() => openReportModal(selectedEmployee._id)}
-              >
-                Generate Report
-              </button>
-              <button
-                className="rounded-2xl bg-red-50 px-5 py-3 font-medium text-red-500 shadow-sm ring-1 ring-red-200"
-                onClick={requestDeleteMonth}
-              >
-                Delete Month
-              </button>
+              {canManagerUse("addEntry") ? (
+                <button
+                  className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm"
+                  onClick={() =>
+                    openAttendanceModePrompt({
+                      employeeId: selectedEmployee._id,
+                      allowEmployeeSelect: false,
+                    })
+                  }
+                >
+                  + Add
+                </button>
+              ) : null}
+              {canManagerUse("addBonus") ? (
+                <button
+                  className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
+                  onClick={() => openBonusModal(selectedEmployee._id)}
+                >
+                  + Bonus
+                </button>
+              ) : null}
+              {canManagerUse("exportPdf") ? (
+                <button
+                  className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
+                  onClick={() => openReportModal(selectedEmployee._id)}
+                >
+                  Generate Report
+                </button>
+              ) : null}
+              {canManagerUse("deleteEntry") ? (
+                <button
+                  className="rounded-2xl bg-red-50 px-5 py-3 font-medium text-red-500 shadow-sm ring-1 ring-red-200"
+                  onClick={requestDeleteMonth}
+                >
+                  Delete Month
+                </button>
+              ) : null}
             </div>
           </div>
 
@@ -1124,26 +1217,30 @@ export default function Employees() {
                     </td>
                     <td>
                       <div className="flex items-center justify-center gap-3">
-                        <button
-                          className="text-blue-500"
-                          onClick={() => {
-                            setAttendanceEntryMode("single")
-                            setEditAttendance(entry)
-                            setAttendanceContext({
-                              employeeId: selectedEmployee._id,
-                              allowEmployeeSelect: false,
-                            })
-                            setAttendanceModalOpen(true)
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="text-red-500"
-                          onClick={() => requestDeleteAttendance(entry)}
-                        >
-                          Delete
-                        </button>
+                        {canManagerUse("editEntry") ? (
+                          <button
+                            className="text-blue-500"
+                            onClick={() => {
+                              setAttendanceEntryMode("single")
+                              setEditAttendance(entry)
+                              setAttendanceContext({
+                                employeeId: selectedEmployee._id,
+                                allowEmployeeSelect: false,
+                              })
+                              setAttendanceModalOpen(true)
+                            }}
+                          >
+                            Edit
+                          </button>
+                        ) : null}
+                        {canManagerUse("deleteEntry") ? (
+                          <button
+                            className="text-red-500"
+                            onClick={() => requestDeleteAttendance(entry)}
+                          >
+                            Delete
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -1238,28 +1335,34 @@ export default function Employees() {
                             {entry.lastEditedBy || "-"} {entry.lastEditedByRole ? `(${entry.lastEditedByRole})` : ""}
                           </span>
                         </p>
-                        <div className="flex gap-3">
-                          <button
-                            className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600"
-                            onClick={() => {
-                              setAttendanceEntryMode("single")
-                              setEditAttendance(entry)
-                              setAttendanceContext({
-                                employeeId: selectedEmployee._id,
-                                allowEmployeeSelect: false,
-                              })
-                              setAttendanceModalOpen(true)
-                            }}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-600"
-                            onClick={() => requestDeleteAttendance(entry)}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                        {canManagerUse("editEntry") || canManagerUse("deleteEntry") ? (
+                          <div className="flex gap-3">
+                            {canManagerUse("editEntry") ? (
+                              <button
+                                className="flex-1 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600"
+                                onClick={() => {
+                                  setAttendanceEntryMode("single")
+                                  setEditAttendance(entry)
+                                  setAttendanceContext({
+                                    employeeId: selectedEmployee._id,
+                                    allowEmployeeSelect: false,
+                                  })
+                                  setAttendanceModalOpen(true)
+                                }}
+                              >
+                                Edit
+                              </button>
+                            ) : null}
+                            {canManagerUse("deleteEntry") ? (
+                              <button
+                                className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-600"
+                                onClick={() => requestDeleteAttendance(entry)}
+                              >
+                                Delete
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -1410,35 +1513,45 @@ export default function Employees() {
 
       <MobileActionFab
         actions={[
-          {
-            label: "Add Employee",
-            className: "bg-blue-600",
-            onClick: () => {
-              setEditEmployee(null)
-              setModalOpen(true)
-            },
-          },
-          {
-            label: "Employees PDF",
-            className: "bg-blue-700",
-            onClick: () => buildEmployeesDirectoryPdf(filteredEmployees),
-          },
-          {
-            label: "Generate Report",
-            className: "bg-blue-700",
-            onClick: () => openReportModal(),
-          },
-          {
-            label: "Add Attendance",
-            className: "bg-green-600",
-            onClick: () => openAttendanceModePrompt({ allowEmployeeSelect: true }),
-          },
-          {
-            label: "Add Bonus",
-            className: "bg-violet-600",
-            onClick: () => openBonusModal(),
-          },
-          selectedEmployee
+          canManagerUse("addEmployee")
+            ? {
+                label: "Add Employee",
+                className: "bg-blue-600",
+                onClick: () => {
+                  setEditEmployee(null)
+                  setModalOpen(true)
+                },
+              }
+            : null,
+          canManagerUse("exportPdf")
+            ? {
+                label: "Employees PDF",
+                className: "bg-blue-700",
+                onClick: () => buildEmployeesDirectoryPdf(filteredEmployees),
+              }
+            : null,
+          canManagerUse("exportPdf")
+            ? {
+                label: "Generate Report",
+                className: "bg-blue-700",
+                onClick: () => openReportModal(),
+              }
+            : null,
+          canManagerUse("addEntry")
+            ? {
+                label: "Add Attendance",
+                className: "bg-green-600",
+                onClick: () => openAttendanceModePrompt({ allowEmployeeSelect: true }),
+              }
+            : null,
+          canManagerUse("addBonus")
+            ? {
+                label: "Add Bonus",
+                className: "bg-violet-600",
+                onClick: () => openBonusModal(),
+              }
+            : null,
+          selectedEmployee && canManagerUse("deleteEntry")
             ? {
                 label: "Delete Month",
                 className: "bg-red-600",
