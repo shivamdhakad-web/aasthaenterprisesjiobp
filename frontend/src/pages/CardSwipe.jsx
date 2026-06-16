@@ -6,6 +6,7 @@ import * as XLSX from "xlsx"
 import MobileActionFab from "../components/MobileActionFab"
 import AddCardSwipeModal from "../components/AddCardSwipeModal"
 import { useAuth } from "../contexts/AuthContext"
+import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
 import { addEntry, deleteEntry, deleteMonth, getEntries } from "../services/cardSwipeApi"
 
 const getToday = () => new Date().toISOString().slice(0, 10)
@@ -44,6 +45,9 @@ const defaultBulkRow = () => ({
 
 export default function CardSwipe() {
   const { user } = useAuth()
+  const isManager = user?.role === "Manager"
+  const { canUse } = useManagerDashboardSettings("cardSwipe", isManager)
+  const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
   const [month, setMonth] = useState("")
@@ -270,6 +274,11 @@ export default function CardSwipe() {
   }
 
   const handleGenerate = () => {
+    if (!canManagerUse("generateReport")) {
+      setNotice({ type: "error", text: "You do not have access to generate reports." })
+      return
+    }
+
     const reportData = getReportData()
 
     if (!reportData.length) {
@@ -288,15 +297,30 @@ export default function CardSwipe() {
   }
 
   const openCreateModal = () => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", text: "You do not have access to add card swipe entries." })
+      return
+    }
+
     setEditData(null)
     setModalOpen(true)
   }
 
   const openEntryModePrompt = () => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", text: "You do not have access to add card swipe entries." })
+      return
+    }
+
     setEntryModePrompt(true)
   }
 
   const openBulkModal = () => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", text: "You do not have access to add card swipe entries." })
+      return
+    }
+
     setBulkRows([defaultBulkRow()])
     setBulkOpen(true)
   }
@@ -321,6 +345,11 @@ export default function CardSwipe() {
   }
 
   const saveBulkEntries = async () => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", text: "You do not have access to add card swipe entries." })
+      return
+    }
+
     const invalid = bulkRows.some((row) => !row.date || !row.amount || !row.charges || !row.machine || !row.paymentMethod)
 
     if (invalid) {
@@ -354,6 +383,11 @@ export default function CardSwipe() {
   }
 
   const askDeleteEntry = (entry) => {
+    if (!canManagerUse("deleteEntry")) {
+      setNotice({ type: "error", text: "You do not have access to delete card swipe entries." })
+      return
+    }
+
     setConfirmState({
       title: "Delete Card Swipe Entry",
       description: `Delete this ${formatCurrency(entry.amount)} card swipe entry from ${formatDate(entry.date)}?`,
@@ -368,6 +402,11 @@ export default function CardSwipe() {
   }
 
   const askDeleteMonth = () => {
+    if (!canManagerUse("deleteMonth")) {
+      setNotice({ type: "error", text: "You do not have access to delete month records." })
+      return
+    }
+
     if (!month) {
       setNotice({ type: "error", text: "Please select a month first." })
       return
@@ -469,18 +508,22 @@ export default function CardSwipe() {
           onChange={(event) => setSearch(event.target.value)}
           className="input w-full sm:max-w-[420px]"
         />
-        <button
-          onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-        >
-          Generate Report
-        </button>
-        <button
-          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-          onClick={openEntryModePrompt}
-        >
-          + Add Entry
-        </button>
+        {canManagerUse("generateReport") ? (
+          <button
+            onClick={() => setReportOpen(true)}
+            className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+          >
+            Generate Report
+          </button>
+        ) : null}
+        {canManagerUse("addEntry") ? (
+          <button
+            className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+            onClick={openEntryModePrompt}
+          >
+            + Add Entry
+          </button>
+        ) : null}
       </div>
 
       <div className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 sm:block">

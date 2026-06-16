@@ -6,6 +6,7 @@ import * as XLSX from "xlsx"
 
 import MobileActionFab from "../../components/MobileActionFab"
 import { useAuth } from "../../contexts/AuthContext"
+import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
 import {
   addExpense,
   deleteExpense,
@@ -66,6 +67,9 @@ const defaultBulkExpenseRow = (user) => ({
 
 export default function Expenses() {
   const { user } = useAuth()
+  const isManager = user?.role === "Manager"
+  const { canUse } = useManagerDashboardSettings("expenses", isManager)
+  const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
@@ -134,20 +138,40 @@ export default function Expenses() {
   }
 
   const openCreateModal = () => {
+    if (!canManagerUse("addExpense")) {
+      setNotice({ type: "error", text: "You do not have access to add expenses." })
+      return
+    }
+
     resetForm()
     setOpen(true)
   }
 
   const openEntryModePrompt = () => {
+    if (!canManagerUse("addExpense")) {
+      setNotice({ type: "error", text: "You do not have access to add expenses." })
+      return
+    }
+
     setEntryModePrompt(true)
   }
 
   const openBulkModal = () => {
+    if (!canManagerUse("addExpense")) {
+      setNotice({ type: "error", text: "You do not have access to add expenses." })
+      return
+    }
+
     setBulkEntries([defaultBulkExpenseRow(user)])
     setBulkOpen(true)
   }
 
   const openEditModal = (expense) => {
+    if (!canManagerUse("editExpense")) {
+      setNotice({ type: "error", text: "You do not have access to edit expenses." })
+      return
+    }
+
     setForm({
       date: expense.date || getToday(),
       category: expense.category || categoryOptions[0] || defaultCategories[0],
@@ -167,6 +191,11 @@ export default function Expenses() {
   }
 
   const saveExpense = async () => {
+    if (!canManagerUse(editId ? "editExpense" : "addExpense")) {
+      setNotice({ type: "error", text: "You do not have access to save this expense." })
+      return
+    }
+
     if (!form.date || !form.category || !form.amount || !form.paymentMode || !form.addedBy) {
       setNotice({ type: "error", text: "Please complete all expense fields." })
       return
@@ -207,6 +236,11 @@ export default function Expenses() {
   }
 
   const askDelete = (expense) => {
+    if (!canManagerUse("deleteExpense")) {
+      setNotice({ type: "error", text: "You do not have access to delete expenses." })
+      return
+    }
+
     setConfirmState({
       title: "Delete Expense",
       description: `Delete the expense "${expense.description}"? This action cannot be undone.`,
@@ -237,6 +271,11 @@ export default function Expenses() {
   }
 
   const saveBulkExpenses = async () => {
+    if (!canManagerUse("addExpense")) {
+      setNotice({ type: "error", text: "You do not have access to add expenses." })
+      return
+    }
+
     const validEntries = bulkEntries.filter(
       (entry) => entry.date && entry.category && entry.amount && entry.paymentMode && entry.addedBy,
     )
@@ -396,6 +435,11 @@ export default function Expenses() {
   }
 
   const handleGenerateReport = () => {
+    if (!canManagerUse("generateReport")) {
+      setNotice({ type: "error", text: "You do not have access to generate reports." })
+      return
+    }
+
     if (!reportData.length) {
       setNotice({ type: "error", text: "No report data found for the selected filters." })
       return
@@ -450,19 +494,23 @@ export default function Expenses() {
           className="input w-full lg:max-w-[420px]"
         />
 
-        <button
-          onClick={openEntryModePrompt}
-          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
-        >
-          + Add Expense
-        </button>
+        {canManagerUse("addExpense") ? (
+          <button
+            onClick={openEntryModePrompt}
+            className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
+          >
+            + Add Expense
+          </button>
+        ) : null}
 
-        <button
-          onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
-        >
-          Generate Report
-        </button>
+        {canManagerUse("generateReport") ? (
+          <button
+            onClick={() => setReportOpen(true)}
+            className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
+          >
+            Generate Report
+          </button>
+        ) : null}
       </div>
 
       <div className="mb-3 lg:hidden">
@@ -540,12 +588,16 @@ export default function Expenses() {
                 </td>
                 <td>
                   <div className="flex items-center justify-center gap-3">
-                    <button onClick={() => openEditModal(expense)} className="text-blue-500">
-                      Edit
-                    </button>
-                    <button onClick={() => askDelete(expense)} className="text-red-500">
-                      Delete
-                    </button>
+                    {canManagerUse("editExpense") ? (
+                      <button onClick={() => openEditModal(expense)} className="text-blue-500">
+                        Edit
+                      </button>
+                    ) : null}
+                    {canManagerUse("deleteExpense") ? (
+                      <button onClick={() => askDelete(expense)} className="text-red-500">
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>
@@ -604,26 +656,32 @@ export default function Expenses() {
                     </span>
                   </p>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        openEditModal(expense)
-                      }}
-                      className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        askDelete(expense)
-                      }}
-                      className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {canManagerUse("editExpense") || canManagerUse("deleteExpense") ? (
+                    <div className="flex gap-2">
+                      {canManagerUse("editExpense") ? (
+                        <button
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            openEditModal(expense)
+                          }}
+                          className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      {canManagerUse("deleteExpense") ? (
+                        <button
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            askDelete(expense)
+                          }}
+                          className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -912,17 +970,21 @@ export default function Expenses() {
 
       <MobileActionFab
         actions={[
-          {
-            label: "Add Expense",
-            className: "bg-blue-600",
-            onClick: openEntryModePrompt,
-          },
-          {
-            label: "Generate Report",
-            className: "bg-purple-600",
-            onClick: () => setReportOpen(true),
-          },
-        ]}
+          canManagerUse("addExpense")
+            ? {
+                label: "Add Expense",
+                className: "bg-blue-600",
+                onClick: openEntryModePrompt,
+              }
+            : null,
+          canManagerUse("generateReport")
+            ? {
+                label: "Generate Report",
+                className: "bg-purple-600",
+                onClick: () => setReportOpen(true),
+              }
+            : null,
+        ].filter(Boolean)}
       />
     </div>
   )
