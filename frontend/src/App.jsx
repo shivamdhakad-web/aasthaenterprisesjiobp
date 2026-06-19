@@ -44,6 +44,8 @@ import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
+import DcdPage from "./pages/shared/DcdPage"
+import MduPage from "./pages/shared/MduPage"
 
 export default function App() {
   const AppRouter =
@@ -83,6 +85,8 @@ export default function App() {
             <Route path="lubricants" element={<Lubricants />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
+            <Route path="dcd" element={<DcdPage />} />
+            <Route path="mdu" element={<MduPage />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
             <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="ttdrivers" element={<TTDrivers />} />
@@ -181,6 +185,24 @@ export default function App() {
                 "cardSwipe",
                 <ApprovalWrappedPage moduleKey="card-swipe" title="Card Swipe">
                   <CardSwipe />
+                </ApprovalWrappedPage>,
+              )}
+            />
+            <Route
+              path="dcd"
+              element={managerPage(
+                "dcd",
+                <ApprovalWrappedPage moduleKey="dcd" title="D.C.D">
+                  <DcdPage />
+                </ApprovalWrappedPage>,
+              )}
+            />
+            <Route
+              path="mdu"
+              element={managerPage(
+                "mdu",
+                <ApprovalWrappedPage moduleKey="mdu" title="M.D.U">
+                  <MduPage />
                 </ApprovalWrappedPage>,
               )}
             />

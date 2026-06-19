@@ -1,0 +1,99 @@
+import SimpleAuditRegisterPage, { helpers } from "./SimpleAuditRegisterPage"
+import { addDcdEntry, deleteDcdEntry, getDcdEntries, updateDcdEntry } from "../../services/dcdApi"
+
+const { formatDate, formatNumber, numberValue, today } = helpers
+
+const empty = () => ({
+  date: today(),
+  volume: "",
+  purchasePrice: "",
+  salePrice: "",
+  shift: "",
+  remark: "",
+})
+
+const getProfit = (entry) =>
+  Number(entry.profit ?? (numberValue(entry.salePrice) - numberValue(entry.purchasePrice)) * numberValue(entry.volume))
+
+export default function DcdPage() {
+  return (
+    <SimpleAuditRegisterPage
+      config={{
+        title: "D.C.D",
+        kicker: "Diesel Credit/Daily Register",
+        description: "Track date, volume, purchase price, sale price, profit, shift, remarks, and audit history.",
+        pageKey: "dcd",
+        empty,
+        api: {
+          list: getDcdEntries,
+          add: addDcdEntry,
+          update: updateDcdEntry,
+          remove: deleteDcdEntry,
+        },
+        requiredFields: ["date", "volume", "purchasePrice", "salePrice"],
+        searchFields: ["date", "volume", "purchasePrice", "salePrice", "shift", "remark"],
+        searchPlaceholder: "Search date, volume, shift, remark",
+        fields: [
+          { key: "date", label: "Date", type: "date" },
+          { key: "volume", label: "Volume", type: "number" },
+          { key: "purchasePrice", label: "Purchase Price", type: "number" },
+          { key: "salePrice", label: "Sale Price", type: "number" },
+          { key: "shift", label: "Shift" },
+          { key: "remark", label: "Remark", full: true },
+        ],
+        columns: [
+          { key: "date", label: "Date", render: (entry) => formatDate(entry.date) },
+          { key: "volume", label: "Volume", render: (entry) => formatNumber(entry.volume) },
+          { key: "purchasePrice", label: "Purchase Price", render: (entry) => formatNumber(entry.purchasePrice) },
+          { key: "salePrice", label: "Sale Price", render: (entry) => formatNumber(entry.salePrice) },
+          {
+            key: "profit",
+            label: "Profit",
+            render: (entry) => formatNumber(getProfit(entry)),
+            className: (entry) => (getProfit(entry) >= 0 ? "font-semibold text-emerald-500" : "font-semibold text-red-500"),
+          },
+          { key: "shift", label: "Shift" },
+          { key: "remark", label: "Remark" },
+        ],
+        buildPayload: (form) => ({
+          ...form,
+          volume: numberValue(form.volume),
+          purchasePrice: numberValue(form.purchasePrice),
+          salePrice: numberValue(form.salePrice),
+          profit: (numberValue(form.salePrice) - numberValue(form.purchasePrice)) * numberValue(form.volume),
+        }),
+        summary: (entries) => {
+          const totalVolume = entries.reduce((sum, entry) => sum + numberValue(entry.volume), 0)
+          const totalProfit = entries.reduce((sum, entry) => sum + getProfit(entry), 0)
+          const avgSale = entries.length
+            ? entries.reduce((sum, entry) => sum + numberValue(entry.salePrice), 0) / entries.length
+            : 0
+
+          return [
+            { label: "Entries", value: entries.length, tone: "blue" },
+            { label: "Total Volume", value: formatNumber(totalVolume), tone: "green" },
+            { label: "Total Profit", value: formatNumber(totalProfit), tone: totalProfit >= 0 ? "green" : "rose" },
+            { label: "Avg Sale Price", value: formatNumber(avgSale), tone: "amber" },
+          ]
+        },
+        preview: (form) => {
+          const profit = (numberValue(form.salePrice) - numberValue(form.purchasePrice)) * numberValue(form.volume)
+
+          return {
+            label: "Calculated Profit",
+            value: formatNumber(profit),
+            className: profit >= 0 ? "text-emerald-500" : "text-red-500",
+          }
+        },
+        mobileTitle: (entry) => `Shift ${entry.shift || "-"}`,
+        mobileBadge: (entry) => formatNumber(getProfit(entry)),
+        mobileFields: [
+          { key: "volume", label: "Volume", render: (entry) => formatNumber(entry.volume) },
+          { key: "purchasePrice", label: "Purchase", render: (entry) => formatNumber(entry.purchasePrice) },
+          { key: "salePrice", label: "Sale", render: (entry) => formatNumber(entry.salePrice) },
+          { key: "remark", label: "Remark" },
+        ],
+      }}
+    />
+  )
+}

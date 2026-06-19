@@ -16,6 +16,8 @@ const SecureNote = require("../models/SecureNote")
 const TTDriver = require("../models/TTDriver")
 const CustomerDriver = require("../models/CustomerDriver")
 const TankerDelivery = require("../models/TankerDelivery")
+const DcdEntry = require("../models/DcdEntry")
+const MduEntry = require("../models/MduEntry")
 const Customer = require("../models/Customer")
 const CustomerTransaction = require("../models/CustomerTransaction")
 const Settings = require("../models/Settings")
@@ -57,6 +59,37 @@ const calculateAttendancePayload = (payload) => ({
   advanceCash: Number(payload.advanceCash || 0),
   advancePetrol: Number(payload.advancePetrol || 0),
 })
+
+const calculateDcdPayload = (payload) => {
+  const volume = Number(payload.volume || 0)
+  const purchasePrice = Number(payload.purchasePrice || 0)
+  const salePrice = Number(payload.salePrice || 0)
+
+  return {
+    ...payload,
+    volume,
+    purchasePrice,
+    salePrice,
+    profit: Number(payload.profit ?? (salePrice - purchasePrice) * volume),
+  }
+}
+
+const calculateMduPayload = (payload) => {
+  const openingStock = Number(payload.openingStock || 0)
+  const decant = Number(payload.decant || 0)
+  const sale = Number(payload.sale || 0)
+  const physicalStock = Number(payload.physicalStock || 0)
+
+  return {
+    ...payload,
+    openingStock,
+    decant,
+    sale,
+    physicalStock,
+    rate: Number(payload.rate || 0),
+    lossGain: Number(payload.lossGain ?? physicalStock - (openingStock + decant - sale)),
+  }
+}
 
 const buildMobileEntryPayload = async (payload) => {
   const settings = await MobileDispenserSettings.findOne()
@@ -422,6 +455,14 @@ const approvalHandlers = {
   "card-swipe:update": ({ resourceId, payload }) => genericUpdate(CardSwipe, resourceId, payload),
   "card-swipe:delete": ({ resourceId }) => genericDelete(CardSwipe, resourceId),
   "card-swipe:deleteMonth": ({ meta }) => deleteCardSwipeMonth(Number(meta.year), Number(meta.month)),
+
+  "dcd:create": ({ payload }) => genericCreate(DcdEntry, calculateDcdPayload(payload)),
+  "dcd:update": ({ resourceId, payload }) => genericUpdate(DcdEntry, resourceId, calculateDcdPayload(payload)),
+  "dcd:delete": ({ resourceId }) => genericDelete(DcdEntry, resourceId),
+
+  "mdu:create": ({ payload }) => genericCreate(MduEntry, calculateMduPayload(payload)),
+  "mdu:update": ({ resourceId, payload }) => genericUpdate(MduEntry, resourceId, calculateMduPayload(payload)),
+  "mdu:delete": ({ resourceId }) => genericDelete(MduEntry, resourceId),
 
   "meter-readings:create": ({ payload }) => genericCreate(MeterReading, calculateMeterPayload(payload)),
   "meter-readings:update": ({ resourceId, payload }) =>
