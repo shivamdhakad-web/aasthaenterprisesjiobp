@@ -18,6 +18,8 @@ const CustomerDriver = require("../models/CustomerDriver")
 const TankerDelivery = require("../models/TankerDelivery")
 const DcdEntry = require("../models/DcdEntry")
 const MduEntry = require("../models/MduEntry")
+const InvoiceDetail = require("../models/InvoiceDetail")
+const DailySale = require("../models/DailySale")
 const Customer = require("../models/Customer")
 const CustomerTransaction = require("../models/CustomerTransaction")
 const Settings = require("../models/Settings")
@@ -88,6 +90,35 @@ const calculateMduPayload = (payload) => {
     physicalStock,
     rate: Number(payload.rate || 0),
     lossGain: Number(payload.lossGain ?? physicalStock - (openingStock + decant - sale)),
+  }
+}
+
+const calculateInvoiceDetailPayload = (payload) => {
+  const qty = Number(payload.qty || 0)
+  const invoiceAmount = Number(payload.invoiceAmount || 0)
+  const transportCost = Number(payload.transportCost || 0)
+  const lfr = Number(payload.lfr || 0)
+
+  return {
+    ...payload,
+    qty,
+    invoiceAmount,
+    transportCost,
+    lfr,
+    purchaseAmount: Number(payload.purchaseAmount ?? (qty ? (invoiceAmount + transportCost) / qty + lfr : 0)),
+  }
+}
+
+const calculateDailySalePayload = (payload) => {
+  const sale = Number(payload.sale || 0)
+  const rate = Number(payload.rate || 0)
+
+  return {
+    ...payload,
+    sale,
+    rate,
+    lossGain: Number(payload.lossGain || 0),
+    profit: Number(payload.profit ?? sale * rate),
   }
 }
 
@@ -463,6 +494,16 @@ const approvalHandlers = {
   "mdu:create": ({ payload }) => genericCreate(MduEntry, calculateMduPayload(payload)),
   "mdu:update": ({ resourceId, payload }) => genericUpdate(MduEntry, resourceId, calculateMduPayload(payload)),
   "mdu:delete": ({ resourceId }) => genericDelete(MduEntry, resourceId),
+
+  "invoice-details:create": ({ payload }) => genericCreate(InvoiceDetail, calculateInvoiceDetailPayload(payload)),
+  "invoice-details:update": ({ resourceId, payload }) =>
+    genericUpdate(InvoiceDetail, resourceId, calculateInvoiceDetailPayload(payload)),
+  "invoice-details:delete": ({ resourceId }) => genericDelete(InvoiceDetail, resourceId),
+
+  "daily-sales:create": ({ payload }) => genericCreate(DailySale, calculateDailySalePayload(payload)),
+  "daily-sales:update": ({ resourceId, payload }) =>
+    genericUpdate(DailySale, resourceId, calculateDailySalePayload(payload)),
+  "daily-sales:delete": ({ resourceId }) => genericDelete(DailySale, resourceId),
 
   "meter-readings:create": ({ payload }) => genericCreate(MeterReading, calculateMeterPayload(payload)),
   "meter-readings:update": ({ resourceId, payload }) =>

@@ -160,7 +160,7 @@ export default function SimpleAuditRegisterPage({ config }) {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
         {summary.map((item) => (
           <SummaryCard key={item.label} {...item} />
         ))}

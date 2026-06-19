@@ -168,10 +168,32 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     ],
   },
   {
+    key: "invoiceDetails",
+    label: "Invoice Details",
+    path: "/manager/invoice-details",
+    order: 17,
+    buttons: [
+      { key: "addEntry", label: "Add Entry", enabled: true },
+      { key: "editEntry", label: "Edit Entry", enabled: true },
+      { key: "deleteEntry", label: "Delete Entry", enabled: true },
+    ],
+  },
+  {
+    key: "dailySales",
+    label: "Daily Sales",
+    path: "/manager/daily-sales",
+    order: 18,
+    buttons: [
+      { key: "addEntry", label: "Add Entry", enabled: true },
+      { key: "editEntry", label: "Edit Entry", enabled: true },
+      { key: "deleteEntry", label: "Delete Entry", enabled: true },
+    ],
+  },
+  {
     key: "smartCalculator",
     label: "Smart Calculator",
     path: "/manager/smart-calculator",
-    order: 17,
+    order: 19,
     buttons: [
       { key: "saveEntry", label: "Save Entry", enabled: true },
       { key: "sendToAdmin", label: "Send To Admin", enabled: true },
@@ -181,7 +203,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "densityCalculator",
     label: "Density Calculator",
     path: "/manager/density-calculator",
-    order: 18,
+    order: 20,
     buttons: [
       { key: "saveDensity", label: "Save Density", enabled: true },
       { key: "viewHistory", label: "View History", enabled: true },
@@ -191,7 +213,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "ttDrivers",
     label: "TT Drivers",
     path: "/manager/ttdrivers",
-    order: 19,
+    order: 21,
     buttons: [
       { key: "addDriver", label: "Add Driver", enabled: true },
       { key: "editDriver", label: "Edit Driver", enabled: true },
@@ -203,7 +225,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "customerDrivers",
     label: "Customer Drivers",
     path: "/manager/customerdrivers",
-    order: 20,
+    order: 22,
     buttons: [
       { key: "addDriver", label: "Add Driver", enabled: true },
       { key: "editDriver", label: "Edit Driver", enabled: true },
@@ -215,7 +237,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "secureNotes",
     label: "Secure Notes",
     path: "/manager/secure-notes",
-    order: 21,
+    order: 23,
     buttons: [
       { key: "addNote", label: "Add Note", enabled: true },
       { key: "editNote", label: "Edit Note", enabled: true },
@@ -226,14 +248,14 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "reminder",
     label: "Reminder",
     path: "/manager/reminder",
-    order: 22,
+    order: 24,
     buttons: [
       { key: "addReminder", label: "Add Reminder", enabled: true },
       { key: "editReminder", label: "Edit Reminder", enabled: true },
       { key: "deleteReminder", label: "Delete Reminder", enabled: true },
     ],
   },
-  { key: "settings", label: "Settings", path: "/manager/settings", order: 23, buttons: [] },
+  { key: "settings", label: "Settings", path: "/manager/settings", order: 25, buttons: [] },
 ]
 
 const cloneDefaultPages = () =>

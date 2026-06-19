@@ -46,6 +46,8 @@ import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 import DcdPage from "./pages/shared/DcdPage"
 import MduPage from "./pages/shared/MduPage"
+import InvoiceDetailsPage from "./pages/shared/InvoiceDetailsPage"
+import DailySalesPage from "./pages/shared/DailySalesPage"
 
 export default function App() {
   const AppRouter =
@@ -87,6 +89,8 @@ export default function App() {
             <Route path="card-swipe" element={<CardSwipe />} />
             <Route path="dcd" element={<DcdPage />} />
             <Route path="mdu" element={<MduPage />} />
+            <Route path="invoice-details" element={<InvoiceDetailsPage />} />
+            <Route path="daily-sales" element={<DailySalesPage />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
             <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="ttdrivers" element={<TTDrivers />} />
@@ -203,6 +207,24 @@ export default function App() {
                 "mdu",
                 <ApprovalWrappedPage moduleKey="mdu" title="M.D.U">
                   <MduPage />
+                </ApprovalWrappedPage>,
+              )}
+            />
+            <Route
+              path="invoice-details"
+              element={managerPage(
+                "invoiceDetails",
+                <ApprovalWrappedPage moduleKey="invoice-details" title="Invoice Details">
+                  <InvoiceDetailsPage />
+                </ApprovalWrappedPage>,
+              )}
+            />
+            <Route
+              path="daily-sales"
+              element={managerPage(
+                "dailySales",
+                <ApprovalWrappedPage moduleKey="daily-sales" title="Daily Sales">
+                  <DailySalesPage />
                 </ApprovalWrappedPage>,
               )}
             />
