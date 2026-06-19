@@ -17,11 +17,11 @@ return(
 
 {/* MAIN AREA */}
 
-<div className="flex-1 flex flex-col">
+<div className="flex-1 min-w-0 flex flex-col">
 
 <Topbar toggleSidebar={()=>setOpen(!open)}/>
 
-<main className="flex-1 overflow-y-auto bg-[var(--bg-main)] transition-colors duration-300">
+<main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-[var(--bg-main)] transition-colors duration-300">
 
 <Outlet/>
 

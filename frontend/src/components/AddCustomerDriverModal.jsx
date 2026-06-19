@@ -14,6 +14,8 @@ name:"",
 number:"",
 gadiNumber:"",
 transportName:"",
+from:"",
+to:"",
 route:"",
 carrierId:"",
 remark:""
@@ -25,7 +27,11 @@ useEffect(()=>{
 
 if(editData){
 
-setForm(editData)
+setForm({
+...editData,
+from: editData.from || editData.route?.split(" to ")?.[0] || "",
+to: editData.to || editData.route?.split(" to ")?.[1] || "",
+})
 
 }
 
@@ -44,13 +50,18 @@ setForm({...form,[e.target.name]:e.target.value})
 
 const handleSave = async()=>{
 
+const payload = {
+...form,
+route: [form.from, form.to].filter(Boolean).join(" to "),
+}
+
 if(editData){
 
-await updateCustomerDriver(editData._id,form)
+await updateCustomerDriver(editData._id,payload)
 
 }else{
 
-await addCustomerDriver(form)
+await addCustomerDriver(payload)
 
 }
 
@@ -63,6 +74,8 @@ name:"",
 number:"",
 gadiNumber:"",
 transportName:"",
+from:"",
+to:"",
 route:"",
 carrierId:"",
 remark:""
@@ -126,9 +139,18 @@ className="input"
 
 
 <input
-placeholder="Route"
-name="route"
-value={form.route}
+placeholder="From"
+name="from"
+value={form.from}
+onChange={handleChange}
+className="input"
+/>
+
+
+<input
+placeholder="To"
+name="to"
+value={form.to}
 onChange={handleChange}
 className="input"
 />

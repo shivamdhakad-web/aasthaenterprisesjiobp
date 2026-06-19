@@ -7,6 +7,21 @@ import AddCustomerDriverModal from "../components/AddCustomerDriverModal"
 import MobileActionFab from "../components/MobileActionFab"
 import { deleteCustomerDriver, getCustomerDrivers } from "../services/customerDriverApi"
 
+const getRouteParts = (driver = {}) => {
+  if (driver.from || driver.to) {
+    return {
+      from: driver.from || "-",
+      to: driver.to || "-",
+    }
+  }
+
+  const [from = "", to = ""] = String(driver.route || "").split(" to ")
+  return {
+    from: from || "-",
+    to: to || "-",
+  }
+}
+
 export default function CustomerDrivers() {
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
@@ -67,16 +82,21 @@ export default function CustomerDrivers() {
 
     autoTable(doc, {
       startY: 50,
-      head: [["Name", "Number", "Gadi", "Transport", "Route", "Carrier", "Remark"]],
-      body: filteredData.map((item) => [
-        item.name,
-        item.number,
-        item.gadiNumber,
-        item.transportName,
-        item.route,
-        item.carrierId,
-        item.remark,
-      ]),
+      head: [["Name", "Number", "Gadi", "Transport", "From", "To", "Carrier", "Remark"]],
+      body: filteredData.map((item) => {
+        const route = getRouteParts(item)
+
+        return [
+          item.name,
+          item.number,
+          item.gadiNumber,
+          item.transportName,
+          route.from,
+          route.to,
+          item.carrierId,
+          item.remark,
+        ]
+      }),
       styles: {
         fontSize: 8,
         cellPadding: 3,
@@ -100,7 +120,8 @@ export default function CustomerDrivers() {
       Number: item.number,
       Gadi: item.gadiNumber,
       Transport: item.transportName,
-      Route: item.route,
+      From: getRouteParts(item).from,
+      To: getRouteParts(item).to,
       Carrier: item.carrierId,
       Remark: item.remark,
     }))
@@ -182,7 +203,8 @@ export default function CustomerDrivers() {
               <th>Number</th>
               <th>Gadi Number</th>
               <th>Transport Name</th>
-              <th>Route</th>
+              <th>From</th>
+              <th>To</th>
               <th>Carrier ID</th>
               <th>Remark</th>
               <th>Action</th>
@@ -197,7 +219,8 @@ export default function CustomerDrivers() {
                 <td>{item.number}</td>
                 <td>{item.gadiNumber}</td>
                 <td>{item.transportName}</td>
-                <td>{item.route}</td>
+                <td>{getRouteParts(item).from}</td>
+                <td>{getRouteParts(item).to}</td>
                 <td>{item.carrierId}</td>
                 <td>{item.remark}</td>
                 <td>
@@ -253,7 +276,8 @@ export default function CustomerDrivers() {
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <InfoPill label="Gadi" value={item.gadiNumber} />
                 <InfoPill label="Transport" value={item.transportName} />
-                <InfoPill label="Route" value={item.route} />
+                <InfoPill label="From" value={getRouteParts(item).from} />
+                <InfoPill label="To" value={getRouteParts(item).to} />
                 <InfoPill label="Carrier" value={item.carrierId} />
               </div>
 

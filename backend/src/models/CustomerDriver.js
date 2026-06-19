@@ -21,6 +21,14 @@ transportName:{
 type:String
 },
 
+from:{
+type:String
+},
+
+to:{
+type:String
+},
+
 route:{
 type:String
 },
