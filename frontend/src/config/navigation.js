@@ -53,6 +53,7 @@ export const navigationByRole = {
     { label: "Secure Notes", path: "/admin/secure-notes", icon: FileLock2 },
     { label: "Reminder", path: "/admin/reminder", icon: Bell },
     { label: "Storage", path: "/admin/storage", icon: HardDrive },
+    { label: "Bill Generator", path: "/admin/bill-generator", icon: Receipt },
     { label: "Settings", path: "/admin/settings", icon: Settings },
   ],
   Manager: [

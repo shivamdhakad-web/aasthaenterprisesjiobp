@@ -42,6 +42,7 @@ import TasksPage from "./pages/shared/TasksPage"
 import StorageOverview from "./pages/admin/StorageOverview"
 import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
+import BillGeneratorPage from "./pages/admin/BillGeneratorPage"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 import DcdPage from "./pages/shared/DcdPage"
@@ -84,6 +85,7 @@ export default function App() {
             <Route path="reminder" element={<ReminderBox />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="storage" element={<StorageOverview />} />
+            <Route path="bill-generator" element={<BillGeneratorPage />} />
             <Route path="lubricants" element={<Lubricants />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />

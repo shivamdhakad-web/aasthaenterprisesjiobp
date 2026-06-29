@@ -52,6 +52,7 @@ const policyRules = [
   { pattern: /^\/invoice-details(?:\/|$)/, methods: ["POST", "PUT", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/daily-sales(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
   { pattern: /^\/daily-sales(?:\/|$)/, methods: ["POST", "PUT", "DELETE"], roles: ["Admin"] },
+  { pattern: /^\/bill-generator(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/tanker-deliveries(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
   { pattern: /^\/tanker-deliveries(?:\/|$)/, methods: ["POST", "PUT", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/customers(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
