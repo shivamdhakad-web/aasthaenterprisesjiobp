@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/AuthContext"
 import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
 
 const today = () => new Date().toISOString().slice(0, 10)
+const currentMonth = () => new Date().toISOString().slice(0, 7)
 const numberValue = (value) => Number(value || 0)
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-")
@@ -30,6 +31,7 @@ export default function SimpleAuditRegisterPage({ config }) {
 
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
+  const [monthFilter, setMonthFilter] = useState(currentMonth())
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState(null)
   const [form, setForm] = useState(config.empty())
@@ -55,14 +57,17 @@ export default function SimpleAuditRegisterPage({ config }) {
 
   const filteredEntries = useMemo(
     () =>
-      entries.filter((entry) =>
-        config.searchFields
+      entries.filter((entry) => {
+        const matchesSearch = config.searchFields
           .map((key) => entry[key])
           .join(" ")
           .toLowerCase()
-          .includes(search.toLowerCase()),
-      ),
-    [config.searchFields, entries, search],
+          .includes(search.toLowerCase())
+        const entryMonth = entry.date ? String(entry.date).slice(0, 7) : ""
+
+        return matchesSearch && (!monthFilter || entryMonth === monthFilter)
+      }),
+    [config.searchFields, entries, monthFilter, search],
   )
 
   const summary = config.summary(filteredEntries)
@@ -160,7 +165,7 @@ export default function SimpleAuditRegisterPage({ config }) {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
+      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-6">
         {summary.map((item) => (
           <SummaryCard key={item.label} {...item} />
         ))}
@@ -172,6 +177,12 @@ export default function SimpleAuditRegisterPage({ config }) {
           onChange={(event) => setSearch(event.target.value)}
           placeholder={config.searchPlaceholder}
           className="input w-full sm:max-w-[460px]"
+        />
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={(event) => setMonthFilter(event.target.value)}
+          className="input w-full sm:max-w-[220px]"
         />
         {canManagerUse("addEntry") ? (
           <button
@@ -336,7 +347,7 @@ export default function SimpleAuditRegisterPage({ config }) {
   )
 }
 
-export const helpers = { today, numberValue, formatDate, formatNumber }
+export const helpers = { today, currentMonth, numberValue, formatDate, formatNumber }
 
 function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, preview }) {
   const update = (key, value) => setForm({ ...form, [key]: value })
@@ -444,3 +455,4 @@ function ConfirmDialog({ title, description, onCancel, onConfirm }) {
     </div>
   )
 }
+

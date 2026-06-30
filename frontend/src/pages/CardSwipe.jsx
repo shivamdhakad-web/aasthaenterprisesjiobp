@@ -10,6 +10,7 @@ import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
 import { addEntry, deleteEntry, deleteMonth, getEntries } from "../services/cardSwipeApi"
 
 const getToday = () => new Date().toISOString().slice(0, 10)
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -50,7 +51,7 @@ export default function CardSwipe() {
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
-  const [month, setMonth] = useState("")
+  const [month, setMonth] = useState(getCurrentMonth())
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [machine, setMachine] = useState("")
@@ -429,7 +430,7 @@ export default function CardSwipe() {
 
   const clearFilters = () => {
     setSearch("")
-    setMonth("")
+    setMonth(getCurrentMonth())
     setStartDate("")
     setEndDate("")
     setMachine("")
@@ -491,6 +492,7 @@ export default function CardSwipe() {
       <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-5">
         <SummaryCard label="Total Swipe" value={formatCurrency(summary.totalAmount)} tone="blue" />
         <SummaryCard label="Total Charges" value={formatCurrency(summary.totalCharges)} tone="amber" />
+        <SummaryCard label="Month Profit" value={formatCurrency(monthProfit)} tone="emerald" />
         {/* <SummaryCard label="Cash" value={formatCurrency(summary.cash)} tone="emerald" /> */}
         <SummaryCard label="Cash Profit" value={formatCurrency(summary.cashProfit)} tone="green" />
         {/* <SummaryCard label="Online" value={formatCurrency(summary.online)} tone="indigo" /> */}
@@ -987,3 +989,4 @@ function ConfirmDialog({
     </div>
   )
 }
+

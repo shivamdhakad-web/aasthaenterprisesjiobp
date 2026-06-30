@@ -19,6 +19,7 @@ import {
 } from "../services/lubricantApi"
 
 const getToday = () => new Date().toISOString().slice(0, 10)
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -70,6 +71,7 @@ export default function Lubricants() {
   const [search, setSearch] = useState("")
   const [productFilter, setProductFilter] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [monthFilter, setMonthFilter] = useState(getCurrentMonth())
   const [open, setOpen] = useState(false)
   const [productModal, setProductModal] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
@@ -145,10 +147,11 @@ export default function Lubricants() {
         return (
           target.includes(search.toLowerCase()) &&
           (!productFilter || entry.product === productFilter) &&
-          (!dateFilter || entry.date === dateFilter)
+          (!dateFilter || entry.date === dateFilter) &&
+          (!monthFilter || String(entry.date || "").slice(0, 7) === monthFilter)
         )
       }),
-    [data, dateFilter, productFilter, search],
+    [data, dateFilter, monthFilter, productFilter, search],
   )
 
   const summary = useMemo(() => {
@@ -178,10 +181,7 @@ export default function Lubricants() {
         weekSales += saleTotal
       }
 
-      if (
-        entryDate.getMonth() === today.getMonth() &&
-        entryDate.getFullYear() === today.getFullYear()
-      ) {
+      if (String(entry.date || "").slice(0, 7) === (monthFilter || getCurrentMonth())) {
         monthSales += saleTotal
         monthProfit += profitTotal
       }
@@ -195,7 +195,7 @@ export default function Lubricants() {
       monthProfit,
       totalProfit,
     }
-  }, [filtered])
+  }, [filtered, monthFilter])
 
   const profitRows = useMemo(
     () =>
@@ -702,7 +702,7 @@ export default function Lubricants() {
       </div>
 
       <div className={`mb-6 ${showFilter ? "block" : "hidden xl:block"}`}>
-        <div className="grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 xl:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto]">
+        <div className="grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 xl:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto]">
           <select
             value={productFilter}
             onChange={(event) => setProductFilter(event.target.value)}
@@ -720,6 +720,13 @@ export default function Lubricants() {
             type="date"
             value={dateFilter}
             onChange={(event) => setDateFilter(event.target.value)}
+            className="input"
+          />
+
+          <input
+            type="month"
+            value={monthFilter}
+            onChange={(event) => setMonthFilter(event.target.value)}
             className="input"
           />
 
@@ -1630,3 +1637,5 @@ function InfoLine({ label, value }) {
     </p>
   )
 }
+
+

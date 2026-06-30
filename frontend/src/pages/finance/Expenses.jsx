@@ -19,6 +19,7 @@ const defaultPaymentModes = ["Cash", "UPI", "Bank"]
 const defaultAddedByOptions = ["Admin", "Manager", "Account Team"]
 
 const getToday = () => new Date().toISOString().slice(0, 10)
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -74,6 +75,7 @@ export default function Expenses() {
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [monthFilter, setMonthFilter] = useState(getCurrentMonth())
   const [showFilter, setShowFilter] = useState(false)
   const [openCard, setOpenCard] = useState(null)
   const [open, setOpen] = useState(false)
@@ -329,10 +331,11 @@ export default function Expenses() {
         return (
           target.includes(search.toLowerCase()) &&
           (!category || expense.category === category) &&
-          (!dateFilter || expense.date === dateFilter)
+          (!dateFilter || expense.date === dateFilter) &&
+          (!monthFilter || String(expense.date || "").slice(0, 7) === monthFilter)
         )
       }),
-    [category, data, dateFilter, search],
+    [category, data, dateFilter, monthFilter, search],
   )
 
   const summary = useMemo(() => {
@@ -361,16 +364,13 @@ export default function Expenses() {
         weekTotal += amount
       }
 
-      if (
-        expenseDate.getMonth() === currentMonth &&
-        expenseDate.getFullYear() === currentYear
-      ) {
+      if (String(expense.date || "").slice(0, 7) === (monthFilter || getCurrentMonth())) {
         monthTotal += amount
       }
     })
 
     return { todayTotal, weekTotal, monthTotal, grandTotal }
-  }, [filteredData])
+  }, [filteredData, monthFilter])
 
   const reportData = useMemo(
     () =>
@@ -522,7 +522,7 @@ export default function Expenses() {
         </button>
       </div>
 
-      <div className={`mb-5 gap-3 lg:grid lg:grid-cols-[minmax(0,220px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden lg:grid"}`}>
+      <div className={`mb-5 gap-3 lg:grid lg:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden lg:grid"}`}>
         <select value={category} onChange={(event) => setCategory(event.target.value)} className="input">
           <option value="">All Categories</option>
           {categoryOptions.map((item) => (
@@ -536,6 +536,13 @@ export default function Expenses() {
           type="date"
           value={dateFilter}
           onChange={(event) => setDateFilter(event.target.value)}
+          className="input"
+        />
+
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={(event) => setMonthFilter(event.target.value)}
           className="input"
         />
 
@@ -1140,3 +1147,5 @@ function ConfirmDialog({
     </div>
   )
 }
+
+

@@ -25,6 +25,8 @@ import {
 const formatCurrency = (value) =>
   `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`
 
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
+
 const statusMeta = {
   present: {
     label: "Present",
@@ -258,7 +260,7 @@ export default function Employees() {
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false)
   const [editAttendance, setEditAttendance] = useState(null)
   const [attendanceSaving, setAttendanceSaving] = useState(false)
-  const [selectedMonth, setSelectedMonth] = useState("")
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [openCard, setOpenCard] = useState(null)
   const [expandedAttendanceId, setExpandedAttendanceId] = useState(null)
   const [notice, setNotice] = useState(null)
@@ -406,6 +408,32 @@ export default function Employees() {
     [summary],
   )
 
+  const salaryTopCards = useMemo(
+    () => [
+      {
+        key: "totalEarned",
+        label: "Total Earned",
+        value: formatCurrency(summary.earned),
+        accent: "text-emerald-600",
+        ring: "border-emerald-200 bg-emerald-50/80",
+      },
+      {
+        key: "totalBonus",
+        label: "Total Bonus",
+        value: formatCurrency(summary.bonus),
+        accent: "text-violet-600",
+        ring: "border-violet-200 bg-violet-50/80",
+      },
+      {
+        key: "earnedBonusTotal",
+        label: "Earned + Bonus",
+        value: formatCurrency(summary.earned + summary.bonus),
+        accent: "text-blue-600",
+        ring: "border-blue-200 bg-blue-50/80",
+      },
+    ],
+    [summary],
+  )
   const openLedger = async (employee, options = {}) => {
     if (options.toggle && selectedEmployee?._id === employee._id) {
       setSelectedEmployee(null)
@@ -1160,6 +1188,18 @@ export default function Employees() {
             </div>
           </div>
 
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            {salaryTopCards.map((card) => (
+              <SummaryCard
+                key={card.key}
+                label={card.label}
+                value={card.value}
+                accent={card.accent}
+                ring={card.ring}
+              />
+            ))}
+          </div>
+
         <div className="mt-5 hidden gap-4 lg:grid sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((card) => (
             <SummaryCard
@@ -1749,3 +1789,6 @@ function ConfirmDialog({
     </div>
   )
 }
+
+
+
