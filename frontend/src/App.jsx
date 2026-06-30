@@ -42,6 +42,7 @@ import TasksPage from "./pages/shared/TasksPage"
 import StorageOverview from "./pages/admin/StorageOverview"
 import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
+import AdminDashboardEditor from "./pages/admin/AdminDashboardEditor"
 import BillGeneratorPage from "./pages/admin/BillGeneratorPage"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="meter-readings" element={<MeterReadings />} />
             <Route path="tanker-deliveries" element={<TankerDeliveries />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="admin-dashboard-editor" element={<AdminDashboardEditor />} />
             <Route path="employee-dashboard-editor" element={<EmployeeDashboardEditor />} />
             <Route path="manager-dashboard-editor" element={<ManagerDashboardEditor />} />
             <Route path="leaves" element={<LeaveManagementPage />} />

@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom"
 import { navigationByRole, roleBadges } from "../../config/navigation"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTheme } from "../../contexts/ThemeContext"
+import useAdminDashboardSettings from "../../hooks/useAdminDashboardSettings"
 import useEmployeeDashboardSettings from "../../hooks/useEmployeeDashboardSettings"
 import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
 
@@ -9,11 +10,16 @@ export default function Sidebar({ open, setOpen }) {
   const location = useLocation()
   const { user } = useAuth()
   const { isDayTheme } = useTheme()
+  const adminDashboardSettings = useAdminDashboardSettings(user?.role === "Admin")
   const employeeDashboardSettings = useEmployeeDashboardSettings("", user?.role === "Employee")
   const managerDashboardSettings = useManagerDashboardSettings("", user?.role === "Manager")
   const baseItems = navigationByRole[user?.role] || []
   const items =
-    user?.role === "Employee"
+    user?.role === "Admin"
+      ? adminDashboardSettings.loading
+        ? baseItems
+        : mergeNavigation(baseItems, adminDashboardSettings.pages)
+      : user?.role === "Employee"
       ? employeeDashboardSettings.loading
         ? []
         : mergeNavigation(baseItems, employeeDashboardSettings.pages)
