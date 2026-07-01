@@ -47,7 +47,7 @@ export default function InvoiceDetailsPage() {
         searchPlaceholder: "Search date, product, invoice amount, remark",
         fields: [
           { key: "date", label: "Date", type: "date" },
-          { key: "product", label: "Product" },
+          { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },
           { key: "qty", label: "Qty", type: "number" },
           { key: "invoiceAmount", label: "Invoice Amount", type: "number" },
           { key: "transportCost", label: "Transport Cost", type: "number" },
@@ -56,7 +56,7 @@ export default function InvoiceDetailsPage() {
         ],
         columns: [
           { key: "date", label: "Date", render: (entry) => formatDate(entry.date) },
-          { key: "product", label: "Product" },
+          { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },
           { key: "qty", label: "Qty", render: (entry) => formatNumber(entry.qty) },
           { key: "invoiceAmount", label: "Invoice Amount", render: (entry) => formatNumber(entry.invoiceAmount) },
           { key: "transportCost", label: "Transport Cost", render: (entry) => formatNumber(entry.transportCost) },
@@ -85,19 +85,21 @@ export default function InvoiceDetailsPage() {
           }
         },
         summary: (entries) => {
-          const totalQty = entries.reduce((sum, entry) => sum + numberValue(entry.qty), 0)
-          const totalInvoice = entries.reduce((sum, entry) => sum + numberValue(entry.invoiceAmount), 0)
-          const totalTransport = entries.reduce((sum, entry) => sum + numberValue(entry.transportCost), 0)
-          const averagePurchase = entries.length
-            ? entries.reduce((sum, entry) => sum + getPurchaseAmount(entry), 0) / entries.length
-            : 0
+          const hsdEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "hsd")
+          const msEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "ms")
+          const sumField = (list, key) => list.reduce((sum, entry) => sum + numberValue(entry[key]), 0)
+          const avgPurchase = (list) =>
+            list.length ? list.reduce((sum, entry) => sum + getPurchaseAmount(entry), 0) / list.length : 0
 
           return [
-            { label: "Entries", value: entries.length, tone: "blue" },
-            { label: "Total Qty", value: formatNumber(totalQty), tone: "green" },
-            { label: "Invoice Amount", value: formatNumber(totalInvoice), tone: "amber" },
-            { label: "Transport Cost", value: formatNumber(totalTransport), tone: "rose" },
-            { label: "Avg Purchase", value: formatNumber(averagePurchase), tone: "green" },
+            { label: "HSD Total Qty", value: formatNumber(sumField(hsdEntries, "qty")), tone: "green" },
+            { label: "MS Total Qty", value: formatNumber(sumField(msEntries, "qty")), tone: "amber" },
+            { label: "Avg Purchase Rate HSD", value: formatNumber(avgPurchase(hsdEntries).toFixed(2)), tone: "violet" },
+            { label: "Avg Purchase Rate MS", value: formatNumber(avgPurchase(msEntries).toFixed(2)), tone: "blue" },
+            { label: "Total Invoice Amount HSD", value: formatNumber(sumField(hsdEntries, "invoiceAmount")), tone: "green" },
+            { label: "Total Transport Cost HSD", value: formatNumber(sumField(hsdEntries, "transportCost")), tone: "rose" },
+            { label: "Total Invoice Amount MS", value: formatNumber(sumField(msEntries, "invoiceAmount")), tone: "amber" },
+            { label: "Total Transport Cost MS", value: formatNumber(sumField(msEntries, "transportCost")), tone: "rose" },
           ]
         },
         preview: (form) => {
@@ -124,3 +126,4 @@ export default function InvoiceDetailsPage() {
     />
   )
 }
+

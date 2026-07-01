@@ -82,14 +82,8 @@ export default function MduPage() {
             ? rateEntries.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / rateEntries.length
             : 0
           const profit = avgRate * totalSale
-          const loss = entries.reduce((sum, entry) => {
-            const value = getLossGain(entry)
-            return value < 0 ? sum + Math.abs(value) : sum
-          }, 0)
-          const gain = entries.reduce((sum, entry) => {
-            const value = getLossGain(entry)
-            return value > 0 ? sum + value : sum
-          }, 0)
+          const lossGain = entries.reduce((sum, entry) => sum + getLossGain(entry), 0)
+          const otherProfit = lossGain * avgRate
 
           return [
             { label: "Entries", value: entries.length, tone: "blue" },
@@ -97,7 +91,8 @@ export default function MduPage() {
             { label: "Total Sale", value: formatNumber(totalSale), tone: "amber" },
             { label: "Avg Rate", value: formatNumber(avgRate.toFixed(2)), tone: "violet" },
             { label: "Profit", value: formatNumber(profit.toFixed(2)), tone: profit >= 0 ? "green" : "rose" },
-            { label: "Loss / Gain", value: `${formatNumber(loss)} / ${formatNumber(gain)}`, tone: gain >= loss ? "green" : "rose" },
+            { label: "Loss / Gain", value: formatNumber(lossGain.toFixed(2)), tone: lossGain >= 0 ? "green" : "rose" },
+            { label: "Other Profit", value: formatNumber(otherProfit.toFixed(2)), tone: otherProfit >= 0 ? "green" : "rose" },
           ]
         },
         preview: (form) => {
@@ -123,4 +118,5 @@ export default function MduPage() {
     />
   )
 }
+
 

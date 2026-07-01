@@ -83,6 +83,63 @@ export default function SimpleAuditRegisterPage({ config }) {
     setModalOpen(true)
   }
 
+  const openBulkCreate = () => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", text: "You do not have access to add entries." })
+      return
+    }
+
+    setBulkRows([config.empty(), config.empty()])
+    setBulkOpen(true)
+  }
+
+  const updateBulkRow = (index, key, value) => {
+    setBulkRows((current) =>
+      current.map((row, rowIndex) => (rowIndex === index ? { ...row, [key]: value } : row)),
+    )
+  }
+
+  const addBulkRow = () => setBulkRows((current) => [...current, config.empty()])
+
+  const removeBulkRow = (index) => {
+    setBulkRows((current) => (current.length > 1 ? current.filter((_, rowIndex) => rowIndex !== index) : current))
+  }
+
+  const saveBulk = async () => {
+    if (!canManagerUse("addEntry")) {
+      setNotice({ type: "error", text: "You do not have access to add entries." })
+      return
+    }
+
+    const validRows = bulkRows.filter((row) => config.requiredFields.some((key) => String(row[key] || "").trim()))
+    const hasMissing = validRows.some((row) => config.requiredFields.some((key) => !String(row[key] || "").trim()))
+
+    if (!validRows.length || hasMissing) {
+      setNotice({ type: "error", text: "Please complete required fields in every filled row." })
+      return
+    }
+
+    setBulkSaving(true)
+
+    try {
+      await Promise.all(
+        validRows.map((row) =>
+          config.api.add({
+            ...config.buildPayload(row),
+            createdBy: user?.name || user?.role || "Admin",
+          }),
+        ),
+      )
+      setBulkOpen(false)
+      setBulkRows([config.empty()])
+      await load()
+      setNotice({ type: "success", text: `${validRows.length} ${config.title} entries saved successfully.` })
+    } catch (error) {
+      setNotice({ type: "error", text: error?.response?.data?.message || "Unable to save multiple entries." })
+    } finally {
+      setBulkSaving(false)
+    }
+  }
   const openEdit = (entry) => {
     if (!canManagerUse("editEntry")) {
       setNotice({ type: "error", text: "You do not have access to edit entries." })
@@ -185,13 +242,22 @@ export default function SimpleAuditRegisterPage({ config }) {
           className="input w-full sm:max-w-[220px]"
         />
         {canManagerUse("addEntry") ? (
-          <button
-            type="button"
-            onClick={openCreate}
-            className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
-          >
-            + Add Entry
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
+            >
+              + Add Entry
+            </button>
+            <button
+              type="button"
+              onClick={openBulkCreate}
+              className="hidden rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
+            >
+              + Multiple Entries
+            </button>
+          </>
         ) : null}
       </div>
 
@@ -315,6 +381,19 @@ export default function SimpleAuditRegisterPage({ config }) {
         />
       ) : null}
 
+      {bulkOpen ? (
+        <BulkEntryModal
+          title={`Add Multiple ${config.title} Entries`}
+          fields={config.fields}
+          rows={bulkRows}
+          updateRow={updateBulkRow}
+          addRow={addBulkRow}
+          removeRow={removeBulkRow}
+          onClose={() => setBulkOpen(false)}
+          onSave={saveBulk}
+          saving={bulkSaving}
+        />
+      ) : null}
       {confirmState ? (
         <ConfirmDialog
           title={confirmState.title}
@@ -341,6 +420,13 @@ export default function SimpleAuditRegisterPage({ config }) {
                 onClick: openCreate,
               }
             : null,
+          canManagerUse("addEntry")
+            ? {
+                label: "Multiple Entries",
+                className: "bg-emerald-600",
+                onClick: openBulkCreate,
+              }
+            : null,
         ].filter(Boolean)}
       />
     </div>
@@ -363,16 +449,32 @@ function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, pre
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {fields.map((field) => (
-            <input
-              key={field.key}
-              type={field.type || "text"}
-              value={form[field.key] ?? ""}
-              placeholder={field.label}
-              onChange={(event) => update(field.key, event.target.value)}
-              className={field.full ? "input sm:col-span-2" : "input"}
-            />
-          ))}
+          {fields.map((field) =>
+            field.type === "select" ? (
+              <select
+                key={field.key}
+                value={form[field.key] ?? ""}
+                onChange={(event) => update(field.key, event.target.value)}
+                className={field.full ? "input sm:col-span-2" : "input"}
+              >
+                <option value="">{field.label}</option>
+                {(field.options || []).map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                key={field.key}
+                type={field.type || "text"}
+                value={form[field.key] ?? ""}
+                placeholder={field.label}
+                onChange={(event) => update(field.key, event.target.value)}
+                className={field.full ? "input sm:col-span-2" : "input"}
+              />
+            ),
+          )}
         </div>
 
         {preview ? (
@@ -395,12 +497,87 @@ function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, pre
   )
 }
 
+function BulkEntryModal({ title, fields, rows, updateRow, addRow, removeRow, onClose, onSave, saving }) {
+  const visibleFields = fields.filter((field) => !field.bulkHidden)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3">
+      <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 text-[color:var(--text-primary)] sm:p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h2>
+            <p className="mt-1 text-sm text-[color:var(--text-secondary)]">Fill multiple rows and save them together.</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-2">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {rows.map((row, index) => (
+            <div key={index} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="font-semibold text-[color:var(--text-strong)]">Entry {index + 1}</p>
+                <button type="button" onClick={() => removeRow(index)} className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-1 text-sm text-red-500">
+                  Remove
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleFields.map((field) =>
+                  field.type === "select" ? (
+                    <select
+                      key={field.key}
+                      value={row[field.key] ?? ""}
+                      onChange={(event) => updateRow(index, field.key, event.target.value)}
+                      className={field.full ? "input lg:col-span-3" : "input"}
+                    >
+                      <option value="">{field.label}</option>
+                      {(field.options || []).map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      key={field.key}
+                      type={field.type || "text"}
+                      value={row[field.key] ?? ""}
+                      placeholder={field.label}
+                      onChange={(event) => updateRow(index, field.key, event.target.value)}
+                      className={field.full ? "input lg:col-span-3" : "input"}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-between">
+          <button type="button" onClick={addRow} className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 font-medium text-emerald-600">
+            + Add Row
+          </button>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2">
+              Cancel
+            </button>
+            <button type="button" onClick={onSave} disabled={saving} className="rounded-xl bg-blue-600 px-4 py-2 text-white disabled:opacity-60">
+              {saving ? "Saving..." : "Save All"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 function SummaryCard({ label, value, tone = "blue" }) {
   const tones = {
     blue: "border-blue-200/70 bg-blue-50/80 text-blue-600",
     green: "border-green-200/70 bg-green-50/80 text-green-600",
     rose: "border-rose-200/70 bg-rose-50/80 text-rose-600",
     amber: "border-amber-200/70 bg-amber-50/80 text-amber-600",
+    violet: "border-violet-200/70 bg-violet-50/80 text-violet-600",
   }
 
   return (
@@ -455,4 +632,6 @@ function ConfirmDialog({ title, description, onCancel, onConfirm }) {
     </div>
   )
 }
+
+
 

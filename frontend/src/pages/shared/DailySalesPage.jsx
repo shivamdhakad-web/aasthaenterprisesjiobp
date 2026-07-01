@@ -34,7 +34,7 @@ export default function DailySalesPage() {
         searchPlaceholder: "Search date, product, sale, remark",
         fields: [
           { key: "date", label: "Date", type: "date" },
-          { key: "product", label: "Product" },
+          { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },
           { key: "sale", label: "Sale", type: "number" },
           { key: "rate", label: "Rate", type: "number" },
           { key: "lossGain", label: "Loss / Gain (LTR)", type: "number" },
@@ -42,7 +42,7 @@ export default function DailySalesPage() {
         ],
         columns: [
           { key: "date", label: "Date", render: (entry) => formatDate(entry.date) },
-          { key: "product", label: "Product" },
+          { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },
           { key: "sale", label: "Sale", render: (entry) => formatNumber(entry.sale) },
           { key: "rate", label: "Rate", render: (entry) => formatNumber(entry.rate) },
           {
@@ -72,20 +72,26 @@ export default function DailySalesPage() {
           }
         },
         summary: (entries) => {
-          const hsdSale = entries
-            .filter((entry) => String(entry.product || "").toLowerCase() === "hsd")
-            .reduce((sum, entry) => sum + numberValue(entry.sale), 0)
-          const msSale = entries
-            .filter((entry) => String(entry.product || "").toLowerCase() === "ms")
-            .reduce((sum, entry) => sum + numberValue(entry.sale), 0)
+          const hsdEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "hsd")
+          const msEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "ms")
+          const hsdSale = hsdEntries.reduce((sum, entry) => sum + numberValue(entry.sale), 0)
+          const msSale = msEntries.reduce((sum, entry) => sum + numberValue(entry.sale), 0)
           const totalProfit = entries.reduce((sum, entry) => sum + getProfit(entry), 0)
-          const avgRate = entries.length ? entries.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / entries.length : 0
+          const lossGain = entries.reduce((sum, entry) => sum + numberValue(entry.lossGain), 0)
+          const avgRateHsd = hsdEntries.length
+            ? hsdEntries.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / hsdEntries.length
+            : 0
+          const avgRateMs = msEntries.length
+            ? msEntries.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / msEntries.length
+            : 0
 
           return [
             { label: "Entries", value: entries.length, tone: "blue" },
             { label: "HSD Sale", value: formatNumber(hsdSale), tone: "green" },
             { label: "MS Sale", value: formatNumber(msSale), tone: "amber" },
-            { label: "Avg Rate", value: formatNumber(avgRate), tone: "blue" },
+            { label: "Avg Rate HSD", value: formatNumber(avgRateHsd.toFixed(2)), tone: "violet" },
+            { label: "Avg Rate MS", value: formatNumber(avgRateMs.toFixed(2)), tone: "blue" },
+            { label: "Loss / Gain", value: formatNumber(lossGain.toFixed(2)), tone: lossGain >= 0 ? "green" : "rose" },
             { label: "Total Profit", value: formatNumber(totalProfit), tone: "green" },
           ]
         },
@@ -110,3 +116,4 @@ export default function DailySalesPage() {
     />
   )
 }
+
