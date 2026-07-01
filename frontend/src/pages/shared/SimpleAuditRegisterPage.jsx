@@ -40,6 +40,10 @@ export default function SimpleAuditRegisterPage({ config }) {
   const [confirmState, setConfirmState] = useState(null)
   const [openCard, setOpenCard] = useState(null)
 
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkRows, setBulkRows] = useState([config.empty()])
+  const [bulkSaving, setBulkSaving] = useState(false)
+
   useEffect(() => {
     load()
   }, [])
@@ -632,6 +636,4 @@ function ConfirmDialog({ title, description, onCancel, onConfirm }) {
     </div>
   )
 }
-
-
 

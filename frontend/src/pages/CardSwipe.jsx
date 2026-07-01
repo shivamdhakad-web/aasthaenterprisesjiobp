@@ -192,6 +192,15 @@ export default function CardSwipe() {
 
   const summary = getSummary(filteredEntries)
 
+  const monthProfit = useMemo(() => {
+    const activeMonth = month || getCurrentMonth()
+
+    return entries.reduce((total, entry) => {
+      const entryMonth = entry.date ? String(entry.date).slice(0, 7) : ""
+      return entryMonth === activeMonth ? total + Number(entry.charges || 0) : total
+    }, 0)
+  }, [entries, month])
+
   const getReportData = () =>
     filteredEntries.filter((entry) => {
       const entryDate = new Date(entry.date)
@@ -989,5 +998,4 @@ function ConfirmDialog({
     </div>
   )
 }
-
 
