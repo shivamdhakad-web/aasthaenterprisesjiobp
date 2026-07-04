@@ -14,7 +14,11 @@ import { getAttendance } from "../../services/attendanceApi"
 const currentMonth = () => new Date().toISOString().slice(0, 7)
 const today = () => new Date().toISOString().slice(0, 10)
 const numberValue = (value) => Number(value || 0)
-const formatCurrency = (value) => `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`
+const formatCurrency = (value) => {
+  const amount = Number(value || 0)
+  const hasDecimal = !Number.isInteger(amount)
+  return `Rs. ${amount.toLocaleString("en-IN", { minimumFractionDigits: hasDecimal ? 2 : 0, maximumFractionDigits: 2 })}`
+}
 const formatNumber = (value) => Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })
 
 const getDateKey = (value) => String(value || "").slice(0, 10)
@@ -353,5 +357,6 @@ export default function FinanceDashboardPage() {
     </div>
   )
 }
+
 
 
