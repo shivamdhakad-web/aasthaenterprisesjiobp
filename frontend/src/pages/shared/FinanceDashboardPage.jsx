@@ -228,6 +228,11 @@ export default function FinanceDashboardPage() {
       { earned: 0, bonus: 0 },
     )
 
+    const earnedBonus = employeeMoney.earned + employeeMoney.bonus
+    const totalProfit = cardSwipeProfit + lubricantProfit + mduOtherProfit + dcdProfit + msProfit + hsdProfit
+    const totalExpense = monthExpense + earnedBonus + Math.abs(msProductLoss) + Math.abs(hsdProductLoss)
+    const finalProfit = totalProfit - totalExpense
+
     return {
       cardSwipeProfit,
       lubricantProfit,
@@ -248,7 +253,7 @@ export default function FinanceDashboardPage() {
       msProfit,
       hsdProfit,
       monthExpense,
-      earnedBonus: employeeMoney.earned + employeeMoney.bonus,
+      earnedBonus,
     }
   }, [data, filters])
 
@@ -327,6 +332,9 @@ export default function FinanceDashboardPage() {
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <FinanceCard label="Total Profit" value={formatCurrency(metrics.totalProfit)} tone={metrics.totalProfit >= 0 ? "green" : "rose"} helper="All profit cards combined" />
+        <FinanceCard label="Total Expense" value={formatCurrency(metrics.totalExpense)} tone="rose" helper="Expenses + salary cost + product loss" />
+        <FinanceCard label="Final Profit" value={formatCurrency(metrics.finalProfit)} tone={metrics.finalProfit >= 0 ? "green" : "rose"} helper="Total Profit - Total Expense" />
         <FinanceCard label="Card Swipe Month Profit" value={formatCurrency(metrics.cardSwipeProfit)} tone="green" />
         <FinanceCard label="Lubricant Month Profit" value={formatCurrency(metrics.lubricantProfit)} tone="green" />
         <FinanceCard label="M.D.U Other Profit" value={formatCurrency(metrics.mduOtherProfit)} tone={metrics.mduOtherProfit >= 0 ? "green" : "rose"} />
@@ -357,6 +365,8 @@ export default function FinanceDashboardPage() {
     </div>
   )
 }
+
+
 
 
 
