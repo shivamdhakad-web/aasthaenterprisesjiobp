@@ -256,6 +256,7 @@ export default function Employees() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editEmployee, setEditEmployee] = useState(null)
   const [attendance, setAttendance] = useState([])
+  const [allAttendanceByEmployee, setAllAttendanceByEmployee] = useState({})
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false)
   const [editAttendance, setEditAttendance] = useState(null)
@@ -302,8 +303,23 @@ export default function Employees() {
   const fetchEmployees = async () => {
     try {
       const data = await getEmployees()
-      setEmployees(Array.isArray(data) ? data : [])
+      const employeeList = Array.isArray(data) ? data : []
+      setEmployees(employeeList)
+
+      const attendancePairs = await Promise.all(
+        employeeList.map(async (employee) => {
+          try {
+            const records = await getAttendance(employee._id)
+            return [employee._id, Array.isArray(records) ? records : []]
+          } catch {
+            return [employee._id, []]
+          }
+        }),
+      )
+
+      setAllAttendanceByEmployee(Object.fromEntries(attendancePairs))
     } catch (error) {
+      setAllAttendanceByEmployee({})
       setNotice({
         type: "error",
         message: error?.response?.data?.message || "Unable to load employees.",
@@ -333,6 +349,54 @@ export default function Employees() {
   const summary = useMemo(
     () => calculateAttendanceSummary(selectedEmployee, sortedAttendance),
     [selectedEmployee, sortedAttendance],
+  )
+
+  const allEmployeeSalarySummary = useMemo(() => {
+    return employees.reduce(
+      (totals, employee) => {
+        const records = (allAttendanceByEmployee[employee._id] || []).filter((entry) => {
+          if (!selectedMonth) {
+            return true
+          }
+
+          const entryMonth = entry.date ? new Date(entry.date).toISOString().slice(0, 7) : ""
+          return entryMonth === selectedMonth
+        })
+        const employeeSummary = calculateAttendanceSummary(employee, records)
+
+        totals.earned += employeeSummary.earned
+        totals.bonus += employeeSummary.bonus
+        return totals
+      },
+      { earned: 0, bonus: 0 },
+    )
+  }, [allAttendanceByEmployee, employees, selectedMonth])
+
+  const allEmployeeSalaryCards = useMemo(
+    () => [
+      {
+        key: "allTotalEarned",
+        label: "All Employees Earned",
+        value: formatCurrency(allEmployeeSalarySummary.earned),
+        accent: "text-emerald-600",
+        ring: "border-emerald-200 bg-emerald-50/80",
+      },
+      {
+        key: "allTotalBonus",
+        label: "All Employees Bonus",
+        value: formatCurrency(allEmployeeSalarySummary.bonus),
+        accent: "text-violet-600",
+        ring: "border-violet-200 bg-violet-50/80",
+      },
+      {
+        key: "allEarnedBonusTotal",
+        label: "Earned + Bonus",
+        value: formatCurrency(allEmployeeSalarySummary.earned + allEmployeeSalarySummary.bonus),
+        accent: "text-blue-600",
+        ring: "border-blue-200 bg-blue-50/80",
+      },
+    ],
+    [allEmployeeSalarySummary],
   )
 
   const summaryCards = useMemo(
@@ -592,6 +656,7 @@ export default function Employees() {
       if (selectedEmployee && targetEmployees.some((employee) => employee._id === selectedEmployee._id)) {
         await openLedger(selectedEmployee)
       }
+      await fetchEmployees()
     } catch (error) {
       setNotice({
         type: "error",
@@ -698,6 +763,7 @@ export default function Employees() {
       if (targetEmployee && mode !== "multiple") {
         await openLedger(targetEmployee)
       }
+      await fetchEmployees()
     } catch (error) {
       setNotice({
         type: "error",
@@ -748,6 +814,7 @@ export default function Employees() {
         if (selectedEmployee) {
           await openLedger(selectedEmployee)
         }
+        await fetchEmployees()
         setNotice({ type: "success", message: "Attendance entry deleted successfully" })
       },
     })
@@ -883,6 +950,18 @@ export default function Employees() {
             {notice.message}
           </div>
         ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {allEmployeeSalaryCards.map((card) => (
+            <SummaryCard
+              key={card.key}
+              label={card.label}
+              value={card.value}
+              accent={card.accent}
+              ring={card.ring}
+            />
+          ))}
+        </div>
 
         <div className="flex flex-col gap-3 xl:flex-row">
           <input
@@ -1789,6 +1868,4 @@ function ConfirmDialog({
     </div>
   )
 }
-
-
 
