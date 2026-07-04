@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { RefreshCw } from "lucide-react"
 
 import { getEntries as getCardSwipeEntries } from "../../services/cardSwipeApi"
@@ -204,6 +204,13 @@ export default function FinanceDashboardPage() {
       ? msInvoices.reduce((sum, entry) => sum + getPurchaseAmount(entry), 0) / msInvoices.length
       : 0
 
+    const msMargin = avgRateMs - avgPurchaseMs
+    const hsdMargin = avgRateHsd - avgPurchaseHsd
+    const msProductLoss = msLossGain * avgPurchaseMs
+    const hsdProductLoss = hsdLossGain * avgPurchaseHsd
+    const msProfit = msMargin * msSale
+    const hsdProfit = hsdMargin * hsdSale
+
     const monthExpense = expenses.reduce((sum, entry) => sum + numberValue(entry.amount), 0)
 
     const employeeMoney = data.employees.reduce(
@@ -230,6 +237,12 @@ export default function FinanceDashboardPage() {
       msLossGain,
       avgPurchaseHsd,
       avgPurchaseMs,
+      msMargin,
+      hsdMargin,
+      msProductLoss,
+      hsdProductLoss,
+      msProfit,
+      hsdProfit,
       monthExpense,
       earnedBonus: employeeMoney.earned + employeeMoney.bonus,
     }
@@ -322,6 +335,12 @@ export default function FinanceDashboardPage() {
         <FinanceCard label="MS Loss / Gain" value={formatNumber(metrics.msLossGain.toFixed(2))} tone={metrics.msLossGain >= 0 ? "green" : "rose"} helper="Daily Sales" />
         <FinanceCard label="Avg Purchase Rate HSD" value={formatNumber(metrics.avgPurchaseHsd.toFixed(2))} tone="violet" />
         <FinanceCard label="Avg Purchase Rate MS" value={formatNumber(metrics.avgPurchaseMs.toFixed(2))} tone="blue" />
+        <FinanceCard label="MS Margin" value={formatCurrency(metrics.msMargin)} tone={metrics.msMargin >= 0 ? "green" : "rose"} helper="Avg Rate MS - Avg Purchase Rate MS" />
+        <FinanceCard label="HSD Margin" value={formatCurrency(metrics.hsdMargin)} tone={metrics.hsdMargin >= 0 ? "green" : "rose"} helper="Avg Rate HSD - Avg Purchase Rate HSD" />
+        <FinanceCard label="MS Product Loss (Rs)" value={formatCurrency(metrics.msProductLoss)} tone={metrics.msProductLoss >= 0 ? "green" : "rose"} helper="MS Loss/Gain x Avg Purchase Rate MS" />
+        <FinanceCard label="HSD Product Loss (Rs)" value={formatCurrency(metrics.hsdProductLoss)} tone={metrics.hsdProductLoss >= 0 ? "green" : "rose"} helper="HSD Loss/Gain x Avg Purchase Rate HSD" />
+        <FinanceCard label="MS Profit (Rs)" value={formatCurrency(metrics.msProfit)} tone={metrics.msProfit >= 0 ? "green" : "rose"} helper="MS Margin x MS Sale" />
+        <FinanceCard label="HSD Profit (Rs)" value={formatCurrency(metrics.hsdProfit)} tone={metrics.hsdProfit >= 0 ? "green" : "rose"} helper="HSD Margin x HSD Sale" />
         <FinanceCard label="Month Expense" value={formatCurrency(metrics.monthExpense)} tone="rose" />
         <FinanceCard label="Earned + Bonus" value={formatCurrency(metrics.earnedBonus)} tone="cyan" helper="All employees" />
       </section>
@@ -334,4 +353,5 @@ export default function FinanceDashboardPage() {
     </div>
   )
 }
+
 
