@@ -234,6 +234,9 @@ export default function FinanceDashboardPage() {
     const finalProfit = totalProfit - totalExpense
 
     return {
+      totalProfit,
+      totalExpense,
+      finalProfit,
       cardSwipeProfit,
       lubricantProfit,
       mduOtherProfit,
@@ -365,6 +368,7 @@ export default function FinanceDashboardPage() {
     </div>
   )
 }
+
 
 
 
