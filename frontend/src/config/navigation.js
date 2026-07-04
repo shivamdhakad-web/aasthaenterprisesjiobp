@@ -1,4 +1,4 @@
-import {
+﻿import {
   Activity,
   CalendarDays,
   Bell,
@@ -13,6 +13,7 @@ import {
   ListTodo,
   NotebookTabs,
   Receipt,
+  Landmark,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -47,6 +48,7 @@ export const navigationByRole = {
     { key: "mdu", label: "M.D.U", path: "/admin/mdu", icon: Truck },
     { key: "invoiceDetails", label: "Invoice Details", path: "/admin/invoice-details", icon: Receipt },
     { key: "dailySales", label: "Daily Sales", path: "/admin/daily-sales", icon: TrendingUp },
+    { key: "financeDashboard", label: "Finance Dashboard", path: "/admin/finance-dashboard", icon: Landmark },
     { key: "smartCalculator", label: "Smart Calculator", path: "/admin/smart-calculator", icon: Calculator },
     { key: "densityCalculator", label: "Density Calculator", path: "/admin/density-calculator", icon: Droplets },
     { key: "ttDrivers", label: "TT Drivers", path: "/admin/ttdrivers", icon: Truck },
@@ -76,6 +78,7 @@ export const navigationByRole = {
     { key: "mdu", label: "M.D.U", path: "/manager/mdu", icon: Truck },
     { key: "invoiceDetails", label: "Invoice Details", path: "/manager/invoice-details", icon: Receipt },
     { key: "dailySales", label: "Daily Sales", path: "/manager/daily-sales", icon: TrendingUp },
+    { key: "financeDashboard", label: "Finance Dashboard", path: "/manager/finance-dashboard", icon: Landmark },
     { key: "smartCalculator", label: "Smart Calculator", path: "/manager/smart-calculator", icon: Calculator },
     { key: "densityCalculator", label: "Density Calculator", path: "/manager/density-calculator", icon: Droplets },
     { key: "ttDrivers", label: "TT Drivers", path: "/manager/ttdrivers", icon: Truck },
@@ -122,3 +125,4 @@ export const roleBadges = {
     dayTone: "from-[#eefbe4] via-[#ffffff] to-[#f7fff2] text-[#213222] border-[#d7edbf]",
   },
 }
+

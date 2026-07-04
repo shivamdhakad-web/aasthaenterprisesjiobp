@@ -1,4 +1,4 @@
-import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom"
+﻿import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom"
 
 import DashboardLayout from "./layouts/DashboardLayout"
 import Home from "./pages/Home"
@@ -50,6 +50,7 @@ import DcdPage from "./pages/shared/DcdPage"
 import MduPage from "./pages/shared/MduPage"
 import InvoiceDetailsPage from "./pages/shared/InvoiceDetailsPage"
 import DailySalesPage from "./pages/shared/DailySalesPage"
+import FinanceDashboardPage from "./pages/shared/FinanceDashboardPage"
 
 export default function App() {
   const AppRouter =
@@ -95,6 +96,7 @@ export default function App() {
             <Route path="mdu" element={<MduPage />} />
             <Route path="invoice-details" element={<InvoiceDetailsPage />} />
             <Route path="daily-sales" element={<DailySalesPage />} />
+            <Route path="finance-dashboard" element={<FinanceDashboardPage />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
             <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="ttdrivers" element={<TTDrivers />} />
@@ -232,6 +234,15 @@ export default function App() {
                 </ApprovalWrappedPage>,
               )}
             />
+            <Route
+              path="finance-dashboard"
+              element={managerPage(
+                "financeDashboard",
+                <ApprovalWrappedPage moduleKey="finance-dashboard" title="Finance Dashboard">
+                  <FinanceDashboardPage />
+                </ApprovalWrappedPage>,
+              )}
+            />
             <Route path="smart-calculator" element={managerPage("smartCalculator", <SmartCalculatorPage />)} />
             <Route path="density-calculator" element={managerPage("densityCalculator", <DensityCalculatorPage />)} />
             <Route
@@ -288,3 +299,6 @@ export default function App() {
     </AppRouter>
   )
 }
+
+
+

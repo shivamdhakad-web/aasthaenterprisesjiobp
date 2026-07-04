@@ -1,4 +1,4 @@
-const AdminDashboardSetting = require("../models/AdminDashboardSetting")
+﻿const AdminDashboardSetting = require("../models/AdminDashboardSetting")
 
 const DEFAULT_ADMIN_DASHBOARD_PAGES = [
   { key: "dashboard", label: "Dashboard", path: "/admin", order: 1 },
@@ -23,15 +23,16 @@ const DEFAULT_ADMIN_DASHBOARD_PAGES = [
   { key: "mdu", label: "M.D.U", path: "/admin/mdu", order: 20 },
   { key: "invoiceDetails", label: "Invoice Details", path: "/admin/invoice-details", order: 21 },
   { key: "dailySales", label: "Daily Sales", path: "/admin/daily-sales", order: 22 },
-  { key: "smartCalculator", label: "Smart Calculator", path: "/admin/smart-calculator", order: 23 },
-  { key: "densityCalculator", label: "Density Calculator", path: "/admin/density-calculator", order: 24 },
-  { key: "ttDrivers", label: "TT Drivers", path: "/admin/ttdrivers", order: 25 },
-  { key: "customerDrivers", label: "Customer Drivers", path: "/admin/customerdrivers", order: 26 },
-  { key: "secureNotes", label: "Secure Notes", path: "/admin/secure-notes", order: 27 },
-  { key: "reminder", label: "Reminder", path: "/admin/reminder", order: 28 },
-  { key: "storage", label: "Storage", path: "/admin/storage", order: 29 },
-  { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 30 },
-  { key: "settings", label: "Settings", path: "/admin/settings", order: 31 },
+  { key: "financeDashboard", label: "Finance Dashboard", path: "/admin/finance-dashboard", order: 23 },
+  { key: "smartCalculator", label: "Smart Calculator", path: "/admin/smart-calculator", order: 24 },
+  { key: "densityCalculator", label: "Density Calculator", path: "/admin/density-calculator", order: 25 },
+  { key: "ttDrivers", label: "TT Drivers", path: "/admin/ttdrivers", order: 26 },
+  { key: "customerDrivers", label: "Customer Drivers", path: "/admin/customerdrivers", order: 27 },
+  { key: "secureNotes", label: "Secure Notes", path: "/admin/secure-notes", order: 28 },
+  { key: "reminder", label: "Reminder", path: "/admin/reminder", order: 29 },
+  { key: "storage", label: "Storage", path: "/admin/storage", order: 30 },
+  { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 31 },
+  { key: "settings", label: "Settings", path: "/admin/settings", order: 32 },
 ]
 
 const cloneDefaultPages = () => DEFAULT_ADMIN_DASHBOARD_PAGES.map((page) => ({ ...page }))
@@ -121,3 +122,5 @@ exports.updateAdminDashboardSettings = async (req, res) => {
 }
 
 exports.DEFAULT_ADMIN_DASHBOARD_PAGES = DEFAULT_ADMIN_DASHBOARD_PAGES
+
+

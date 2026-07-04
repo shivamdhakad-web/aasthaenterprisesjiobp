@@ -1,4 +1,4 @@
-const ManagerDashboardSetting = require("../models/ManagerDashboardSetting")
+﻿const ManagerDashboardSetting = require("../models/ManagerDashboardSetting")
 
 const DEFAULT_MANAGER_DASHBOARD_PAGES = [
   { key: "dashboard", label: "Dashboard", path: "/manager", order: 1, buttons: [] },
@@ -190,10 +190,17 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     ],
   },
   {
+    key: "financeDashboard",
+    label: "Finance Dashboard",
+    path: "/manager/finance-dashboard",
+    order: 19,
+    buttons: [],
+  },
+  {
     key: "smartCalculator",
     label: "Smart Calculator",
     path: "/manager/smart-calculator",
-    order: 19,
+    order: 20,
     buttons: [
       { key: "saveEntry", label: "Save Entry", enabled: true },
       { key: "sendToAdmin", label: "Send To Admin", enabled: true },
@@ -203,7 +210,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "densityCalculator",
     label: "Density Calculator",
     path: "/manager/density-calculator",
-    order: 20,
+    order: 21,
     buttons: [
       { key: "saveDensity", label: "Save Density", enabled: true },
       { key: "viewHistory", label: "View History", enabled: true },
@@ -213,7 +220,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "ttDrivers",
     label: "TT Drivers",
     path: "/manager/ttdrivers",
-    order: 21,
+    order: 22,
     buttons: [
       { key: "addDriver", label: "Add Driver", enabled: true },
       { key: "editDriver", label: "Edit Driver", enabled: true },
@@ -225,7 +232,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "customerDrivers",
     label: "Customer Drivers",
     path: "/manager/customerdrivers",
-    order: 22,
+    order: 23,
     buttons: [
       { key: "addDriver", label: "Add Driver", enabled: true },
       { key: "editDriver", label: "Edit Driver", enabled: true },
@@ -237,7 +244,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "secureNotes",
     label: "Secure Notes",
     path: "/manager/secure-notes",
-    order: 23,
+    order: 24,
     buttons: [
       { key: "addNote", label: "Add Note", enabled: true },
       { key: "editNote", label: "Edit Note", enabled: true },
@@ -248,14 +255,14 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     key: "reminder",
     label: "Reminder",
     path: "/manager/reminder",
-    order: 24,
+    order: 25,
     buttons: [
       { key: "addReminder", label: "Add Reminder", enabled: true },
       { key: "editReminder", label: "Edit Reminder", enabled: true },
       { key: "deleteReminder", label: "Delete Reminder", enabled: true },
     ],
   },
-  { key: "settings", label: "Settings", path: "/manager/settings", order: 25, buttons: [] },
+  { key: "settings", label: "Settings", path: "/manager/settings", order: 26, buttons: [] },
 ]
 
 const cloneDefaultPages = () =>
@@ -371,3 +378,7 @@ exports.updateManagerDashboardSettings = async (req, res) => {
 }
 
 exports.DEFAULT_MANAGER_DASHBOARD_PAGES = DEFAULT_MANAGER_DASHBOARD_PAGES
+
+
+
+
