@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom"
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom"
 
 import DashboardLayout from "./layouts/DashboardLayout"
 import Home from "./pages/Home"
@@ -277,7 +277,7 @@ export default function App() {
 
         <Route element={<ProtectedRoute roles={["Employee"]} />}>
           <Route path="/employee" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="salary" replace />} />
+            <Route index element={<EmployeeOverview />} />
             <Route path="info" element={<EmployeeInfo />} />
             <Route path="attendance" element={<EmployeeAttendance />} />
             <Route path="leaves" element={<EmployeeLeave />} />
@@ -299,6 +299,7 @@ export default function App() {
     </AppRouter>
   )
 }
+
 
 
 
