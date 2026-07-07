@@ -41,6 +41,11 @@ const getTime = (value) => {
     return Number.isNaN(time) ? 0 : time;
 };
 
+const getEntryBonus = (entry) =>
+    Number(entry?.bonusAmount ?? entry?.bonus ?? entry?.payment ?? entry?.amount ?? 0);
+
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7);
+
 const metricConfigs = {
     present: {
         icon: UserPlus,
@@ -224,7 +229,7 @@ function SalaryEntryCard({ entry }) {
                 </span>
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Bonus:</span>
-                    <span className="font-semibold">₹{formatCurrency(entry.bonus)}</span>
+                    <span className="font-semibold">₹{formatCurrency(getEntryBonus(entry))}</span>
                 </span>
                 {entry.remark && (
                     <span className="flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-xs text-[color:var(--text-muted)]">
@@ -241,7 +246,7 @@ export default function EmployeeSalary() {
     const [summary, setSummary] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
     const [dateFilter, setDateFilter] = useState("");
-    const [monthFilter, setMonthFilter] = useState("");
+    const [monthFilter, setMonthFilter] = useState(getCurrentMonth());
     const [loading, setLoading] = useState(false);
 
     const load = async ({ targetDate = dateFilter, targetMonth = monthFilter } = {}) => {
@@ -260,7 +265,7 @@ export default function EmployeeSalary() {
     };
 
     useEffect(() => {
-        load({ targetDate: "", targetMonth: "" });
+        load({ targetDate: "", targetMonth: getCurrentMonth() });
     }, []);
 
     const entries = useMemo(
@@ -272,7 +277,7 @@ export default function EmployeeSalary() {
     );
 
     const breakdown = summary?.breakdown || {};
-    const finalBalance = Number(summary?.finalSalary ?? breakdown.finalBalance ?? 0);
+    const finalBalance = Number(breakdown.final ?? 0);
 
     const handleDateSearch = () => {
         setMonthFilter("");
@@ -285,9 +290,10 @@ export default function EmployeeSalary() {
     };
 
     const handleAllEntries = () => {
+        const currentMonth = getCurrentMonth();
         setDateFilter("");
-        setMonthFilter("");
-        load({ targetDate: "", targetMonth: "" });
+        setMonthFilter(currentMonth);
+        load({ targetDate: "", targetMonth: currentMonth });
     };
 
     const clearFilters = () => {
@@ -321,7 +327,6 @@ export default function EmployeeSalary() {
             </h1>
 
             <p className="mt-3 max-w-xl text-sm font-medium text-slate-600 sm:text-base">
-                Track your attendance, earnings, bonus, shortage and final balance in one place.
             </p>
         </div>
 
@@ -599,7 +604,7 @@ export default function EmployeeSalary() {
                                             ₹{formatCurrency(entry.advancePetrol)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ₹{formatCurrency(entry.bonus)}
+                                            ₹{formatCurrency(getEntryBonus(entry))}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-[color:var(--text-muted)]">
                                             {entry.remark || "—"}
@@ -628,3 +633,6 @@ export default function EmployeeSalary() {
         </div>
     );
 }
+
+
+

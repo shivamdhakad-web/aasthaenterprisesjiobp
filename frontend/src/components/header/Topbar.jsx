@@ -145,7 +145,7 @@ export default function Topbar({ toggleSidebar }) {
   const ThemeIcon = theme === "day" ? MoonStar : SunMedium
 
   return (
-    <div className="theme-topbar flex items-center justify-between border-b px-4 py-4 transition-colors duration-300 lg:px-5">
+    <div className="theme-topbar relative z-[2000] flex items-center justify-between border-b px-4 py-4 transition-colors duration-300 lg:px-5">
       <div className="flex w-full items-center gap-3">
         <button
           onClick={toggleSidebar}
@@ -190,7 +190,7 @@ export default function Topbar({ toggleSidebar }) {
           ) : null}
         </Link>
 
-        <div className="relative profile-menu">
+        <div className="relative z-[2100] profile-menu">
           <div
             onClick={() => setOpenMenu(!openMenu)}
             className="flex cursor-pointer items-center gap-3 rounded-2xl px-1 py-1 select-none"
@@ -207,7 +207,7 @@ export default function Topbar({ toggleSidebar }) {
           </div>
 
           {openMenu ? (
-            <div className="theme-surface absolute right-0 z-[999] mt-2 w-44 overflow-hidden rounded-xl border shadow-2xl">
+            <div className="theme-surface absolute right-0 z-[2200] mt-2 w-44 overflow-hidden rounded-xl border shadow-2xl">
               <div className="border-b border-[color:var(--border-strong)] px-3 py-2 text-xs text-[color:var(--text-secondary)]">
                 Signed in as
                 <div className="theme-text-strong text-sm font-medium">{user?.role}</div>
@@ -226,3 +226,4 @@ export default function Topbar({ toggleSidebar }) {
     </div>
   )
 }
+
