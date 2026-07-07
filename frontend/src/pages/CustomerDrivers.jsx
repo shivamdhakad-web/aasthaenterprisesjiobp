@@ -7,6 +7,9 @@ import AddCustomerDriverModal from "../components/AddCustomerDriverModal"
 import MobileActionFab from "../components/MobileActionFab"
 import { deleteCustomerDriver, getCustomerDrivers } from "../services/customerDriverApi"
 
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
+const getEntryDate = (driver = {}) => String(driver.createdAt || driver.updatedAt || "").slice(0, 10)
+
 const getRouteParts = (driver = {}) => {
   if (driver.from || driver.to) {
     return {
@@ -25,6 +28,9 @@ const getRouteParts = (driver = {}) => {
 export default function CustomerDrivers() {
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
+  const [dateFilter, setDateFilter] = useState("")
+  const [deleteMonthOpen, setDeleteMonthOpen] = useState(false)
+  const [deleteMonthValue, setDeleteMonthValue] = useState(getCurrentMonth())
   const [reportOpen, setReportOpen] = useState(false)
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
@@ -32,7 +38,7 @@ export default function CustomerDrivers() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState(null)
   const [openCard, setOpenCard] = useState(null)
-  const [copied, setCopied] = useState(false)
+  const [toast, setToast] = useState("")
 
   useEffect(() => {
     loadDrivers()
@@ -48,9 +54,11 @@ export default function CustomerDrivers() {
     loadDrivers()
   }
 
-  const filtered = data.filter((driver) =>
-    Object.values(driver).join(" ").toLowerCase().includes(search.toLowerCase()),
-  )
+  const filtered = data.filter((driver) => {
+    const matchesSearch = Object.values(driver).join(" ").toLowerCase().includes(search.toLowerCase())
+    const matchesDate = !dateFilter || getEntryDate(driver) === dateFilter
+    return matchesSearch && matchesDate
+  })
 
   const totalDrivers = filtered.length
 
@@ -65,8 +73,8 @@ export default function CustomerDrivers() {
 
   const copyText = (text) => {
     navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setToast("Copied")
+    setTimeout(() => setToast(""), 2000)
   }
 
   const generatePDF = (filteredData) => {
@@ -155,6 +163,22 @@ export default function CustomerDrivers() {
     setReportOpen(false)
   }
 
+  const deleteSelectedMonth = async () => {
+    const targets = data.filter((driver) => String(driver.createdAt || driver.updatedAt || "").slice(0, 7) === deleteMonthValue)
+
+    if (!targets.length) {
+      setToast("No customer drivers found for selected month.")
+      setTimeout(() => setToast(""), 2200)
+      return
+    }
+
+    await Promise.all(targets.map((driver) => deleteCustomerDriver(driver._id)))
+    setDeleteMonthOpen(false)
+    await loadDrivers()
+    setToast(`${targets.length} customer drivers deleted.`)
+    setTimeout(() => setToast(""), 2200)
+  }
+
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <h1 className="mb-4 text-xl font-bold text-[color:var(--text-strong)]">
@@ -176,6 +200,13 @@ export default function CustomerDrivers() {
           className="input w-full sm:w-72"
         />
 
+        <input
+          type="date"
+          value={dateFilter}
+          onChange={(event) => setDateFilter(event.target.value)}
+          className="input w-full sm:w-56"
+        />
+
         <button
           className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
           onClick={() => {
@@ -191,6 +222,16 @@ export default function CustomerDrivers() {
           className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
         >
           Generate Report
+        </button>
+
+        <button
+          onClick={() => {
+            setDeleteMonthValue(getCurrentMonth())
+            setDeleteMonthOpen(true)
+          }}
+          className="hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-medium text-red-500 shadow-sm sm:inline-flex"
+        >
+          Delete Month
         </button>
       </div>
 
@@ -317,6 +358,27 @@ export default function CustomerDrivers() {
         })}
       </div>
 
+      {deleteMonthOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-[color:var(--text-primary)]">
+            <h2 className="mb-3 text-lg font-semibold text-[color:var(--text-strong)]">Delete Month</h2>
+            <p className="mb-4 text-sm text-[color:var(--text-secondary)]">Select a month to delete customer driver records created in that month.</p>
+            <input type="month" value={deleteMonthValue} onChange={(event) => setDeleteMonthValue(event.target.value)} className="input w-full" />
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteMonthOpen(false)}
+                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+              <button onClick={deleteSelectedMonth} className="rounded-xl bg-red-600 px-4 py-2 text-white">
+                Delete Month
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {reportOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-[color:var(--text-primary)]">
@@ -369,9 +431,9 @@ export default function CustomerDrivers() {
         </div>
       )}
 
-      {copied && (
+      {toast && (
         <div className="fixed left-1/2 top-3 z-50 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm text-white shadow-lg">
-          Copied
+          {toast}
         </div>
       )}
 
@@ -389,6 +451,14 @@ export default function CustomerDrivers() {
             label: "Generate Report",
             className: "bg-purple-600",
             onClick: () => setReportOpen(true),
+          },
+          {
+            label: "Delete Month",
+            className: "bg-red-600",
+            onClick: () => {
+              setDeleteMonthValue(getCurrentMonth())
+              setDeleteMonthOpen(true)
+            },
           },
         ]}
       />

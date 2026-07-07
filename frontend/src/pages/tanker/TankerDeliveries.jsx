@@ -1,5 +1,8 @@
 import { X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import * as XLSX from "xlsx"
 
 import MobileActionFab from "../../components/MobileActionFab"
 import { useAuth } from "../../contexts/AuthContext"
@@ -12,6 +15,7 @@ import {
 } from "../../services/tankerApi"
 
 const getToday = () => new Date().toISOString().slice(0, 10)
+const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
 
 const emptyDelivery = () => ({
   date: getToday(),
@@ -47,7 +51,8 @@ const formatDateTime = (value) => {
   })
 }
 
-const formatLiters = (value) => `${Number(value || 0).toLocaleString("en-IN")} L`
+const formatNumber = (value) => Number(value || 0).toLocaleString("en-IN")
+const formatLiters = (value) => `${formatNumber(value)} L`
 
 const normalizeDelivery = (delivery = {}) => ({
   ...emptyDelivery(),
@@ -92,6 +97,10 @@ export default function TankerDeliveries() {
   const [productFilter, setProductFilter] = useState("")
   const [dateFilter, setDateFilter] = useState("")
   const [showFilter, setShowFilter] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportFormat, setReportFormat] = useState("pdf")
+  const [deleteMonthOpen, setDeleteMonthOpen] = useState(false)
+  const [deleteMonthValue, setDeleteMonthValue] = useState(getCurrentMonth())
   const [open, setOpen] = useState(false)
   const [edit, setEdit] = useState(null)
   const [form, setForm] = useState(emptyDelivery())
@@ -318,6 +327,90 @@ export default function TankerDeliveries() {
     })
   }
 
+  const exportTankerReport = () => {
+    const headers = [
+      "Date",
+      "Truck No.",
+      "Transport Name",
+      "Driver Name",
+      "Number",
+      "Product",
+      "Qty.",
+      "Initial Stock",
+      "Initial Temp",
+      "Final Stock",
+      "Final Temp",
+      "Fuel Sales",
+      "Unloaded Qty",
+      "Loss/Gain",
+      "Last Edited",
+      "Edited By",
+    ]
+    const rows = filteredData.map((delivery) => [
+      formatDate(delivery.date),
+      delivery.truckNo || "-",
+      delivery.transportName || "-",
+      delivery.driverName || "-",
+      delivery.number || "-",
+      delivery.product || "-",
+      formatNumber(delivery.qty),
+      formatNumber(delivery.initialStock),
+      delivery.initialTemp || 0,
+      formatNumber(delivery.finalStock),
+      delivery.finalTemp || 0,
+      formatNumber(delivery.fuelSales),
+      formatNumber(delivery.unloadedQty),
+      formatNumber(delivery.lossGain),
+      formatDateTime(delivery.lastEditedAt),
+      delivery.lastEditedBy ? `${delivery.lastEditedBy} (${delivery.lastEditedByRole || "-"})` : "-",
+    ])
+
+    if (reportFormat === "excel") {
+      const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows])
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, "Tanker Deliveries")
+      XLSX.writeFile(workbook, "Tanker_Deliveries_Report.xlsx")
+    } else {
+      const doc = new jsPDF({ orientation: "landscape" })
+      doc.setFontSize(16)
+      doc.text("Tanker Deliveries Report", 14, 16)
+      doc.setFontSize(10)
+      doc.text(`Product: ${productFilter || "All"}  Date: ${dateFilter || "All"}  Records: ${filteredData.length}`, 14, 24)
+      autoTable(doc, {
+        startY: 30,
+        head: [headers],
+        body: rows,
+        styles: { fontSize: 6, cellPadding: 1.6 },
+        headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+      })
+      doc.save("Tanker_Deliveries_Report.pdf")
+    }
+
+    setReportOpen(false)
+  }
+
+  const deleteSelectedMonth = async () => {
+    if (!canManagerUse("deleteDelivery")) {
+      setNotice({ type: "error", text: "You do not have access to delete tanker deliveries." })
+      return
+    }
+
+    const targets = data.filter((delivery) => String(delivery.date || "").slice(0, 7) === deleteMonthValue)
+    if (!targets.length) {
+      setNotice({ type: "error", text: "No tanker deliveries found for selected month." })
+      return
+    }
+
+    try {
+      await Promise.all(targets.map((delivery) => deleteDelivery(delivery._id)))
+      setDeleteMonthOpen(false)
+      await load()
+      setNotice({ type: "success", text: `${targets.length} tanker deliveries deleted successfully.` })
+    } catch (error) {
+      setNotice({ type: "error", text: error?.response?.data?.message || "Unable to delete selected month." })
+    }
+  }
+
   const clearFilters = () => {
     setProductFilter("")
     setDateFilter("")
@@ -385,6 +478,25 @@ export default function TankerDeliveries() {
             Record Delivery
           </button>
         ) : null}
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
+        >
+          Generate Report
+        </button>
+        {canManagerUse("deleteDelivery") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteMonthValue(getCurrentMonth())
+              setDeleteMonthOpen(true)
+            }}
+            className="hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-medium text-red-500 sm:inline-flex"
+          >
+            Delete Month
+          </button>
+        ) : null}
       </div>
 
       <div className="mb-3 sm:hidden">
@@ -418,7 +530,6 @@ export default function TankerDeliveries() {
               <th>Fuel Sales</th>
               <th>Unloaded Qty</th>
               <th>Loss/Gain</th>
-              <th>Audit</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -432,21 +543,15 @@ export default function TankerDeliveries() {
                 <td>{delivery.driverName || "-"}</td>
                 <td>{delivery.number || "-"}</td>
                 <td>{delivery.product || "-"}</td>
-                <td>{formatLiters(delivery.qty)}</td>
-                <td>{formatLiters(delivery.initialStock)}</td>
+                <td>{formatNumber(delivery.qty)}</td>
+                <td>{formatNumber(delivery.initialStock)}</td>
                 <td>{delivery.initialTemp || 0}</td>
-                <td>{formatLiters(delivery.finalStock)}</td>
+                <td>{formatNumber(delivery.finalStock)}</td>
                 <td>{delivery.finalTemp || 0}</td>
-                <td>{formatLiters(delivery.fuelSales)}</td>
-                <td>{formatLiters(delivery.unloadedQty)}</td>
+                <td>{formatNumber(delivery.fuelSales)}</td>
+                <td>{formatNumber(delivery.unloadedQty)}</td>
                 <td className={numberValue(delivery.lossGain) >= 0 ? "font-semibold text-emerald-500" : "font-semibold text-red-500"}>
-                  {formatLiters(delivery.lossGain)}
-                </td>
-                <td className="max-w-[105px] text-left text-[11px] leading-5 text-[color:var(--text-secondary)]">
-                  <div>Edited: {formatDateTime(delivery.lastEditedAt)}</div>
-                  <div>
-                    By: {delivery.lastEditedBy || "-"} {delivery.lastEditedByRole ? `(${delivery.lastEditedByRole})` : ""}
-                  </div>
+                  {formatNumber(delivery.lossGain)}
                 </td>
                 <td>
                   <div className="flex items-center justify-center gap-3">
@@ -596,6 +701,25 @@ export default function TankerDeliveries() {
         />
       ) : null}
 
+      {reportOpen ? (
+        <ReportModal
+          format={reportFormat}
+          setFormat={setReportFormat}
+          count={filteredData.length}
+          onClose={() => setReportOpen(false)}
+          onDownload={exportTankerReport}
+        />
+      ) : null}
+
+      {deleteMonthOpen ? (
+        <DeleteMonthModal
+          value={deleteMonthValue}
+          setValue={setDeleteMonthValue}
+          onClose={() => setDeleteMonthOpen(false)}
+          onDelete={deleteSelectedMonth}
+        />
+      ) : null}
+
       {entryModePrompt ? (
         <ConfirmDialog
           title="Record Tanker Delivery"
@@ -617,6 +741,21 @@ export default function TankerDeliveries() {
 
       <MobileActionFab
         actions={[
+          {
+            label: "Generate Report",
+            className: "bg-purple-600",
+            onClick: () => setReportOpen(true),
+          },
+          canManagerUse("deleteDelivery")
+            ? {
+                label: "Delete Month",
+                className: "bg-red-600",
+                onClick: () => {
+                  setDeleteMonthValue(getCurrentMonth())
+                  setDeleteMonthOpen(true)
+                },
+              }
+            : null,
           canManagerUse("addDelivery")
             ? {
                 label: "Record Delivery",
@@ -630,11 +769,48 @@ export default function TankerDeliveries() {
   )
 }
 
+function ReportModal({ format, setFormat, count, onClose, onDownload }) {
+  return (
+    <ModalShell title="Generate Tanker Report" onClose={onClose} maxWidth="max-w-sm">
+      <p className="text-sm text-[color:var(--text-secondary)]">{count} records will be exported.</p>
+      <select value={format} onChange={(event) => setFormat(event.target.value)} className="input mt-4 w-full">
+        <option value="pdf">PDF</option>
+        <option value="excel">Excel</option>
+      </select>
+      <div className="mt-5 flex justify-end gap-3">
+        <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]">
+          Cancel
+        </button>
+        <button type="button" onClick={onDownload} className="rounded-xl bg-purple-600 px-4 py-2 text-white">
+          Download
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+function DeleteMonthModal({ value, setValue, onClose, onDelete }) {
+  return (
+    <ModalShell title="Delete Tanker Month" onClose={onClose} maxWidth="max-w-sm">
+      <p className="text-sm leading-6 text-[color:var(--text-secondary)]">Select a month to delete tanker delivery records from that month.</p>
+      <input type="month" value={value} onChange={(event) => setValue(event.target.value)} className="input mt-4 w-full" />
+      <div className="mt-5 flex justify-end gap-3">
+        <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]">
+          Cancel
+        </button>
+        <button type="button" onClick={onDelete} className="rounded-xl bg-red-600 px-4 py-2 text-white">
+          Delete Month
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
 function DeliveryModal({ title, form, setForm, productOptions, onClose, onSave, saving }) {
   const lossGain = numberValue(form.qty) - numberValue(form.unloadedQty)
 
   return (
-    <ModalShell title={title} onClose={onClose}>
+    <ModalShell title={title} onClose={onClose} maxWidth="max-w-2xl">
       <DeliveryFields form={form} setForm={setForm} productOptions={productOptions} />
 
       <div className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
@@ -738,7 +914,7 @@ function DeliveryFields({ form, setForm, productOptions, compact = false }) {
   const update = (key, value) => setForm({ ...form, [key]: value })
 
   return (
-    <div className={`grid gap-3 ${compact ? "lg:grid-cols-3" : ""}`}>
+    <div className={`grid gap-3 ${compact ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
       <input type="date" value={form.date} onChange={(event) => update("date", event.target.value)} className="input" />
       <input placeholder="Truck No." value={form.truckNo} onChange={(event) => update("truckNo", event.target.value)} className="input" />
       <input placeholder="Transport Name" value={form.transportName} onChange={(event) => update("transportName", event.target.value)} className="input" />
@@ -814,8 +990,8 @@ function InlineNotice({ notice }) {
 
 function ModalShell({ title, onClose, children, maxWidth = "max-w-md" }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className={`w-full ${maxWidth} rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-[color:var(--text-primary)]`}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-3 py-6 sm:items-center sm:p-4">
+      <div className={`max-h-[92vh] w-full ${maxWidth} overflow-y-auto rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 text-[color:var(--text-primary)] sm:p-6`}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h2>
           <button
@@ -876,3 +1052,4 @@ function ConfirmDialog({
     </div>
   )
 }
+

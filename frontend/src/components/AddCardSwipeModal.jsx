@@ -9,11 +9,11 @@ const defaultForm = (machineOptions = [], paymentMethodOptions = []) => ({
   date: getToday(),
   time: "",
   amount: "",
-  charges: "",
-  paymentMethod: paymentMethodOptions[0] || "Online",
+  charges: "0",
+  paymentMethod: paymentMethodOptions.includes("Cash") ? "Cash" : paymentMethodOptions[0] || "Cash",
   txnDetails: "",
   machine: machineOptions[0] || "Self",
-  remark: "",
+  remark: "C.C.",
 })
 
 export default function AddCardSwipeModal({
@@ -47,11 +47,11 @@ export default function AddCardSwipeModal({
         date: editData.date?.split("T")[0] || getToday(),
         time: editData.time || "",
         amount: String(editData.amount ?? ""),
-        charges: String(editData.charges ?? ""),
-        paymentMethod: editData.paymentMethod || paymentMethodOptions[0] || "Online",
+        charges: String(editData.charges ?? "0"),
+        paymentMethod: editData.paymentMethod || (paymentMethodOptions.includes("Cash") ? "Cash" : paymentMethodOptions[0]) || "Cash",
         txnDetails: editData.txnDetails || "",
         machine: editData.machine || machineOptions[0] || "Self",
-        remark: editData.remark || "",
+        remark: editData.remark || "C.C.",
       })
       return
     }
@@ -290,3 +290,4 @@ function InlineOptionSelect({
     </div>
   )
 }
+

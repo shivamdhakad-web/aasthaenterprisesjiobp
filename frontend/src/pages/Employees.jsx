@@ -570,7 +570,10 @@ export default function Employees() {
     setEditAttendance(null)
     setAttendanceEntryMode(mode)
     setAttendanceContext({
-      employeeId: employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "",
+      employeeId:
+        mode === "multiple" && allowEmployeeSelect
+          ? ""
+          : employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "",
       allowEmployeeSelect,
     })
     setAttendanceModalOpen(true)
@@ -1868,4 +1871,5 @@ function ConfirmDialog({
     </div>
   )
 }
+
 

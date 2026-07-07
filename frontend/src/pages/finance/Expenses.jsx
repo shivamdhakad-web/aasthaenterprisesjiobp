@@ -14,7 +14,7 @@ import {
   updateExpense,
 } from "../../services/expenseApi"
 
-const defaultCategories = ["Electricity", "Maintenance", "Salary", "Cleaning", "Miscellaneous"]
+const defaultCategories = ["Other", "Electricity", "Maintenance", "Salary", "Cleaning", "Miscellaneous"]
 const defaultPaymentModes = ["Cash", "UPI", "Bank"]
 const defaultAddedByOptions = ["Admin", "Manager", "Account Team"]
 
@@ -1147,5 +1147,6 @@ function ConfirmDialog({
     </div>
   )
 }
+
 
 

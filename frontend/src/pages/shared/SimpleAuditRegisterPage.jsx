@@ -1,5 +1,8 @@
 import { X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import * as XLSX from "xlsx"
 
 import MobileActionFab from "../../components/MobileActionFab"
 import { useAuth } from "../../contexts/AuthContext"
@@ -32,6 +35,13 @@ export default function SimpleAuditRegisterPage({ config }) {
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
   const [monthFilter, setMonthFilter] = useState(currentMonth())
+  const [fromDate, setFromDate] = useState("")
+  const [toDate, setToDate] = useState("")
+  const [actionChoiceOpen, setActionChoiceOpen] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportFormat, setReportFormat] = useState("pdf")
+  const [monthDeleteOpen, setMonthDeleteOpen] = useState(false)
+  const [deleteMonthValue, setDeleteMonthValue] = useState(currentMonth())
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState(null)
   const [form, setForm] = useState(config.empty())
@@ -67,11 +77,15 @@ export default function SimpleAuditRegisterPage({ config }) {
           .join(" ")
           .toLowerCase()
           .includes(search.toLowerCase())
-        const entryMonth = entry.date ? String(entry.date).slice(0, 7) : ""
+        const entryDate = entry.date ? String(entry.date).slice(0, 10) : ""
+        const entryMonth = entryDate ? entryDate.slice(0, 7) : ""
 
-        return matchesSearch && (!monthFilter || entryMonth === monthFilter)
+        const matchesFromDate = !fromDate || (entryDate && entryDate >= fromDate)
+        const matchesToDate = !toDate || (entryDate && entryDate <= toDate)
+
+        return matchesSearch && (!monthFilter || entryMonth === monthFilter) && matchesFromDate && matchesToDate
       }),
-    [config.searchFields, entries, monthFilter, search],
+    [config.searchFields, entries, fromDate, monthFilter, search, toDate],
   )
 
   const summary = config.summary(filteredEntries)
@@ -216,6 +230,69 @@ export default function SimpleAuditRegisterPage({ config }) {
     })
   }
 
+  const clearFilters = () => {
+    setSearch("")
+    setMonthFilter(currentMonth())
+    setFromDate("")
+    setToDate("")
+  }
+
+  const getReportValue = (entry, column) => {
+    if (column.render) return String(column.render(entry) ?? "-")
+    return String(entry[column.key] ?? "-")
+  }
+
+  const exportReport = () => {
+    const fileBase = `${config.title.replace(/\s+/g, "_")}_Report`
+    const headers = config.columns.map((column) => column.label)
+    const rows = filteredEntries.map((entry) => config.columns.map((column) => getReportValue(entry, column)))
+
+    if (reportFormat === "excel") {
+      const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows])
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, sheet, config.title.slice(0, 28))
+      XLSX.writeFile(workbook, `${fileBase}.xlsx`)
+    } else {
+      const doc = new jsPDF({ orientation: "landscape" })
+      doc.setFontSize(16)
+      doc.text(config.title, 14, 16)
+      doc.setFontSize(10)
+      doc.text(`Month: ${monthFilter || "All"}  From: ${fromDate || "All"}  To: ${toDate || "All"}  Records: ${filteredEntries.length}`, 14, 24)
+      autoTable(doc, {
+        startY: 30,
+        head: [headers],
+        body: rows,
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+      })
+      doc.save(`${fileBase}.pdf`)
+    }
+
+    setReportOpen(false)
+  }
+
+  const deleteSelectedMonth = async () => {
+    if (!canManagerUse("deleteEntry")) {
+      setNotice({ type: "error", text: "You do not have access to delete entries." })
+      return
+    }
+
+    const targets = entries.filter((entry) => String(entry.date || "").slice(0, 7) === deleteMonthValue)
+    if (!targets.length) {
+      setNotice({ type: "error", text: "No entries found for selected month." })
+      return
+    }
+
+    try {
+      await Promise.all(targets.map((entry) => config.api.remove(entry._id)))
+      setMonthDeleteOpen(false)
+      await load()
+      setNotice({ type: "success", text: `${targets.length} ${config.title} entries deleted successfully.` })
+    } catch (error) {
+      setNotice({ type: "error", text: error?.response?.data?.message || "Unable to delete selected month." })
+    }
+  }
+
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-5">
       <section className="mb-4 rounded-[24px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_14px_28px_rgba(16,24,20,0.06)]">
@@ -245,24 +322,57 @@ export default function SimpleAuditRegisterPage({ config }) {
           onChange={(event) => setMonthFilter(event.target.value)}
           className="input w-full sm:max-w-[220px]"
         />
+        <input
+          type="date"
+          value={fromDate}
+          onChange={(event) => setFromDate(event.target.value)}
+          title="From date"
+          className="input w-full sm:max-w-[190px]"
+        />
+        <input
+          type="date"
+          value={toDate}
+          onChange={(event) => setToDate(event.target.value)}
+          title="To date"
+          className="input w-full sm:max-w-[190px]"
+        />
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] sm:inline-flex"
+        >
+          Clear Filters
+        </button>
         {canManagerUse("addEntry") ? (
           <>
             <button
               type="button"
-              onClick={openCreate}
+              onClick={() => setActionChoiceOpen(true)}
               className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
             >
-              + Add Entry
-            </button>
-            <button
-              type="button"
-              onClick={openBulkCreate}
-              className="hidden rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
-            >
-              + Multiple Entries
+              Add Entry
             </button>
           </>
         ) : null}
+        {canManagerUse("deleteEntry") ? (
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteMonthValue(monthFilter || currentMonth())
+              setMonthDeleteOpen(true)
+            }}
+            className="hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-semibold text-red-500 sm:inline-flex"
+          >
+            Delete Month
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
+        >
+          Generate Report
+        </button>
       </div>
 
       <div className="hidden min-w-0 max-w-full overflow-x-auto rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] sm:block">
@@ -372,6 +482,21 @@ export default function SimpleAuditRegisterPage({ config }) {
         })}
       </div>
 
+      {actionChoiceOpen ? (
+        <ActionChoiceModal
+          title={`Add ${config.title} Entry`}
+          onClose={() => setActionChoiceOpen(false)}
+          onSingle={() => {
+            setActionChoiceOpen(false)
+            openCreate()
+          }}
+          onMultiple={() => {
+            setActionChoiceOpen(false)
+            openBulkCreate()
+          }}
+        />
+      ) : null}
+
       {modalOpen ? (
         <EntryModal
           title={editData ? `Edit ${config.title} Entry` : `Add ${config.title} Entry`}
@@ -415,20 +540,49 @@ export default function SimpleAuditRegisterPage({ config }) {
         />
       ) : null}
 
+      {reportOpen ? (
+        <ReportModal
+          title={`Generate ${config.title} Report`}
+          format={reportFormat}
+          setFormat={setReportFormat}
+          count={filteredEntries.length}
+          onClose={() => setReportOpen(false)}
+          onDownload={exportReport}
+        />
+      ) : null}
+
+      {monthDeleteOpen ? (
+        <DeleteMonthModal
+          title={`Delete ${config.title} Month`}
+          value={deleteMonthValue}
+          setValue={setDeleteMonthValue}
+          onClose={() => setMonthDeleteOpen(false)}
+          onDelete={deleteSelectedMonth}
+        />
+      ) : null}
+
       <MobileActionFab
         actions={[
-          canManagerUse("addEntry")
+          {
+            label: "Generate Report",
+            className: "bg-purple-600",
+            onClick: () => setReportOpen(true),
+          },
+          canManagerUse("deleteEntry")
             ? {
-                label: "Add Entry",
-                className: "bg-blue-600",
-                onClick: openCreate,
+                label: "Delete Month",
+                className: "bg-red-600",
+                onClick: () => {
+                  setDeleteMonthValue(monthFilter || currentMonth())
+                  setMonthDeleteOpen(true)
+                },
               }
             : null,
           canManagerUse("addEntry")
             ? {
-                label: "Multiple Entries",
-                className: "bg-emerald-600",
-                onClick: openBulkCreate,
+                label: "Add Entry",
+                className: "bg-blue-600",
+                onClick: () => setActionChoiceOpen(true),
               }
             : null,
         ].filter(Boolean)}
@@ -438,6 +592,33 @@ export default function SimpleAuditRegisterPage({ config }) {
 }
 
 export const helpers = { today, currentMonth, numberValue, formatDate, formatNumber }
+
+function ActionChoiceModal({ title, onClose, onSingle, onMultiple }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-sm rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 text-[color:var(--text-primary)]">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h3>
+          <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-2">
+            <X size={16} />
+          </button>
+        </div>
+        <p className="text-sm leading-6 text-[color:var(--text-secondary)]">Choose how you want to add entries.</p>
+        <div className="mt-5 grid gap-3">
+          <button type="button" onClick={onSingle} className="rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white">
+            Single Entry
+          </button>
+          <button type="button" onClick={onMultiple} className="rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white">
+            Multiple Entries
+          </button>
+          <button type="button" onClick={onClose} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, preview }) {
   const update = (key, value) => setForm({ ...form, [key]: value })
@@ -575,6 +756,49 @@ function BulkEntryModal({ title, fields, rows, updateRow, addRow, removeRow, onC
     </div>
   )
 }
+function ReportModal({ title, format, setFormat, count, onClose, onDownload }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-sm rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 text-[color:var(--text-primary)]">
+        <h3 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h3>
+        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{count} records will be exported.</p>
+        <select value={format} onChange={(event) => setFormat(event.target.value)} className="input mt-4 w-full">
+          <option value="pdf">PDF</option>
+          <option value="excel">Excel</option>
+        </select>
+        <div className="mt-5 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2">
+            Cancel
+          </button>
+          <button type="button" onClick={onDownload} className="rounded-xl bg-purple-600 px-4 py-2 text-white">
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DeleteMonthModal({ title, value, setValue, onClose, onDelete }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-sm rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 text-[color:var(--text-primary)]">
+        <h3 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">Select a month to permanently delete all entries from that month.</p>
+        <input type="month" value={value} onChange={(event) => setValue(event.target.value)} className="input mt-4 w-full" />
+        <div className="mt-5 flex justify-end gap-3">
+          <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2">
+            Cancel
+          </button>
+          <button type="button" onClick={onDelete} className="rounded-xl bg-red-600 px-4 py-2 text-white">
+            Delete Month
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SummaryCard({ label, value, tone = "blue" }) {
   const tones = {
     blue: "border-blue-200/70 bg-blue-50/80 text-blue-600",
@@ -636,4 +860,5 @@ function ConfirmDialog({ title, description, onCancel, onConfirm }) {
     </div>
   )
 }
+
 

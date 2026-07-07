@@ -11,6 +11,8 @@ import { addEntry, deleteEntry, deleteMonth, getEntries } from "../services/card
 
 const getToday = () => new Date().toISOString().slice(0, 10)
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
+const getTodayDateTimeStart = () => `${getToday()}T00:00`
+const getTodayDateTimeEnd = () => `${getToday()}T23:59`
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -37,11 +39,11 @@ const defaultBulkRow = () => ({
   date: getToday(),
   time: "",
   amount: "",
-  charges: "",
-  paymentMethod: "Online",
+  charges: "0",
+  paymentMethod: "Cash",
   txnDetails: "",
   machine: "Self",
-  remark: "",
+  remark: "C.C.",
 })
 
 export default function CardSwipe() {
@@ -52,8 +54,8 @@ export default function CardSwipe() {
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
   const [month, setMonth] = useState(getCurrentMonth())
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+  const [startDate, setStartDate] = useState(getTodayDateTimeStart())
+  const [endDate, setEndDate] = useState(getTodayDateTimeEnd())
   const [machine, setMachine] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -360,7 +362,7 @@ export default function CardSwipe() {
       return
     }
 
-    const invalid = bulkRows.some((row) => !row.date || !row.amount || !row.charges || !row.machine || !row.paymentMethod)
+    const invalid = bulkRows.some((row) => !row.date || !row.amount || !row.machine || !row.paymentMethod)
 
     if (invalid) {
       setNotice({ type: "error", text: "Please complete every card swipe row before saving." })
@@ -440,8 +442,8 @@ export default function CardSwipe() {
   const clearFilters = () => {
     setSearch("")
     setMonth(getCurrentMonth())
-    setStartDate("")
-    setEndDate("")
+    setStartDate(getTodayDateTimeStart())
+    setEndDate(getTodayDateTimeEnd())
     setMachine("")
     setPaymentMethod("")
   }
@@ -998,4 +1000,6 @@ function ConfirmDialog({
     </div>
   )
 }
+
+
 

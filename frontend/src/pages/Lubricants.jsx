@@ -82,7 +82,8 @@ export default function Lubricants() {
   const [notice, setNotice] = useState({ type: "", text: "" })
   const [confirmState, setConfirmState] = useState(null)
   const [showFilter, setShowFilter] = useState(false)
-  const [productStockOpen, setProductStockOpen] = useState(true)
+  const [profitOverviewOpen, setProfitOverviewOpen] = useState(false)
+  const [productStockOpen, setProductStockOpen] = useState(false)
   const [productMode, setProductMode] = useState("create")
   const [activeProduct, setActiveProduct] = useState(null)
   const [openCard, setOpenCard] = useState(null)
@@ -743,7 +744,22 @@ export default function Lubricants() {
       </div>
 
       <section className="mb-6 rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] sm:p-6">
-        <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-strong)]">Profit Overview</h2>
+        <button
+          type="button"
+          onClick={() => setProfitOverviewOpen((current) => !current)}
+          className="flex w-full items-center justify-between gap-3 text-left"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">Profit Overview</h2>
+            <p className="mt-1 text-sm text-[color:var(--text-secondary)]">Review product-wise cost, selling price, and profit summary.</p>
+          </div>
+          <span className="rounded-full border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-1 text-sm font-medium text-[color:var(--text-primary)]">
+            {profitOverviewOpen ? "Hide" : "Show"}
+          </span>
+        </button>
+
+        {profitOverviewOpen ? (
+          <>
 
         <div className="hidden overflow-x-auto xl:block">
           <table className="table min-w-[1100px]">
@@ -799,6 +815,8 @@ export default function Lubricants() {
             </div>
           ))}
         </div>
+          </>
+        ) : null}
       </section>
 
       <section className="mb-6 rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] sm:p-6">
@@ -1637,5 +1655,7 @@ function InfoLine({ label, value }) {
     </p>
   )
 }
+
+
 
 
