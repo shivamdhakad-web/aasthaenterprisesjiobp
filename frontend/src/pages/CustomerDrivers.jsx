@@ -214,7 +214,7 @@ export default function CustomerDrivers() {
             setModalOpen(true)
           }}
         >
-          + Add Driver
+          Add Driver
         </button>
 
         <button

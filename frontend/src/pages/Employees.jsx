@@ -932,7 +932,7 @@ export default function Employees() {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <div className="flex flex-col gap-4">
+      <div className={selectedEmployee ? "hidden" : "flex flex-col gap-4"}>
         <div>
           <h1 className="text-3xl font-bold text-[color:var(--text-strong)]">
             Employees & Attendance
@@ -1017,7 +1017,7 @@ export default function Employees() {
         </div>
       </div>
 
-      <div className="mt-5 hidden overflow-x-auto sm:block">
+      <div className={selectedEmployee ? "hidden" : "mt-5 hidden overflow-x-auto sm:block"}>
         <table className="table min-w-[980px]">
           <thead>
             <tr>
@@ -1089,7 +1089,7 @@ export default function Employees() {
         </table>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:hidden">
+      <div className={selectedEmployee ? "hidden" : "mt-5 grid gap-4 sm:hidden"}>
         {filteredEmployees.map((employee) => {
           const isOpen = openCard === employee._id
           const isSelected = selectedEmployee?._id === employee._id
@@ -1205,7 +1205,25 @@ export default function Employees() {
       </div>
 
       {selectedEmployee ? (
-        <div className="mt-6 rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_16px_32px_rgba(16,24,20,0.05)]">
+        <div className="rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_16px_32px_rgba(16,24,20,0.05)]">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedEmployee(null)
+                setOpenCard(null)
+                setAttendance([])
+                setExpandedAttendanceId(null)
+              }}
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--text-primary)] shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+            >
+              Back to Employees
+            </button>
+            <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
+              Employee Detail View
+            </span>
+          </div>
+
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">
@@ -1216,20 +1234,23 @@ export default function Employees() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-semibold text-[color:var(--text-primary)]">
+            {/* <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-semibold text-[color:var(--text-primary)]">
               Final Balance:{" "}
               <span className={Number(summary.final) >= 0 ? "text-blue-600" : "text-rose-500"}>
                 {formatCurrency(summary.final)}
               </span>
-            </div>
+            </div> */}
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <input
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <div className=" w-24">
+                <input
                 type="month"
                 value={selectedMonth}
                 onChange={(event) => setSelectedMonth(event.target.value)}
-                className="input w-full sm:w-[180px]"
+                className="input sm:w-[180px] "
               />
+              </div>
+              
               {canManagerUse("addEntry") ? (
                 <button
                   className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm"
@@ -1269,7 +1290,7 @@ export default function Employees() {
               ) : null}
             </div>
           </div>
-
+{/* 
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {salaryTopCards.map((card) => (
               <SummaryCard
@@ -1280,7 +1301,7 @@ export default function Employees() {
                 ring={card.ring}
               />
             ))}
-          </div>
+          </div> */}
 
         <div className="mt-5 hidden gap-4 lg:grid sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((card) => (
@@ -1871,5 +1892,7 @@ function ConfirmDialog({
     </div>
   )
 }
+
+
 
 
