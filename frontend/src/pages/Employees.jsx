@@ -27,6 +27,12 @@ const formatCurrency = (value) =>
 
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
 
+const getPreviousMonth = () => {
+  const date = new Date()
+  date.setMonth(date.getMonth() - 1)
+  return date.toISOString().slice(0, 7)
+}
+
 const statusMeta = {
   present: {
     label: "Present",
@@ -351,6 +357,22 @@ export default function Employees() {
     [selectedEmployee, sortedAttendance],
   )
 
+  const allTimeSummary = useMemo(
+    () => calculateAttendanceSummary(selectedEmployee, attendance),
+    [selectedEmployee, attendance],
+  )
+
+  const lastMonthAdvance = useMemo(() => {
+    const previousMonth = getPreviousMonth()
+    return attendance.reduce((total, entry) => {
+      const entryMonth = entry.date ? new Date(entry.date).toISOString().slice(0, 7) : ""
+      if (entryMonth !== previousMonth) {
+        return total
+      }
+      return total + Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+    }, 0)
+  }, [attendance])
+
   const allEmployeeSalarySummary = useMemo(() => {
     return employees.reduce(
       (totals, employee) => {
@@ -364,11 +386,15 @@ export default function Employees() {
         })
         const employeeSummary = calculateAttendanceSummary(employee, records)
 
+        const allRecords = allAttendanceByEmployee[employee._id] || []
+        const employeeAllSummary = calculateAttendanceSummary(employee, allRecords)
+
         totals.earned += employeeSummary.earned
         totals.bonus += employeeSummary.bonus
+        totals.final += employeeAllSummary.final
         return totals
       },
-      { earned: 0, bonus: 0 },
+      { earned: 0, bonus: 0, final: 0 },
     )
   }, [allAttendanceByEmployee, employees, selectedMonth])
 
@@ -395,10 +421,23 @@ export default function Employees() {
         accent: "text-blue-600",
         ring: "border-blue-200 bg-blue-50/80",
       },
+      {
+        key: "allFinalBalance",
+        label: "All Final Balance",
+        value: formatCurrency(allEmployeeSalarySummary.final),
+        accent: Number(allEmployeeSalarySummary.final) >= 0 ? "text-blue-600" : "text-rose-600",
+        ring: Number(allEmployeeSalarySummary.final) >= 0
+          ? "border-blue-200 bg-blue-50/80"
+          : "border-rose-200 bg-rose-50/80",
+      },
     ],
     [allEmployeeSalarySummary],
   )
 
+  const getEmployeeAllFinalBalance = (employee) => {
+    const records = allAttendanceByEmployee[employee._id] || []
+    return calculateAttendanceSummary(employee, records).final
+  }
   const summaryCards = useMemo(
     () => [
       {
@@ -453,6 +492,13 @@ export default function Employees() {
         ring: "border-amber-200 bg-amber-50/80",
       },
       {
+        key: "lastMonthAdvance",
+        label: "Last Month Advance",
+        value: formatCurrency(lastMonthAdvance),
+        accent: "text-orange-600",
+        ring: "border-orange-200 bg-orange-50/80",
+      },
+      {
         key: "bonus",
         label: "Bonus",
         value: formatCurrency(summary.bonus),
@@ -462,14 +508,14 @@ export default function Employees() {
       {
         key: "final",
         label: "Final Balance",
-        value: formatCurrency(summary.final),
-        accent: Number(summary.final) >= 0 ? "text-blue-600" : "text-rose-600",
-        ring: Number(summary.final) >= 0
+        value: formatCurrency(allTimeSummary.final),
+        accent: Number(allTimeSummary.final) >= 0 ? "text-blue-600" : "text-rose-600",
+        ring: Number(allTimeSummary.final) >= 0
           ? "border-blue-200 bg-blue-50/80"
           : "border-rose-200 bg-rose-50/80",
       },
     ],
-    [summary],
+    [allTimeSummary, lastMonthAdvance, summary],
   )
 
   const salaryTopCards = useMemo(
@@ -496,7 +542,7 @@ export default function Employees() {
         ring: "border-blue-200 bg-blue-50/80",
       },
     ],
-    [summary],
+    [allTimeSummary, lastMonthAdvance, summary],
   )
   const openLedger = async (employee, options = {}) => {
     if (options.toggle && selectedEmployee?._id === employee._id) {
@@ -1026,6 +1072,7 @@ export default function Employees() {
               <th>Shift</th>
               <th>Phone</th>
               <th>Salary</th>
+              <th>All Final Balance</th>
               <th>Tshirt</th>
               <th>Pant</th>
               <th>Shoes</th>
@@ -1045,6 +1092,11 @@ export default function Employees() {
                 <td>{employee.shift}</td>
                 <td>{employee.phone}</td>
                 <td>{formatCurrency(employee.salary)}</td>
+                <td>
+                  <span className={getEmployeeAllFinalBalance(employee) >= 0 ? "font-semibold text-blue-600" : "font-semibold text-rose-600"}>
+                    {formatCurrency(getEmployeeAllFinalBalance(employee))}
+                  </span>
+                </td>
                 <td>{employee.tshirt}</td>
                 <td>{employee.pant}</td>
                 <td>{employee.shoes}</td>
@@ -1241,15 +1293,13 @@ export default function Employees() {
               </span>
             </div> */}
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <div className=" w-24">
-                <input
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              <input
                 type="month"
                 value={selectedMonth}
                 onChange={(event) => setSelectedMonth(event.target.value)}
-                className="input sm:w-[180px] "
+                className="h-11 w-[150px] flex-none rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 text-sm font-semibold text-[color:var(--text-primary)] shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
               />
-              </div>
               
               {canManagerUse("addEntry") ? (
                 <button
@@ -1411,7 +1461,7 @@ export default function Employees() {
                 type="month"
                 value={selectedMonth}
                 onChange={(event) => setSelectedMonth(event.target.value)}
-                className="input flex-1"
+                className="h-11 w-[150px] flex-none rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 text-sm font-semibold text-[color:var(--text-primary)] shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
               />
               <button
                 className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm"
@@ -1892,7 +1942,3 @@ function ConfirmDialog({
     </div>
   )
 }
-
-
-
-

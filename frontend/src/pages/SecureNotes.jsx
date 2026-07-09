@@ -1,16 +1,9 @@
-import { Copy, Eye, EyeOff, Globe, LockKeyhole, NotebookPen, Plus, Trash2, User } from "lucide-react"
+﻿import { Copy, Eye, EyeOff, Globe, LockKeyhole, NotebookPen, Plus, Trash2, User } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import MobileActionFab from "../components/MobileActionFab"
 import SecureNoteModal from "../components/SecureNoteModal"
 import { deleteNote, getNotes } from "../services/secureNoteApi"
-
-const getDailyVaultPassword = () => {
-  const today = new Date()
-  const dd = String(today.getDate()).padStart(2, "0")
-  const mm = String(today.getMonth() + 1).padStart(2, "0")
-  const yy = String(today.getFullYear()).slice(-2)
-  return `${dd}${mm}${yy}`
-}
+import { getSettings } from "../services/settingsApi"
 
 const toneClasses = {
   yellow: "bg-amber-100 text-amber-950 border-amber-200",
@@ -38,9 +31,39 @@ export default function SecureNotes() {
   const [showPassword, setShowPassword] = useState(null)
   const [vaultUnlocked, setVaultUnlocked] = useState(false)
   const [vaultPassword, setVaultPassword] = useState("")
+  const [vaultExpectedPassword, setVaultExpectedPassword] = useState("jiobp")
+  const [vaultError, setVaultError] = useState("")
+  const [passwordLoading, setPasswordLoading] = useState(true)
   const [copied, setCopied] = useState("")
   const [expandedCard, setExpandedCard] = useState(null)
 
+
+  useEffect(() => {
+    let active = true
+
+    const loadVaultPassword = async () => {
+      try {
+        const data = await getSettings()
+        if (active) {
+          setVaultExpectedPassword(String(data?.secureNotesPassword || "jiobp"))
+        }
+      } catch (error) {
+        if (active) {
+          setVaultExpectedPassword("jiobp")
+        }
+      } finally {
+        if (active) {
+          setPasswordLoading(false)
+        }
+      }
+    }
+
+    loadVaultPassword()
+
+    return () => {
+      active = false
+    }
+  }, [])
   const loadNotes = async () => {
     const data = await getNotes()
     setNotes(data)
@@ -111,27 +134,33 @@ export default function SecureNotes() {
           </h1>
 
           <div className="mt-6 space-y-3">
-            <input
-              type="password"
-              value={vaultPassword}
-              onChange={(event) => setVaultPassword(event.target.value)}
-              placeholder="Enter vault password"
-              className="input"
-            />
+<input
+  type="password"
+  value={vaultPassword}
+  onChange={(event) => {
+                setVaultPassword(event.target.value)
+                setVaultError("")
+              }}
+  placeholder="Enter vault password"
+  className="input"
+/>
+            {vaultError ? <p className="text-sm font-medium text-red-500">{vaultError}</p> : null}
             <button
               type="button"
               onClick={() => {
-                if (vaultPassword === getDailyVaultPassword()) {
+                if (vaultPassword.trim() === vaultExpectedPassword.trim()) {
                   setVaultUnlocked(true)
                   setVaultPassword("")
+                  setVaultError("")
                   return
                 }
 
-                window.alert("Wrong Password")
+                setVaultError("Wrong password")
               }}
-              className="btn btn-green w-full"
+              disabled={passwordLoading}
+              className="btn btn-green w-full disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Unlock Vault
+              {passwordLoading ? "Loading..." : "Unlock Vault"}
             </button>
           </div>
         </div>
@@ -336,3 +365,7 @@ function InfoRow({ icon, label, value, onCopy }) {
     </div>
   )
 }
+
+
+
+

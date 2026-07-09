@@ -54,8 +54,8 @@ export default function CardSwipe() {
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
   const [month, setMonth] = useState(getCurrentMonth())
-  const [startDate, setStartDate] = useState(getTodayDateTimeStart())
-  const [endDate, setEndDate] = useState(getTodayDateTimeEnd())
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
   const [machine, setMachine] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -442,8 +442,8 @@ export default function CardSwipe() {
   const clearFilters = () => {
     setSearch("")
     setMonth(getCurrentMonth())
-    setStartDate(getTodayDateTimeStart())
-    setEndDate(getTodayDateTimeEnd())
+    setStartDate("")
+    setEndDate("")
     setMachine("")
     setPaymentMethod("")
   }
@@ -1000,6 +1000,7 @@ function ConfirmDialog({
     </div>
   )
 }
+
 
 
 

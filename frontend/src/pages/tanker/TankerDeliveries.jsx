@@ -1,4 +1,4 @@
-import { X } from "lucide-react"
+﻿import { X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -96,6 +96,7 @@ export default function TankerDeliveries() {
   const [search, setSearch] = useState("")
   const [productFilter, setProductFilter] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [monthFilter, setMonthFilter] = useState("")
   const [showFilter, setShowFilter] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [reportFormat, setReportFormat] = useState("pdf")
@@ -148,10 +149,11 @@ export default function TankerDeliveries() {
         return (
           target.includes(search.toLowerCase()) &&
           (!productFilter || delivery.product === productFilter) &&
-          (!dateFilter || delivery.date === dateFilter)
+          (!dateFilter || delivery.date === dateFilter) &&
+          (!monthFilter || String(delivery.date || "").slice(0, 7) === monthFilter)
         )
       }),
-    [data, dateFilter, productFilter, search],
+    [data, dateFilter, monthFilter, productFilter, search],
   )
 
   const productOptions = useMemo(
@@ -375,7 +377,7 @@ export default function TankerDeliveries() {
       doc.setFontSize(16)
       doc.text("Tanker Deliveries Report", 14, 16)
       doc.setFontSize(10)
-      doc.text(`Product: ${productFilter || "All"}  Date: ${dateFilter || "All"}  Records: ${filteredData.length}`, 14, 24)
+      doc.text(`Product: ${productFilter || "All"}  Date: ${dateFilter || "All"}  Month: ${monthFilter || "All"}  Records: ${filteredData.length}`, 14, 24)
       autoTable(doc, {
         startY: 30,
         head: [headers],
@@ -414,6 +416,7 @@ export default function TankerDeliveries() {
   const clearFilters = () => {
     setProductFilter("")
     setDateFilter("")
+    setMonthFilter("")
   }
 
   const filterContent = (
@@ -431,6 +434,13 @@ export default function TankerDeliveries() {
         type="date"
         value={dateFilter}
         onChange={(event) => setDateFilter(event.target.value)}
+        className="input"
+      />
+
+      <input
+        type="month"
+        value={monthFilter}
+        onChange={(event) => setMonthFilter(event.target.value)}
         className="input"
       />
 
@@ -508,7 +518,7 @@ export default function TankerDeliveries() {
         </button>
       </div>
 
-      <div className={`mb-4 gap-3 sm:grid sm:grid-cols-3 ${showFilter ? "grid" : "hidden sm:grid"}`}>
+      <div className={`mb-4 gap-3 sm:grid sm:grid-cols-4 ${showFilter ? "grid" : "hidden sm:grid"}`}>
         {filterContent}
       </div>
 
@@ -592,7 +602,7 @@ export default function TankerDeliveries() {
                     {delivery.truckNo || "-"}
                   </p>
                   <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-                    {delivery.transportName || "-"} • {formatDate(delivery.date)}
+                    {delivery.transportName || "-"} â€¢ {formatDate(delivery.date)}
                   </p>
                 </div>
 
@@ -1052,4 +1062,6 @@ function ConfirmDialog({
     </div>
   )
 }
+
+
 

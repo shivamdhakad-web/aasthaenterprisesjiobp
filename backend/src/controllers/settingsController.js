@@ -1,4 +1,4 @@
-const Settings = require("../models/Settings")
+﻿const Settings = require("../models/Settings")
 
 const DEFAULT_LOGIN_PASSWORDS = {
   admin: process.env.ADMIN_PASSWORD || "123",
@@ -7,6 +7,7 @@ const DEFAULT_LOGIN_PASSWORDS = {
 }
 
 const MASTER_UNLOCK_PASSWORD = process.env.DASHBOARD_MASTER_PASSWORD || "jiobp"
+const DEFAULT_SECURE_NOTES_PASSWORD = process.env.SECURE_NOTES_PASSWORD || "jiobp"
 
 const defaultSettings = {
   companyName: "",
@@ -14,6 +15,7 @@ const defaultSettings = {
   gstNumber: "",
   address: "",
   contacts: [],
+    secureNotesPassword: DEFAULT_SECURE_NOTES_PASSWORD,
   loginPasswords: DEFAULT_LOGIN_PASSWORDS,
   passwordSecurity: {
     masterUnlockPassword: MASTER_UNLOCK_PASSWORD,
@@ -58,6 +60,12 @@ exports.updateSettings = async (req, res) => {
     settings.gstNumber = req.body?.gstNumber ?? settings.gstNumber ?? ""
     settings.address = req.body?.address ?? settings.address ?? ""
 
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, "secureNotesPassword")) {
+        if (req.user?.role !== "Admin") {
+            return res.status(403).json({ message: "Only admin can change secure notes password" })
+        }
+        settings.secureNotesPassword = String(req.body.secureNotesPassword || "").trim() || settings.secureNotesPassword || DEFAULT_SECURE_NOTES_PASSWORD
+    }
     if (Array.isArray(req.body?.contacts)) {
       settings.contacts = req.body.contacts
         .filter((contact) => contact?.name || contact?.phone)
@@ -134,3 +142,4 @@ exports.changeDashboardPassword = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+﻿import { useEffect, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -29,6 +29,7 @@ export default function CustomerDrivers() {
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [monthFilter, setMonthFilter] = useState("")
   const [deleteMonthOpen, setDeleteMonthOpen] = useState(false)
   const [deleteMonthValue, setDeleteMonthValue] = useState(getCurrentMonth())
   const [reportOpen, setReportOpen] = useState(false)
@@ -57,7 +58,8 @@ export default function CustomerDrivers() {
   const filtered = data.filter((driver) => {
     const matchesSearch = Object.values(driver).join(" ").toLowerCase().includes(search.toLowerCase())
     const matchesDate = !dateFilter || getEntryDate(driver) === dateFilter
-    return matchesSearch && matchesDate
+    const matchesMonth = !monthFilter || String(driver.createdAt || driver.updatedAt || "").slice(0, 7) === monthFilter
+    return matchesSearch && matchesDate && matchesMonth
   })
 
   const totalDrivers = filtered.length
@@ -205,6 +207,13 @@ export default function CustomerDrivers() {
           value={dateFilter}
           onChange={(event) => setDateFilter(event.target.value)}
           className="input w-full sm:w-56"
+        />
+
+        <input
+          type="month"
+          value={monthFilter}
+          onChange={(event) => setMonthFilter(event.target.value)}
+          className="input w-full sm:w-52"
         />
 
         <button
@@ -486,3 +495,4 @@ function InfoPill({ label, value }) {
     </div>
   )
 }
+

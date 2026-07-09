@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+﻿import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import {
   changeDashboardPassword,
@@ -12,6 +12,7 @@ const defaultSettings = {
   gstNumber: "",
   address: "",
   contacts: [],
+  secureNotesPassword: "",
 }
 
 const defaultPasswordForm = {
@@ -62,6 +63,7 @@ export default function Settings() {
       gstNumber: data.gstNumber || "",
       address: data.address || "",
       contacts: Array.isArray(data.contacts) ? data.contacts : [],
+      secureNotesPassword: data.secureNotesPassword || "",
     })
   }
 
@@ -215,6 +217,31 @@ export default function Settings() {
         </section>
       ) : null}
 
+
+      {isAdmin ? (
+        <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
+          <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Secure Notes Password</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
+            This password unlocks the Secure Notes vault. Admin can update it anytime from here.
+          </p>
+          <div className="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <Field
+              label="Vault Password"
+              type="password"
+              value={settings.secureNotesPassword}
+              onChange={(value) => updateField("secureNotesPassword", value)}
+            />
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="rounded-2xl bg-green-600 px-6 py-4 font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save Vault Password"}
+            </button>
+          </div>
+        </section>
+      ) : null}
       <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
         <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Contact Numbers</h2>
 
@@ -355,3 +382,4 @@ function PasswordInput({ label, value, onChange }) {
     </label>
   )
 }
+

@@ -15,6 +15,7 @@ const formatBytes = (bytes = 0) => {
 
 export default function StorageOverview() {
   const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
@@ -23,6 +24,8 @@ export default function StorageOverview() {
         setData(response)
       } catch {
         setData(null)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -54,9 +57,9 @@ export default function StorageOverview() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--text-secondary)]">
-          <span>Used {formatBytes(runtimeMemory?.usedBytes)}</span>
-          <span>{runtimeMemory?.usedPercentage || 0}% of 512 MB</span>
-          <span>Free {formatBytes(runtimeMemory?.remainingBytes)}</span>
+          <span>Used {loading ? "Loading..." : formatBytes(runtimeMemory?.usedBytes)}</span>
+          <span>{loading ? "Loading..." : `${runtimeMemory?.usedPercentage || 0}% of 512 MB`}</span>
+          <span>Free {loading ? "Loading..." : formatBytes(runtimeMemory?.remainingBytes)}</span>
         </div>
 
         <p className="mt-3 text-xs text-[color:var(--text-secondary)]">
@@ -66,10 +69,10 @@ export default function StorageOverview() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StorageCard label="RAM Capacity" value={formatBytes(runtimeMemory?.capacityBytes)} />
-        <StorageCard label="RAM Used (RSS)" value={formatBytes(runtimeMemory?.rssBytes)} />
-        <StorageCard label="Heap Used" value={formatBytes(runtimeMemory?.heapUsedBytes)} />
-        <StorageCard label="Heap Total" value={formatBytes(runtimeMemory?.heapTotalBytes)} />
+        <StorageCard label="RAM Capacity" value={loading ? "Loading..." : formatBytes(runtimeMemory?.capacityBytes)} />
+        <StorageCard label="RAM Used (RSS)" value={loading ? "Loading..." : formatBytes(runtimeMemory?.rssBytes)} />
+        <StorageCard label="Heap Used" value={loading ? "Loading..." : formatBytes(runtimeMemory?.heapUsedBytes)} />
+        <StorageCard label="Heap Total" value={loading ? "Loading..." : formatBytes(runtimeMemory?.heapTotalBytes)} />
       </div>
 
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
@@ -86,17 +89,17 @@ export default function StorageOverview() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--text-secondary)]">
-          <span>Used {data ? formatBytes(data.usedBytes) : "0 B"}</span>
-          <span>{data?.usedPercentage || 0}% of 512 MB</span>
-          <span>Free {data ? formatBytes(data.remainingBytes) : "0 B"}</span>
+          <span>Used {loading ? "Loading..." : data ? formatBytes(data.usedBytes) : "0 B"}</span>
+          <span>{loading ? "Loading..." : `${data?.usedPercentage || 0}% of 512 MB`}</span>
+          <span>Free {loading ? "Loading..." : data ? formatBytes(data.remainingBytes) : "0 B"}</span>
         </div>
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StorageCard label="Capacity" value={formatBytes(data?.capacityBytes)} />
-        <StorageCard label="Used" value={formatBytes(data?.usedBytes)} />
-        <StorageCard label="Data Size" value={formatBytes(data?.dataBytes)} />
-        <StorageCard label="Index Size" value={formatBytes(data?.indexBytes)} />
+        <StorageCard label="Capacity" value={loading ? "Loading..." : formatBytes(data?.capacityBytes)} />
+        <StorageCard label="Used" value={loading ? "Loading..." : formatBytes(data?.usedBytes)} />
+        <StorageCard label="Data Size" value={loading ? "Loading..." : formatBytes(data?.dataBytes)} />
+        <StorageCard label="Index Size" value={loading ? "Loading..." : formatBytes(data?.indexBytes)} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -156,3 +159,5 @@ function StorageCard({ label, value }) {
     </div>
   )
 }
+
+
