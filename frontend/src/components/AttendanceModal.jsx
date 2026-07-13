@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 
 const getTodayString = () => new Date().toISOString().slice(0, 10)
 
-const buildEmptyRow = (employeeId = "") => ({
+const buildEmptyRow = (employeeId = "", date = getTodayString()) => ({
   employeeId,
-  date: getTodayString(),
+  date,
   status: "present",
   shortage: "",
   advanceCash: "",
@@ -20,6 +20,8 @@ const buildEmptyForm = (employeeId = "") => ({
 
 const buildMultipleState = (employeeId = "") => ({
   employeeId,
+  date: getTodayString(),
+  defaultDateApplied: false,
   entries: [buildEmptyRow(employeeId), buildEmptyRow(employeeId)],
 })
 
@@ -71,11 +73,6 @@ export default function AttendanceModal({
     setForm((current) => ({ ...current, [name]: value }))
   }
 
-  const handleBulkRootChange = (event) => {
-    const { name, value } = event.target
-    setBulkState((current) => ({ ...current, [name]: value }))
-  }
-
   const updateBulkRow = (index, name, value) => {
     setBulkState((current) => ({
       ...current,
@@ -88,7 +85,7 @@ export default function AttendanceModal({
   const addBulkRow = () => {
     setBulkState((current) => ({
       ...current,
-      entries: [...current.entries, buildEmptyRow(current.employeeId)],
+      entries: [...current.entries, buildEmptyRow(current.employeeId, current.date)],
     }))
   }
 
@@ -117,36 +114,58 @@ export default function AttendanceModal({
 
         {entryMode === "multiple" && !editData ? (
           <div className="mt-5 space-y-4">
-            {showEmployeeSelector ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {showEmployeeSelector ? (
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                    Default Employee
+                  </span>
+                  <select
+                    name="employeeId"
+                    value={bulkState.employeeId}
+                    onChange={(event) => {
+                      setBulkState((current) => ({
+                        ...current,
+                        employeeId: event.target.value,
+                        entries: current.entries.map((entry) => ({
+                          ...entry,
+                          employeeId: entry.employeeId || event.target.value,
+                        })),
+                      }))
+                    }}
+                    className="input"
+                  >
+                    <option value="">Select employee</option>
+                    {employees.map((employee) => (
+                      <option key={employee._id} value={employee._id}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
-                  Default Employee
+                  Default Date
                 </span>
-                <select
-                  name="employeeId"
-                  value={bulkState.employeeId}
+                <input
+                  type="date"
+                  value={bulkState.date}
                   onChange={(event) => {
-                    handleBulkRootChange(event)
                     setBulkState((current) => ({
                       ...current,
-                      employeeId: event.target.value,
-                      entries: current.entries.map((entry) => ({
-                        ...entry,
-                        employeeId: entry.employeeId || event.target.value,
-                      })),
+                      date: event.target.value,
+                      defaultDateApplied: true,
+                      entries: current.defaultDateApplied
+                        ? current.entries
+                        : current.entries.map((entry) => ({ ...entry, date: event.target.value })),
                     }))
                   }}
                   className="input"
-                >
-                  <option value="">Select employee</option>
-                  {employees.map((employee) => (
-                    <option key={employee._id} value={employee._id}>
-                      {employee.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </label>
-            ) : null}
+            </div>
 
             <div className="max-h-[62vh] space-y-3 overflow-y-auto pr-1">
               {bulkState.entries.map((entry, index) => (
@@ -403,3 +422,5 @@ export default function AttendanceModal({
     </div>
   )
 }
+
+
