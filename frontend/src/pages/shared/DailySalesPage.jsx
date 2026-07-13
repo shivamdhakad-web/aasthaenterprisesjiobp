@@ -30,6 +30,11 @@ export default function DailySalesPage() {
           remove: deleteDailySale,
         },
         requiredFields: ["date", "product", "sale", "rate"],
+        bulkDefaults: [
+          { key: "date" },
+          { key: "product" },
+          { key: "rate" },
+        ],
         searchFields: ["date", "product", "sale", "rate", "lossGain", "profit", "remark"],
         searchPlaceholder: "Search date, product, sale, remark",
         fields: [

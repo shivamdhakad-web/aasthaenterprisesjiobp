@@ -26,6 +26,17 @@ const formatDateTime = (value) => {
   })
 }
 
+const buildBulkDefaults = (config) => {
+  const base = config.empty()
+
+  return {
+    values: Object.fromEntries(
+      (config.bulkDefaults || []).map((item) => [item.key, base[item.key] ?? ""]),
+    ),
+    applied: Object.fromEntries((config.bulkDefaults || []).map((item) => [item.key, false])),
+  }
+}
+
 export default function SimpleAuditRegisterPage({ config }) {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
@@ -51,6 +62,7 @@ export default function SimpleAuditRegisterPage({ config }) {
   const [openCard, setOpenCard] = useState(null)
 
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkDefaults, setBulkDefaults] = useState(buildBulkDefaults(config))
   const [bulkRows, setBulkRows] = useState([config.empty()])
   const [bulkSaving, setBulkSaving] = useState(false)
 
@@ -107,7 +119,12 @@ export default function SimpleAuditRegisterPage({ config }) {
       return
     }
 
-    setBulkRows([config.empty(), config.empty()])
+    const defaults = buildBulkDefaults(config)
+    setBulkDefaults(defaults)
+    setBulkRows([
+      { ...config.empty(), ...defaults.values },
+      { ...config.empty(), ...defaults.values },
+    ])
     setBulkOpen(true)
   }
 
@@ -117,7 +134,24 @@ export default function SimpleAuditRegisterPage({ config }) {
     )
   }
 
-  const addBulkRow = () => setBulkRows((current) => [...current, config.empty()])
+  const updateBulkDefault = (key, value) => {
+    setBulkDefaults((current) => {
+      const shouldApplyRows = !current.applied[key]
+      const next = {
+        values: { ...current.values, [key]: value },
+        applied: { ...current.applied, [key]: true },
+      }
+
+      if (shouldApplyRows) {
+        setBulkRows((rows) => rows.map((row) => ({ ...row, [key]: value })))
+      }
+
+      return next
+    })
+  }
+
+  const addBulkRow = () =>
+    setBulkRows((current) => [...current, { ...config.empty(), ...bulkDefaults.values }])
 
   const removeBulkRow = (index) => {
     setBulkRows((current) => (current.length > 1 ? current.filter((_, rowIndex) => rowIndex !== index) : current))
@@ -149,6 +183,7 @@ export default function SimpleAuditRegisterPage({ config }) {
         ),
       )
       setBulkOpen(false)
+      setBulkDefaults(buildBulkDefaults(config))
       setBulkRows([config.empty()])
       await load()
       setNotice({ type: "success", text: `${validRows.length} ${config.title} entries saved successfully.` })
@@ -514,11 +549,18 @@ export default function SimpleAuditRegisterPage({ config }) {
         <BulkEntryModal
           title={`Add Multiple ${config.title} Entries`}
           fields={config.fields}
+          bulkDefaultsConfig={config.bulkDefaults || []}
+          bulkDefaults={bulkDefaults.values}
+          updateBulkDefault={updateBulkDefault}
           rows={bulkRows}
           updateRow={updateBulkRow}
           addRow={addBulkRow}
           removeRow={removeBulkRow}
-          onClose={() => setBulkOpen(false)}
+          onClose={() => {
+            setBulkOpen(false)
+            setBulkDefaults(buildBulkDefaults(config))
+            setBulkRows([config.empty()])
+          }}
           onSave={saveBulk}
           saving={bulkSaving}
         />
@@ -682,8 +724,24 @@ function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, pre
   )
 }
 
-function BulkEntryModal({ title, fields, rows, updateRow, addRow, removeRow, onClose, onSave, saving }) {
+function BulkEntryModal({
+  title,
+  fields,
+  bulkDefaultsConfig = [],
+  bulkDefaults = {},
+  updateBulkDefault,
+  rows,
+  updateRow,
+  addRow,
+  removeRow,
+  onClose,
+  onSave,
+  saving,
+}) {
   const visibleFields = fields.filter((field) => !field.bulkHidden)
+  const defaultFields = bulkDefaultsConfig
+    .map((item) => fields.find((field) => field.key === item.key))
+    .filter(Boolean)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3">
@@ -697,6 +755,45 @@ function BulkEntryModal({ title, fields, rows, updateRow, addRow, removeRow, onC
             <X size={16} />
           </button>
         </div>
+
+        {defaultFields.length ? (
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {defaultFields.map((field) =>
+              field.type === "select" ? (
+                <label key={field.key} className="block">
+                  <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                    Default {field.label}
+                  </span>
+                  <select
+                    value={bulkDefaults[field.key] ?? ""}
+                    onChange={(event) => updateBulkDefault(field.key, event.target.value)}
+                    className="input"
+                  >
+                    <option value="">{field.label}</option>
+                    {(field.options || []).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label key={field.key} className="block">
+                  <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                    Default {field.label}
+                  </span>
+                  <input
+                    type={field.type || "text"}
+                    value={bulkDefaults[field.key] ?? ""}
+                    placeholder={field.label}
+                    onChange={(event) => updateBulkDefault(field.key, event.target.value)}
+                    className="input"
+                  />
+                </label>
+              ),
+            )}
+          </div>
+        ) : null}
 
         <div className="space-y-4">
           {rows.map((row, index) => (

@@ -56,6 +56,16 @@ const defaultBulkSaleRow = (user) => ({
   soldBy: user?.name || "Admin",
 })
 
+const defaultBulkSaleDefaults = () => ({
+  date: getToday(),
+  dateApplied: false,
+})
+
+const buildBulkSaleRow = (user, defaults = defaultBulkSaleDefaults()) => ({
+  ...defaultBulkSaleRow(user),
+  date: defaults.date || getToday(),
+})
+
 const defaultProductForm = () => ({
   name: "",
   price: "",
@@ -70,7 +80,8 @@ export default function Lubricants() {
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState("")
   const [productFilter, setProductFilter] = useState("")
-  const [dateFilter, setDateFilter] = useState("")
+  const [fromDateFilter, setFromDateFilter] = useState("")
+  const [toDateFilter, setToDateFilter] = useState("")
   const [monthFilter, setMonthFilter] = useState(getCurrentMonth())
   const [open, setOpen] = useState(false)
   const [productModal, setProductModal] = useState(false)
@@ -92,7 +103,8 @@ export default function Lubricants() {
   const [entryModePrompt, setEntryModePrompt] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkSaving, setBulkSaving] = useState(false)
-  const [bulkRows, setBulkRows] = useState([defaultBulkSaleRow(user)])
+  const [bulkDefaults, setBulkDefaults] = useState(defaultBulkSaleDefaults())
+  const [bulkRows, setBulkRows] = useState([buildBulkSaleRow(user)])
   const [reportForm, setReportForm] = useState({
     fromDate: "",
     toDate: "",
@@ -148,11 +160,12 @@ export default function Lubricants() {
         return (
           target.includes(search.toLowerCase()) &&
           (!productFilter || entry.product === productFilter) &&
-          (!dateFilter || entry.date === dateFilter) &&
+          (!fromDateFilter || String(entry.date || "") >= fromDateFilter) &&
+          (!toDateFilter || String(entry.date || "") <= toDateFilter) &&
           (!monthFilter || String(entry.date || "").slice(0, 7) === monthFilter)
         )
       }),
-    [data, dateFilter, monthFilter, productFilter, search],
+    [data, fromDateFilter, monthFilter, productFilter, search, toDateFilter],
   )
 
   const summary = useMemo(() => {
@@ -276,19 +289,35 @@ export default function Lubricants() {
   }
 
   const openBulkSaleModal = () => {
-    setBulkRows([defaultBulkSaleRow(user)])
+    const defaults = defaultBulkSaleDefaults()
+    setBulkDefaults(defaults)
+    setBulkRows([buildBulkSaleRow(user, defaults)])
     setBulkOpen(true)
   }
 
   const closeBulkSaleModal = () => {
+    const defaults = defaultBulkSaleDefaults()
     setBulkOpen(false)
-    setBulkRows([defaultBulkSaleRow(user)])
+    setBulkDefaults(defaults)
+    setBulkRows([buildBulkSaleRow(user, defaults)])
   }
 
   const updateBulkRow = (index, key, value) => {
     setBulkRows((current) =>
       current.map((row, rowIndex) => (rowIndex === index ? { ...row, [key]: value } : row)),
     )
+  }
+
+  const updateBulkDefaultDate = (value) => {
+    setBulkDefaults((current) => {
+      const next = { ...current, date: value, dateApplied: true }
+
+      setBulkRows((rows) =>
+        current.dateApplied ? rows : rows.map((row) => ({ ...row, date: value })),
+      )
+
+      return next
+    })
   }
 
   const syncBulkProduct = (index, productName) => {
@@ -308,7 +337,7 @@ export default function Lubricants() {
   }
 
   const addBulkRow = () => {
-    setBulkRows((current) => [...current, defaultBulkSaleRow(user)])
+    setBulkRows((current) => [...current, buildBulkSaleRow(user, bulkDefaults)])
   }
 
   const removeBulkRow = (index) => {
@@ -703,7 +732,7 @@ export default function Lubricants() {
       </div>
 
       <div className={`mb-6 ${showFilter ? "block" : "hidden xl:block"}`}>
-        <div className="grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 xl:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto]">
+        <div className="grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 xl:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,180px)_minmax(0,220px)_auto]">
           <select
             value={productFilter}
             onChange={(event) => setProductFilter(event.target.value)}
@@ -719,8 +748,17 @@ export default function Lubricants() {
 
           <input
             type="date"
-            value={dateFilter}
-            onChange={(event) => setDateFilter(event.target.value)}
+            value={fromDateFilter}
+            onChange={(event) => setFromDateFilter(event.target.value)}
+            title="From date"
+            className="input"
+          />
+
+          <input
+            type="date"
+            value={toDateFilter}
+            onChange={(event) => setToDateFilter(event.target.value)}
+            title="To date"
             className="input"
           />
 
@@ -734,7 +772,8 @@ export default function Lubricants() {
           <button
             onClick={() => {
               setProductFilter("")
-              setDateFilter("")
+              setFromDateFilter("")
+              setToDateFilter("")
             }}
             className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] xl:justify-self-start"
           >
@@ -1146,6 +1185,20 @@ export default function Lubricants() {
 
       {bulkOpen ? (
         <ModalShell title="Add Multiple Lubricant Sales" onClose={closeBulkSaleModal}>
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Default Date
+              </span>
+              <input
+                type="date"
+                value={bulkDefaults.date}
+                onChange={(event) => updateBulkDefaultDate(event.target.value)}
+                className="input"
+              />
+            </label>
+          </div>
+
           <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
             {bulkRows.map((row, index) => {
               const product = products.find((item) => item.name === row.product)

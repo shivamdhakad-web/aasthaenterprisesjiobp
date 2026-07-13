@@ -74,7 +74,8 @@ export default function Expenses() {
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
-  const [dateFilter, setDateFilter] = useState("")
+  const [fromDateFilter, setFromDateFilter] = useState("")
+  const [toDateFilter, setToDateFilter] = useState("")
   const [monthFilter, setMonthFilter] = useState(getCurrentMonth())
   const [showFilter, setShowFilter] = useState(false)
   const [openCard, setOpenCard] = useState(null)
@@ -331,11 +332,12 @@ export default function Expenses() {
         return (
           target.includes(search.toLowerCase()) &&
           (!category || expense.category === category) &&
-          (!dateFilter || expense.date === dateFilter) &&
+          (!fromDateFilter || String(expense.date || "") >= fromDateFilter) &&
+          (!toDateFilter || String(expense.date || "") <= toDateFilter) &&
           (!monthFilter || String(expense.date || "").slice(0, 7) === monthFilter)
         )
       }),
-    [category, data, dateFilter, monthFilter, search],
+    [category, data, fromDateFilter, monthFilter, search, toDateFilter],
   )
 
   const summary = useMemo(() => {
@@ -522,7 +524,7 @@ export default function Expenses() {
         </button>
       </div>
 
-      <div className={`mb-5 gap-3 lg:grid lg:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden lg:grid"}`}>
+      <div className={`mb-5 gap-3 lg:grid lg:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,180px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden lg:grid"}`}>
         <select value={category} onChange={(event) => setCategory(event.target.value)} className="input">
           <option value="">All Categories</option>
           {categoryOptions.map((item) => (
@@ -534,8 +536,17 @@ export default function Expenses() {
 
         <input
           type="date"
-          value={dateFilter}
-          onChange={(event) => setDateFilter(event.target.value)}
+          value={fromDateFilter}
+          onChange={(event) => setFromDateFilter(event.target.value)}
+          title="From date"
+          className="input"
+        />
+
+        <input
+          type="date"
+          value={toDateFilter}
+          onChange={(event) => setToDateFilter(event.target.value)}
+          title="To date"
           className="input"
         />
 
@@ -549,7 +560,8 @@ export default function Expenses() {
         <button
           onClick={() => {
             setCategory("")
-            setDateFilter("")
+            setFromDateFilter("")
+            setToDateFilter("")
           }}
           className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] lg:justify-self-start"
         >

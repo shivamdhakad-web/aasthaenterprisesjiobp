@@ -13,7 +13,7 @@ const defaultForm = (machineOptions = [], paymentMethodOptions = []) => ({
   paymentMethod: paymentMethodOptions.includes("Cash") ? "Cash" : paymentMethodOptions[0] || "Cash",
   txnDetails: "",
   machine: machineOptions[0] || "Self",
-  remark: "C.C.",
+  remark: "",
 })
 
 export default function AddCardSwipeModal({
@@ -51,7 +51,7 @@ export default function AddCardSwipeModal({
         paymentMethod: editData.paymentMethod || (paymentMethodOptions.includes("Cash") ? "Cash" : paymentMethodOptions[0]) || "Cash",
         txnDetails: editData.txnDetails || "",
         machine: editData.machine || machineOptions[0] || "Self",
-        remark: editData.remark || "C.C.",
+        remark: editData.remark || "",
       })
       return
     }

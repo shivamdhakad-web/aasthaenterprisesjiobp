@@ -392,9 +392,15 @@ export default function Employees() {
         totals.earned += employeeSummary.earned
         totals.bonus += employeeSummary.bonus
         totals.final += employeeAllSummary.final
+        if (employeeAllSummary.final > 0) {
+          totals.positiveFinal += employeeAllSummary.final
+        }
+        if (employeeAllSummary.final < 0) {
+          totals.negativeFinal += employeeAllSummary.final
+        }
         return totals
       },
-      { earned: 0, bonus: 0, final: 0 },
+      { earned: 0, bonus: 0, final: 0, positiveFinal: 0, negativeFinal: 0 },
     )
   }, [allAttendanceByEmployee, employees, selectedMonth])
 
@@ -422,6 +428,20 @@ export default function Employees() {
         ring: "border-blue-200 bg-blue-50/80",
       },
       {
+        key: "allPositiveFinalBalance",
+        label: "Positive Final Balance",
+        value: formatCurrency(allEmployeeSalarySummary.positiveFinal),
+        accent: "text-emerald-600",
+        ring: "border-emerald-200 bg-emerald-50/80",
+      },
+      {
+        key: "allNegativeFinalBalance",
+        label: "Negative Final Balance",
+        value: formatCurrency(allEmployeeSalarySummary.negativeFinal),
+        accent: "text-rose-600",
+        ring: "border-rose-200 bg-rose-50/80",
+      },
+      {
         key: "allFinalBalance",
         label: "All Final Balance",
         value: formatCurrency(allEmployeeSalarySummary.final),
@@ -429,7 +449,7 @@ export default function Employees() {
         ring: Number(allEmployeeSalarySummary.final) >= 0
           ? "border-blue-200 bg-blue-50/80"
           : "border-rose-200 bg-rose-50/80",
-      },
+      }
     ],
     [allEmployeeSalarySummary],
   )

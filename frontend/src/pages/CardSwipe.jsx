@@ -35,15 +35,31 @@ const formatDateTime = (value) => {
 const buildOptionList = (defaults, values = []) =>
   [...new Set([...defaults, ...values.filter(Boolean).map((item) => String(item).trim())])]
 
-const defaultBulkRow = () => ({
+const calculateChargeFromPercent = (amount, percent) => {
+  if (percent === "" || amount === "") {
+    return "0"
+  }
+
+  const chargeAmount = (Number(amount || 0) * Number(percent || 0)) / 100
+  return Number.isFinite(chargeAmount) ? String(Number(chargeAmount.toFixed(2))) : "0"
+}
+
+const defaultBulkDefaults = () => ({
   date: getToday(),
+  dateApplied: false,
+  chargePercent: "",
+  chargePercentApplied: false,
+})
+
+const defaultBulkRow = (defaults = defaultBulkDefaults()) => ({
+  date: defaults.date || getToday(),
   time: "",
   amount: "",
-  charges: "0",
+  charges: calculateChargeFromPercent("", defaults.chargePercent),
   paymentMethod: "Cash",
   txnDetails: "",
   machine: "Self",
-  remark: "C.C.",
+  remark: "",
 })
 
 export default function CardSwipe() {
@@ -73,6 +89,7 @@ export default function CardSwipe() {
   const [entryModePrompt, setEntryModePrompt] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkSaving, setBulkSaving] = useState(false)
+  const [bulkDefaults, setBulkDefaults] = useState(defaultBulkDefaults())
   const [bulkRows, setBulkRows] = useState([defaultBulkRow()])
 
   useEffect(() => {
@@ -333,23 +350,70 @@ export default function CardSwipe() {
       return
     }
 
-    setBulkRows([defaultBulkRow()])
+    const defaults = defaultBulkDefaults()
+    setBulkDefaults(defaults)
+    setBulkRows([defaultBulkRow(defaults)])
     setBulkOpen(true)
   }
 
   const closeBulkModal = () => {
+    const defaults = defaultBulkDefaults()
     setBulkOpen(false)
-    setBulkRows([defaultBulkRow()])
+    setBulkDefaults(defaults)
+    setBulkRows([defaultBulkRow(defaults)])
   }
 
   const updateBulkRow = (index, key, value) => {
     setBulkRows((current) =>
-      current.map((row, rowIndex) => (rowIndex === index ? { ...row, [key]: value } : row)),
+      current.map((row, rowIndex) => {
+        if (rowIndex !== index) {
+          return row
+        }
+
+        if (key === "amount" && bulkDefaults.chargePercent !== "") {
+          return {
+            ...row,
+            amount: value,
+            charges: calculateChargeFromPercent(value, bulkDefaults.chargePercent),
+          }
+        }
+
+        return { ...row, [key]: value }
+      }),
     )
   }
 
+  const updateBulkDefaultDate = (value) => {
+    setBulkDefaults((current) => {
+      const next = { ...current, date: value, dateApplied: true }
+
+      setBulkRows((rows) =>
+        current.dateApplied ? rows : rows.map((row) => ({ ...row, date: value })),
+      )
+
+      return next
+    })
+  }
+
+  const updateBulkDefaultChargePercent = (value) => {
+    setBulkDefaults((current) => {
+      const next = { ...current, chargePercent: value, chargePercentApplied: true }
+
+      setBulkRows((rows) =>
+        current.chargePercentApplied
+          ? rows
+          : rows.map((row) => ({
+              ...row,
+              charges: calculateChargeFromPercent(row.amount, value),
+            })),
+      )
+
+      return next
+    })
+  }
+
   const addBulkRow = () => {
-    setBulkRows((current) => [...current, defaultBulkRow()])
+    setBulkRows((current) => [...current, defaultBulkRow(bulkDefaults)])
   }
 
   const removeBulkRow = (index) => {
@@ -734,6 +798,34 @@ export default function CardSwipe() {
 
       {bulkOpen ? (
         <ModalShell title="Add Multiple Card Swipe Entries" onClose={closeBulkModal}>
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Default Date
+              </span>
+              <input
+                type="date"
+                value={bulkDefaults.date}
+                onChange={(event) => updateBulkDefaultDate(event.target.value)}
+                className="input"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Default Charges %
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="1, 2, 3"
+                value={bulkDefaults.chargePercent}
+                onChange={(event) => updateBulkDefaultChargePercent(event.target.value)}
+                className="input"
+              />
+            </label>
+          </div>
+
           <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
             {bulkRows.map((row, index) => (
               <div key={`card-bulk-${index}`} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
@@ -1000,7 +1092,6 @@ function ConfirmDialog({
     </div>
   )
 }
-
 
 
 
