@@ -81,6 +81,8 @@ export default function SimpleAuditRegisterPage({ config }) {
     setEntries(Array.isArray(data) ? data : [])
   }
 
+  const hasDateRangeFilter = Boolean(fromDate || toDate)
+
   const filteredEntries = useMemo(
     () =>
       entries.filter((entry) => {
@@ -94,10 +96,11 @@ export default function SimpleAuditRegisterPage({ config }) {
 
         const matchesFromDate = !fromDate || (entryDate && entryDate >= fromDate)
         const matchesToDate = !toDate || (entryDate && entryDate <= toDate)
+        const matchesMonth = hasDateRangeFilter || !monthFilter || entryMonth === monthFilter
 
-        return matchesSearch && (!monthFilter || entryMonth === monthFilter) && matchesFromDate && matchesToDate
+        return matchesSearch && matchesMonth && matchesFromDate && matchesToDate
       }),
-    [config.searchFields, entries, fromDate, monthFilter, search, toDate],
+    [config.searchFields, entries, fromDate, hasDateRangeFilter, monthFilter, search, toDate],
   )
 
   const summary = config.summary(filteredEntries)
@@ -292,7 +295,11 @@ export default function SimpleAuditRegisterPage({ config }) {
       doc.setFontSize(16)
       doc.text(config.title, 14, 16)
       doc.setFontSize(10)
-      doc.text(`Month: ${monthFilter || "All"}  From: ${fromDate || "All"}  To: ${toDate || "All"}  Records: ${filteredEntries.length}`, 14, 24)
+      doc.text(
+        `Month: ${hasDateRangeFilter ? "All" : monthFilter || "All"}  From: ${fromDate || "All"}  To: ${toDate || "All"}  Records: ${filteredEntries.length}`,
+        14,
+        24,
+      )
       autoTable(doc, {
         startY: 30,
         head: [headers],
@@ -330,85 +337,115 @@ export default function SimpleAuditRegisterPage({ config }) {
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-5">
-      <section className="mb-4 rounded-[24px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_14px_28px_rgba(16,24,20,0.06)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500">{config.kicker}</p>
-        <h1 className="mt-2 text-2xl font-bold text-[color:var(--text-strong)] sm:text-3xl">{config.title}</h1>
-        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{config.description}</p>
-      </section>
+    
+      <div className="mb-4 rounded-2xl border border-[var(--border-color)] bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Fuel Pump SVG */}
+          <div
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${config.iconBg || "bg-emerald-50"}`}
+        >
+          {config.icon}
+        </div>
+
+          <div>
+
+            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+              {config.title}
+            </h1>
+            
+          </div>
+        </div>
+
+        <div className="h-1 w-16 rounded-full bg-emerald-200"></div>
+      </div>
+    </div>
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-6">
+      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {summary.map((item) => (
           <SummaryCard key={item.label} {...item} />
         ))}
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={config.searchPlaceholder}
-          className="input w-full sm:max-w-[460px]"
-        />
-        <input
-          type="month"
-          value={monthFilter}
-          onChange={(event) => setMonthFilter(event.target.value)}
-          className="input w-full sm:max-w-[220px]"
-        />
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(event) => setFromDate(event.target.value)}
-          title="From date"
-          className="input w-full sm:max-w-[190px]"
-        />
-        <input
-          type="date"
-          value={toDate}
-          onChange={(event) => setToDate(event.target.value)}
-          title="To date"
-          className="input w-full sm:max-w-[190px]"
-        />
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] sm:inline-flex"
-        >
-          Clear Filters
-        </button>
-        {canManagerUse("addEntry") ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setActionChoiceOpen(true)}
-              className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
-            >
-              Add Entry
-            </button>
-          </>
-        ) : null}
-        {canManagerUse("deleteEntry") ? (
-          <button
-            type="button"
-            onClick={() => {
-              setDeleteMonthValue(monthFilter || currentMonth())
-              setMonthDeleteOpen(true)
-            }}
-            className="hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-semibold text-red-500 sm:inline-flex"
-          >
-            Delete Month
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm sm:inline-flex"
-        >
-          Generate Report
-        </button>
-      </div>
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+  <input
+    value={search}
+    onChange={(event) => setSearch(event.target.value)}
+    placeholder={config.searchPlaceholder}
+    className="input w-full lg:max-w-[420px]"
+  />
+
+  <div className="hidden gap-3 lg:ml-auto lg:flex">
+    {canManagerUse("addEntry") && (
+      <button
+        type="button"
+        onClick={() => setActionChoiceOpen(true)}
+        className="rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm"
+      >
+        + Add Entry
+      </button>
+    )}
+
+
+
+    <button
+      type="button"
+      onClick={() => setReportOpen(true)}
+      className="rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm"
+    >
+      Generate Report
+    </button>
+
+
+    {canManagerUse("deleteEntry") && (
+      <button
+        type="button"
+        onClick={() => {
+          setDeleteMonthValue(monthFilter || currentMonth())
+          setMonthDeleteOpen(true)
+        }}
+        className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-semibold text-red-500"
+      >
+        Delete Month
+      </button>
+    )}
+  </div>
+</div>
+
+<div className="mb-5 rounded-3xl border border-[var(--border-color)] bg-white p-3 shadow-sm">
+  <div className="grid gap-3 lg:grid-cols-[250px_210px_210px_auto]">
+    <input
+      type="month"
+      value={monthFilter}
+      onChange={(event) => setMonthFilter(event.target.value)}
+      className="input"
+    />
+
+    <input
+      type="date"
+      value={fromDate}
+      onChange={(event) => setFromDate(event.target.value)}
+      className="input"
+    />
+
+    <input
+      type="date"
+      value={toDate}
+      onChange={(event) => setToDate(event.target.value)}
+      className="input"
+    />
+
+    <button
+      type="button"
+      onClick={clearFilters}
+      className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)]"
+    >
+      Clear Filters
+    </button>
+  </div>
+</div>
 
       <div className="hidden min-w-0 max-w-full overflow-x-auto rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] sm:block">
         <table className="table min-w-[980px] text-sm">
@@ -907,7 +944,7 @@ function SummaryCard({ label, value, tone = "blue" }) {
 
   return (
     <div className={`rounded-2xl border p-4 shadow-[0_12px_24px_rgba(16,24,20,0.05)] ${tones[tone] || tones.blue}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{label}</p>
+      <p className="font-semibold tracking-[0.18em] text-[color:var(--text-secondary)] text-[13px]">{label}</p>
       <p className="mt-2 text-2xl font-extrabold">{value}</p>
     </div>
   )

@@ -151,8 +151,10 @@ export default function Lubricants() {
   )
 
   const filtered = useMemo(
-    () =>
-      data.filter((entry) => {
+    () => {
+      const hasDateRange = Boolean(fromDateFilter || toDateFilter)
+
+      return data.filter((entry) => {
         const target = [entry.product, entry.date, entry.soldBy, entry.price, entry.total]
           .join(" ")
           .toLowerCase()
@@ -162,9 +164,10 @@ export default function Lubricants() {
           (!productFilter || entry.product === productFilter) &&
           (!fromDateFilter || String(entry.date || "") >= fromDateFilter) &&
           (!toDateFilter || String(entry.date || "") <= toDateFilter) &&
-          (!monthFilter || String(entry.date || "").slice(0, 7) === monthFilter)
+          (hasDateRange || !monthFilter || String(entry.date || "").slice(0, 7) === monthFilter)
         )
-      }),
+      })
+    },
     [data, fromDateFilter, monthFilter, productFilter, search, toDateFilter],
   )
 
@@ -235,12 +238,11 @@ export default function Lubricants() {
   const totalProfit = Number((unitProfit * Number(form.quantity || 0)).toFixed(2))
 
   const getReportData = () =>
-    filtered.filter((entry) => {
-      const entryDate = new Date(entry.date)
-
+    data.filter((entry) => {
+      const entryDate = String(entry.date || "")
       return (
-        (!reportForm.fromDate || entryDate >= new Date(reportForm.fromDate)) &&
-        (!reportForm.toDate || entryDate <= new Date(reportForm.toDate)) &&
+        (!reportForm.fromDate || entryDate >= reportForm.fromDate) &&
+        (!reportForm.toDate || entryDate <= reportForm.toDate) &&
         (!reportForm.reportProduct || entry.product === reportForm.reportProduct)
       )
     })
@@ -665,18 +667,54 @@ export default function Lubricants() {
     setNotice({ type: "success", text: "Report downloaded successfully." })
   }
 
+  const openReportModal = () => {
+    setReportForm((current) => ({
+      ...current,
+      fromDate: fromDateFilter || current.fromDate,
+      toDate: toDateFilter || current.toDate,
+      reportProduct: productFilter || current.reportProduct,
+    }))
+    setReportOpen(true)
+  }
+
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <div className="mb-5 rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
-        <h1 className="text-3xl font-bold text-[color:var(--text-strong)]">Lubricant Sales</h1>
-        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Track product sales, profits, stock updates, and report downloads in one place.
-        </p>
+
+    <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6 text-amber-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 3h6v5l2 2v8a2 2 0 01-2 2H9a2 2 0 01-2-2v-8l2-2V3z"
+          />
+        </svg>
       </div>
+
+      <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+        Lubricant Sales
+      </h1>
+      <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-semibold text-amber-700">
+          {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
+        </span>
+    </div>
+
+    <div className="h-1 w-16 rounded-full bg-amber-200"></div>
+  </div>
+</div>
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-6">
+      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-6">
         <SummaryCard label="Today Sales" value={formatCurrency(summary.todaySales)} tone="blue" />
         <SummaryCard label="Week Sales" value={formatCurrency(summary.weekSales)} tone="amber" />
         <SummaryCard label="Month Sales" value={formatCurrency(summary.monthSales)} tone="violet" />
@@ -685,42 +723,46 @@ export default function Lubricants() {
         <SummaryCard label="Total Profit" value={formatCurrency(summary.totalProfit)} tone="green" />
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 xl:flex-row">
-        <input
-          placeholder="Search product or seller"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="input w-full xl:max-w-[420px]"
-        />
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
+  <input
+    placeholder="Search product or seller"
+    value={search}
+    onChange={(event) => setSearch(event.target.value)}
+    className="input w-full xl:max-w-[420px]"
+  />
+
+  <div className="hidden gap-3 xl:ml-auto xl:flex">
+    <button
+      onClick={openCreateProductModal}
+      className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
+    >
+      + Add Product
+    </button>
+
+    <button
+      onClick={openEntryModePrompt}
+      className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
+    >
+      + Add Sale
+    </button>
+
+    <button
+      onClick={openReportModal}
+      className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm"
+    >
+      Generate Report
+    </button>
 
         <button
-          onClick={openCreateProductModal}
-          className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm xl:inline-flex"
-        >
-          + Add Product
-        </button>
+      onClick={() => setMonthDeleteOpen(true)}
+      className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 font-medium text-amber-700 shadow-sm"
+    >
+      Delete Month
+    </button>
 
-        <button
-          onClick={() => setMonthDeleteOpen(true)}
-          className="hidden rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 font-medium text-amber-700 shadow-sm xl:inline-flex"
-        >
-          Delete Month
-        </button>
 
-        <button
-          onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm xl:inline-flex"
-        >
-          Generate Report
-        </button>
-
-        <button
-          onClick={openEntryModePrompt}
-          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm xl:inline-flex"
-        >
-          + Add Sale
-        </button>
-      </div>
+  </div>
+</div>
 
       <div className="mb-4 xl:hidden">
         <button
@@ -732,7 +774,7 @@ export default function Lubricants() {
       </div>
 
       <div className={`mb-6 ${showFilter ? "block" : "hidden xl:block"}`}>
-        <div className="grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 xl:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,180px)_minmax(0,220px)_auto]">
+        <div className="grid gap-3 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 xl:grid-cols-[minmax(0,250px)_minmax(0,200px)_minmax(0,200px)_minmax(0,240px)_auto]">
           <select
             value={productFilter}
             onChange={(event) => setProductFilter(event.target.value)}
@@ -775,7 +817,7 @@ export default function Lubricants() {
               setFromDateFilter("")
               setToDateFilter("")
             }}
-            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] xl:justify-self-start"
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] font-medium text-[color:var(--text-primary)]"
           >
             Clear Filters
           </button>
@@ -1535,7 +1577,7 @@ export default function Lubricants() {
           {
             label: "Generate Report",
             className: "bg-purple-600",
-            onClick: () => setReportOpen(true),
+            onClick: openReportModal,
           },
           {
             label: "Delete Month",
@@ -1561,7 +1603,7 @@ function SummaryCard({ label, value, tone }) {
 
   return (
     <div className={`rounded-2xl border p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] ${current.panel}`}>
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{label}</p>
+      <p className="font-semibold tracking-[0.18em] text-[color:var(--text-secondary)] text-[13px]">{label}</p>
       <p className={`mt-3 text-2xl font-extrabold ${current.value}`}>{value}</p>
     </div>
   )

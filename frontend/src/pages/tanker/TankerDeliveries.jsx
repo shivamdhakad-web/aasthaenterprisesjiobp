@@ -446,7 +446,7 @@ export default function TankerDeliveries() {
 
       <button
         onClick={clearFilters}
-        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] sm:justify-self-start"
+        className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-25 py-3 font-medium text-[color:var(--text-primary)] sm:justify-self-start"
       >
         Clear Filters
       </button>
@@ -455,12 +455,35 @@ export default function TankerDeliveries() {
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-5">
-      <div className="mb-4 rounded-[24px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_14px_28px_rgba(16,24,20,0.06)]">
-        <h1 className="text-2xl font-bold text-[color:var(--text-strong)] sm:text-3xl">Tanker Deliveries</h1>
-        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Record incoming stock, unloading details, temperature, loss/gain, and audit history.
-        </p>
+  
+  <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-4 py-3 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-50">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="h-6 w-6 text-cyan-600"
+        >
+          <path d="M3 17h18" />
+          <rect x="3" y="8" width="12" height="6" rx="1.5" />
+          <path d="M15 10h3l3 2v2h-6z" />
+          <circle cx="7" cy="18" r="1.5" />
+          <circle cx="18" cy="18" r="1.5" />
+        </svg>
       </div>
+
+      <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+        Tanker Deliveries
+      </h1>
+    </div>
+
+    <div className="h-1 w-16 rounded-full bg-cyan-200"></div>
+  </div>
+</div>
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
@@ -472,7 +495,7 @@ export default function TankerDeliveries() {
         <SummaryCard label="Gain" value={formatLiters(totalGain)} tone="green" />
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           placeholder="Search truck, transport, driver, number, product"
           value={search}
@@ -480,47 +503,51 @@ export default function TankerDeliveries() {
           className="input w-full sm:max-w-[460px]"
         />
 
-        {canManagerUse("addDelivery") ? (
-          <button
-            onClick={openEntryModePrompt}
-            className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-          >
-            Record Delivery
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-        >
-          Generate Report
-        </button>
-        {canManagerUse("deleteDelivery") ? (
+        <div className="hidden gap-3 sm:ml-auto sm:flex">
+          {canManagerUse("addDelivery") ? (
+            <button
+              onClick={openEntryModePrompt}
+              className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
+            >
+              + Add Entry
+            </button>
+          ) : null}
+
           <button
             type="button"
-            onClick={() => {
-              setDeleteMonthValue(getCurrentMonth())
-              setDeleteMonthOpen(true)
-            }}
-            className="hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-medium text-red-500 sm:inline-flex"
+            onClick={() => setReportOpen(true)}
+            className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm"
           >
-            Delete Month
+            Generate Report
           </button>
-        ) : null}
+
+          {canManagerUse("deleteDelivery") ? (
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteMonthValue(getCurrentMonth())
+                setDeleteMonthOpen(true)
+              }}
+              className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-medium text-red-500"
+            >
+              Delete Month
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="mb-3 sm:hidden">
         <button
           onClick={() => setShowFilter((current) => !current)}
-          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+          className="rounded-2xl border border-[var(--border-color)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
         >
           {showFilter ? "Hide Filters" : "Filters"}
         </button>
       </div>
 
-      <div className={`mb-4 gap-3 sm:grid sm:grid-cols-4 ${showFilter ? "grid" : "hidden sm:grid"}`}>
-        {filterContent}
-      </div>
+      <div className={`mb-4 gap-3 rounded-2xl border border-[var(--border-color)] bg-white p-3 sm:grid sm:grid-cols-4 ${showFilter ? "grid" : "hidden sm:grid"}`}>
+  {filterContent}
+</div>
 
       <div className="hidden max-h-[560px] min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] sm:block">
         <table className="table min-w-[1480px] text-xs">

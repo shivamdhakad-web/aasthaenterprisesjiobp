@@ -177,8 +177,10 @@ export default function CardSwipe() {
   }
 
   const filteredEntries = useMemo(
-    () =>
-      entries.filter((entry) => {
+    () => {
+      const hasDateRange = Boolean(startDate || endDate)
+
+      return entries.filter((entry) => {
         const target = [
           entry.machine,
           entry.paymentMethod,
@@ -199,13 +201,14 @@ export default function CardSwipe() {
 
         return (
           target.includes(search.toLowerCase()) &&
-          (!month || entryMonth === month) &&
+          (hasDateRange || !month || entryMonth === month) &&
           (!machine || entry.machine === machine) &&
           (!paymentMethod || entry.paymentMethod === paymentMethod) &&
           (!from || entryDate >= from) &&
           (!to || entryDate <= to)
         )
-      }),
+      })
+    },
     [endDate, entries, machine, month, paymentMethod, search, startDate],
   )
 
@@ -221,7 +224,7 @@ export default function CardSwipe() {
   }, [entries, month])
 
   const getReportData = () =>
-    filteredEntries.filter((entry) => {
+    entries.filter((entry) => {
       const entryDate = new Date(entry.date)
 
       if (entry.time) {
@@ -323,6 +326,14 @@ export default function CardSwipe() {
 
     setReportOpen(false)
     setNotice({ type: "success", text: "Report downloaded successfully." })
+  }
+
+  const openReportModal = () => {
+    setFromDateTime((current) => startDate || current)
+    setToDateTime((current) => endDate || current)
+    setReportMachine((current) => machine || current)
+    setReportPayment((current) => paymentMethod || current)
+    setReportOpen(true)
   }
 
   const openCreateModal = () => {
@@ -543,7 +554,7 @@ export default function CardSwipe() {
         ))}
       </select>
       <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} className="input" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3">
         <button
           type="button"
           className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium text-[color:var(--text-primary)]"
@@ -551,20 +562,49 @@ export default function CardSwipe() {
         >
           Clear
         </button>
-        <button type="button" className="btn btn-red" onClick={askDeleteMonth}>
-          Delete Month
-        </button>
+        
       </div>
     </>
   )
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <h1 className="mb-4 text-3xl font-bold text-[color:var(--text-strong)]">Card Swipe Register</h1>
+      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      {/* Card Swipe SVG */}
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="h-6 w-6 text-blue-600"
+        >
+          <rect x="2" y="5" width="20" height="14" rx="2" />
+          <path d="M2 10h20" />
+          <path d="M7 15h4" />
+        </svg>
+      </div>
+
+      <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+        Card Swipe Register
+      </h1>
+
+      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+        {entries.length} Entries
+      </span>
+    </div>
+
+    <div className="h-1 w-16 rounded-full bg-blue-200"></div>
+  </div>
+  
+      </div>
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-5">
+      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-5">
         <SummaryCard label="Total Swipe" value={formatCurrency(summary.totalAmount)} tone="blue" />
         <SummaryCard label="Total Charges" value={formatCurrency(summary.totalCharges)} tone="amber" />
         <SummaryCard label="Month Profit" value={formatCurrency(monthProfit)} tone="emerald" />
@@ -578,32 +618,42 @@ export default function CardSwipe() {
         <SummaryCard label="DSM Charges" value={formatCurrency(summary.dsmCharges)} tone="rose" />
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <input
-          placeholder="Search swipe, machine, remark"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="input w-full sm:max-w-[420px]"
-        />
-        {canManagerUse("generateReport") ? (
-          <button
-            onClick={() => setReportOpen(true)}
-            className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-          >
-            Generate Report
-          </button>
-        ) : null}
-        {canManagerUse("addEntry") ? (
-          <button
-            className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-            onClick={openEntryModePrompt}
-          >
-            + Add Entry
-          </button>
-        ) : null}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+  <input
+    placeholder="Search swipe, machine, remark"
+    value={search}
+    onChange={(event) => setSearch(event.target.value)}
+    className="input w-full sm:max-w-[420px]"
+  />
+
+  <div className="hidden gap-3 sm:ml-auto sm:flex">
+    
+
+    {canManagerUse("addEntry") ? (
+      <button
+        className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
+        onClick={openEntryModePrompt}
+      >
+        + Add Entry
+      </button>
+    ) : null}
+
+    {canManagerUse("generateReport") ? (
+      <button
+        onClick={openReportModal}
+        className="rounded-2xl bg-fuchsia-800 px-5 py-3 font-medium text-gray-50 shadow-sm"
+      >
+        Generate Report
+      </button>
+    ) : null}
+
+    <button type="button" className="btn btn-red" onClick={askDeleteMonth}>
+          Delete Month
+        </button>
+  </div>
       </div>
 
-      <div className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 sm:block">
+      <div className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:block">
         <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-6">{filterContent}</div>
       </div>
 
@@ -960,7 +1010,7 @@ export default function CardSwipe() {
           {
             label: "Generate Report",
             className: "bg-purple-600",
-            onClick: () => setReportOpen(true),
+            onClick: openReportModal,
           },
           {
             label: "Delete Month",
@@ -990,7 +1040,7 @@ function SummaryCard({ label, value, tone }) {
 
   return (
     <div className={`rounded-2xl border p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] ${current.panel}`}>
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{label}</p>
+      <p className="font-semibold tracking-[0.18em] text-[color:var(--text-secondary)] text-[13px]">{label}</p>
       <p className={`mt-3 text-2xl font-extrabold ${current.value}`}>{value}</p>
     </div>
   )
@@ -1092,6 +1142,4 @@ function ConfirmDialog({
     </div>
   )
 }
-
-
 

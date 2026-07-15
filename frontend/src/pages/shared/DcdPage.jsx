@@ -23,6 +23,22 @@ export default function DcdPage() {
         kicker: "Diesel Credit/Daily Register",
         description: "Track date, volume, purchase price, sale price, profit, shift, remarks, and audit history.",
         pageKey: "dcd",
+        iconBg: "bg-orange-50",
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-6 w-6 text-orange-600"
+          >
+            <ellipse cx="12" cy="5" rx="5" ry="2" />
+            <path d="M7 5v14c0 1.1 2.2 2 5 2s5-.9 5-2V5" />
+            <path d="M7 12c0 1.1 2.2 2 5 2s5-.9 5-2" />
+            <path d="M10 9h4" />
+          </svg>
+        ),
         empty,
         api: {
           list: getDcdEntries,

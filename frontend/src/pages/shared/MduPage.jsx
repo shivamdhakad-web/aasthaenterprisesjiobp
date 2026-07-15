@@ -24,6 +24,13 @@ export default function MduPage() {
         kicker: "MDU DSR Register",
         description: "Track opening stock, decant, sales, physical stock, loss/gain, rate, remarks, and audit history.",
         pageKey: "mdu",
+        icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-emerald-600">
+          <rect x="6" y="3" width="8" height="18" rx="2" />
+          <path d="M14 6h2l2 2v7a2 2 0 0 0 2 2" />
+          <path d="M8 7h4" />
+        </svg>
+      ),
         empty,
         api: {
           list: getMduEntries,

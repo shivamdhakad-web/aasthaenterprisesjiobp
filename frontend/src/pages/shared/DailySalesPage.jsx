@@ -22,6 +22,22 @@ export default function DailySalesPage() {
         kicker: "Daily Sales Register",
         description: "Track product sales, rate, loss/gain, profit, remarks, and audit history.",
         pageKey: "dailySales",
+        iconBg: "bg-blue-50",
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-6 w-6 text-blue-600"
+          >
+            <path d="M4 20h16" />
+            <rect x="5" y="11" width="3" height="7" rx="1" />
+            <rect x="10.5" y="8" width="3" height="10" rx="1" />
+            <rect x="16" y="5" width="3" height="13" rx="1" />
+          </svg>
+        ),
         empty,
         api: {
           list: getDailySales,

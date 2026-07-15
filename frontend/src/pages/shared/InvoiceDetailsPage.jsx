@@ -35,6 +35,22 @@ export default function InvoiceDetailsPage() {
         kicker: "Fuel Invoice Register",
         description: "Track product invoice quantity, invoice amount, transport cost, LFR, purchase amount, remarks, and audit history.",
         pageKey: "invoiceDetails",
+        iconBg: "bg-violet-50",
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-6 w-6 text-violet-600"
+          >
+            <path d="M7 3h10v18l-2-1-2 1-2-1-2 1-2-1V3z" />
+            <path d="M9 8h6" />
+            <path d="M9 12h6" />
+            <path d="M9 16h4" />
+          </svg>
+        ),
         empty,
         api: {
           list: getInvoiceDetails,

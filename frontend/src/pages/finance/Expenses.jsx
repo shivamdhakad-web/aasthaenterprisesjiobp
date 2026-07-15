@@ -317,8 +317,10 @@ export default function Expenses() {
   }
 
   const filteredData = useMemo(
-    () =>
-      data.filter((expense) => {
+    () => {
+      const hasDateRange = Boolean(fromDateFilter || toDateFilter)
+
+      return data.filter((expense) => {
         const target = [
           expense.description,
           expense.category,
@@ -334,9 +336,10 @@ export default function Expenses() {
           (!category || expense.category === category) &&
           (!fromDateFilter || String(expense.date || "") >= fromDateFilter) &&
           (!toDateFilter || String(expense.date || "") <= toDateFilter) &&
-          (!monthFilter || String(expense.date || "").slice(0, 7) === monthFilter)
+          (hasDateRange || !monthFilter || String(expense.date || "").slice(0, 7) === monthFilter)
         )
-      }),
+      })
+    },
     [category, data, fromDateFilter, monthFilter, search, toDateFilter],
   )
 
@@ -376,15 +379,15 @@ export default function Expenses() {
 
   const reportData = useMemo(
     () =>
-      filteredData.filter((expense) => {
-        const expenseDate = new Date(expense.date)
+      data.filter((expense) => {
+        const expenseDate = String(expense.date || "")
         return (
-          (!reportForm.fromDate || expenseDate >= new Date(reportForm.fromDate)) &&
-          (!reportForm.toDate || expenseDate <= new Date(reportForm.toDate)) &&
+          (!reportForm.fromDate || expenseDate >= reportForm.fromDate) &&
+          (!reportForm.toDate || expenseDate <= reportForm.toDate) &&
           (!reportForm.category || expense.category === reportForm.category)
         )
       }),
-    [filteredData, reportForm.category, reportForm.fromDate, reportForm.toDate],
+    [data, reportForm.category, reportForm.fromDate, reportForm.toDate],
   )
 
   const exportPdf = () => {
@@ -472,12 +475,29 @@ export default function Expenses() {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <div className="mb-5 rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
-        <h1 className="text-3xl font-bold text-[color:var(--text-strong)]">Expenses</h1>
-        <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-          Track expense entries, reports, filters, and edit history in one place.
-        </p>
-      </div>
+    
+    <div className="group relative mb-3 flex items-center gap-4 rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] px-5 py-3 shadow-[0_4px_20px_rgba(16,24,20,0.04)] transition-all hover:shadow-[0_8px_30px_rgba(16,24,20,0.08)]">
+  <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-emerald-400 to-emerald-600"></div>
+
+  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 transition-colors group-hover:bg-emerald-500/20">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v20" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  </div>
+
+  <div className="flex items-center gap-3">
+    <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+      Expenses
+    </h1>
+    <span className="rounded-full bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-600">
+  {filteredData?.length || 0} {filteredData?.length === 1 ? 'item' : 'items'}
+</span>
+
+  </div>
+
+  <div className="ml-auto h-0.5 w-12 rounded-full bg-emerald-500/30 transition-all group-hover:w-16 group-hover:bg-emerald-500/60"></div>
+    </div>
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
@@ -488,14 +508,15 @@ export default function Expenses() {
         <SummaryCard label="Total Expense" value={formatCurrency(summary.grandTotal)} tone="violet" />
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row">
-        <input
-          placeholder="Search expense"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="input w-full lg:max-w-[420px]"
-        />
+    <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+      <input
+        placeholder="Search expense"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        className="input w-full lg:max-w-[420px]"
+      />
 
+      <div className="flex gap-3 lg:ml-auto">
         {canManagerUse("addExpense") ? (
           <button
             onClick={openEntryModePrompt}
@@ -507,13 +528,22 @@ export default function Expenses() {
 
         {canManagerUse("generateReport") ? (
           <button
-            onClick={() => setReportOpen(true)}
+            onClick={() => {
+              setReportForm((current) => ({
+                ...current,
+                fromDate: fromDateFilter || current.fromDate,
+                toDate: toDateFilter || current.toDate,
+                category: category || current.category,
+              }))
+              setReportOpen(true)
+            }}
             className="hidden rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm lg:inline-flex"
           >
             Generate Report
           </button>
         ) : null}
       </div>
+    </div>
 
       <div className="mb-3 lg:hidden">
         <button
@@ -524,49 +554,57 @@ export default function Expenses() {
         </button>
       </div>
 
-      <div className={`mb-5 gap-3 lg:grid lg:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,180px)_minmax(0,220px)_auto] ${showFilter ? "grid" : "hidden lg:grid"}`}>
-        <select value={category} onChange={(event) => setCategory(event.target.value)} className="input">
-          <option value="">All Categories</option>
-          {categoryOptions.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
+      <div
+        className={`mb-5 rounded-3xl border border-[var(--border-color)] bg-white p-3 shadow-sm ${
+          showFilter ? "block" : "hidden lg:block"
+        }`}
+      >
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,180px)_minmax(0,220px)_auto]">
+          <select
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            className="input"
+          >
+            <option value="">All Categories</option>
+            {categoryOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
 
-        <input
-          type="date"
-          value={fromDateFilter}
-          onChange={(event) => setFromDateFilter(event.target.value)}
-          title="From date"
-          className="input"
-        />
+          <input
+            type="date"
+            value={fromDateFilter}
+            onChange={(event) => setFromDateFilter(event.target.value)}
+            className="input"
+          />
 
-        <input
-          type="date"
-          value={toDateFilter}
-          onChange={(event) => setToDateFilter(event.target.value)}
-          title="To date"
-          className="input"
-        />
+          <input
+            type="date"
+            value={toDateFilter}
+            onChange={(event) => setToDateFilter(event.target.value)}
+            className="input"
+          />
 
-        <input
-          type="month"
-          value={monthFilter}
-          onChange={(event) => setMonthFilter(event.target.value)}
-          className="input"
-        />
+          <input
+            type="month"
+            value={monthFilter}
+            onChange={(event) => setMonthFilter(event.target.value)}
+            className="input"
+          />
 
-        <button
-          onClick={() => {
-            setCategory("")
-            setFromDateFilter("")
-            setToDateFilter("")
-          }}
-          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)] lg:justify-self-start"
-        >
-          Clear Filters
-        </button>
+          <button
+            onClick={() => {
+              setCategory("")
+              setFromDateFilter("")
+              setToDateFilter("")
+            }}
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)]"
+          >
+            Clear Filters
+          </button>
+        </div>
       </div>
 
       <div className="hidden max-h-[620px] overflow-x-auto overflow-y-auto rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-[0_16px_32px_rgba(16,24,20,0.05)] lg:block">
@@ -1000,7 +1038,15 @@ export default function Expenses() {
             ? {
                 label: "Generate Report",
                 className: "bg-purple-600",
-                onClick: () => setReportOpen(true),
+                onClick: () => {
+                  setReportForm((current) => ({
+                    ...current,
+                    fromDate: fromDateFilter || current.fromDate,
+                    toDate: toDateFilter || current.toDate,
+                    category: category || current.category,
+                  }))
+                  setReportOpen(true)
+                },
               }
             : null,
         ].filter(Boolean)}
@@ -1019,12 +1065,15 @@ function SummaryCard({ label, value, tone }) {
   const current = tones[tone] || tones.blue
 
   return (
-    <div className={`rounded-3xl border p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] ${current.panel}`}>
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">{label}</p>
+    <div className={`rounded-2xl border p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] ${current.panel}`}>
+      <p className="font-semibold tracking-[0.18em] text-[color:var(--text-secondary)] text-[13px]">{label}</p>
       <p className={`mt-3 text-2xl font-extrabold ${current.value}`}>{value}</p>
     </div>
   )
 }
+
+
+
 
 function InlineNotice({ notice }) {
   return (

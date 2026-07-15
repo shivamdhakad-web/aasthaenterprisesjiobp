@@ -218,8 +218,8 @@ const buildAttendanceReportExcel = ({ employee, entries, fromDate, toDate }) => 
   XLSX.writeFile(workbook, `${employee.name}_attendance_report.xlsx`)
 }
 
-const buildEmployeesDirectoryPdf = (employees) => {
-  const doc = new jsPDF()
+const buildEmployeesDirectoryPdf = (employees, getAllFinalBalance = () => 0) => {
+  const doc = new jsPDF({ orientation: "landscape" })
 
   doc.setFont("helvetica", "bold")
   doc.setFontSize(18)
@@ -233,13 +233,14 @@ const buildEmployeesDirectoryPdf = (employees) => {
 
   autoTable(doc, {
     startY: 48,
-    head: [["Name", "Role", "Shift", "Phone", "Salary", "Tshirt", "Pant", "Shoes"]],
+    head: [["Name", "Role", "Shift", "Phone", "Salary", "All Final Balance", "Tshirt", "Pant", "Shoes"]],
     body: employees.map((employee) => [
       employee.name || "-",
       employee.role || "-",
       employee.shift || "-",
       employee.phone || "-",
       formatCurrency(employee.salary),
+      formatCurrency(getAllFinalBalance(employee)),
       employee.tshirt || "-",
       employee.pant || "-",
       employee.shoes || "-",
@@ -999,14 +1000,39 @@ export default function Employees() {
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <div className={selectedEmployee ? "hidden" : "flex flex-col gap-4"}>
-        <div>
-          <h1 className="text-3xl font-bold text-[color:var(--text-strong)]">
-            Employees & Attendance
-          </h1>
-          <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-            Manage employee records, attendance entries, reports, and monthly summaries from one place.
-          </p>
+
+      <div className="mb-0 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* SVG Icon */}
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-6 w-6 text-emerald-600"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+
+            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+              Employees & Attendance
+            </h1>
+
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+              {employees.length} Employees
+            </span>
+          </div>
+
+          <div className="h-1 w-16 rounded-full bg-emerald-200"></div>
         </div>
+      </div>
 
         {notice ? (
           <div
@@ -1032,7 +1058,7 @@ export default function Employees() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 xl:flex-row">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
           <input
             placeholder="Search employee"
             value={search}
@@ -1040,7 +1066,7 @@ export default function Employees() {
             className="input w-full xl:max-w-[420px]"
           />
 
-          <div className="hidden flex-wrap gap-3 sm:flex">
+          <div className="hidden flex-wrap gap-3 sm:flex xl:ml-auto">
             {canManagerUse("addEmployee") ? (
               <button
                 className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
@@ -1056,7 +1082,12 @@ export default function Employees() {
             {canManagerUse("exportPdf") ? (
               <button
                 className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
-                onClick={() => buildEmployeesDirectoryPdf(filteredEmployees)}
+                onClick={() =>
+                  buildEmployeesDirectoryPdf(
+                    filteredEmployees,
+                    getEmployeeAllFinalBalance
+                  )
+                }
               >
                 PDF
               </button>
@@ -1065,7 +1096,9 @@ export default function Employees() {
             {canManagerUse("addEntry") ? (
               <button
                 className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm"
-                onClick={() => openAttendanceModePrompt({ allowEmployeeSelect: true })}
+                onClick={() =>
+                  openAttendanceModePrompt({ allowEmployeeSelect: true })
+                }
               >
                 + Add Entry
               </button>
@@ -1073,7 +1106,7 @@ export default function Employees() {
 
             {canManagerUse("addBonus") ? (
               <button
-                className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
+                className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-gray-50 shadow-sm"
                 onClick={() => openBonusModal()}
               >
                 + Add Bonus
@@ -1336,7 +1369,7 @@ export default function Employees() {
               ) : null}
               {canManagerUse("addBonus") ? (
                 <button
-                  className="rounded-2xl bg-violet-600 px-5 py-3 font-medium text-white shadow-sm"
+                  className="rounded-2xl bg-violet-600 px-5 py-3 font-medium  text-gray-50 shadow-sm"
                   onClick={() => openBonusModal(selectedEmployee._id)}
                 >
                   + Bonus
@@ -1740,7 +1773,7 @@ export default function Employees() {
             ? {
                 label: "Employees PDF",
                 className: "bg-blue-700",
-                onClick: () => buildEmployeesDirectoryPdf(filteredEmployees),
+                onClick: () => buildEmployeesDirectoryPdf(filteredEmployees, getEmployeeAllFinalBalance),
               }
             : null,
           canManagerUse("exportPdf")
