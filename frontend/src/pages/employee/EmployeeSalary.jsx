@@ -342,28 +342,31 @@ export default function EmployeeSalary() {
                     My Salary
                 </span>
 
-                <span className="rounded-full border border-emerald-300 bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800 shadow-sm">
-                    Live
-                </span>
+<span className="ml-[65px] sm:ml-0 rounded-full border border-emerald-300 bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800 shadow-sm">
+    Live
+</span>
             </h1>
 
             <p className="mt-3 max-w-xl text-sm font-medium text-slate-600 sm:text-base">
             </p>
         </div>
 
-        <button
-            type="button"
-            onClick={() => setShowFilters((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white px-5 py-3.5 font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-md"
-        >
-            <Filter size={18} strokeWidth={2} />
-            <span>{showFilters ? "Hide Filters" : "Filter Salary"}</span>
-            {showFilters ? (
-                <ChevronUp size={16} strokeWidth={2.5} />
-            ) : (
-                <ChevronDown size={16} strokeWidth={2.5} />
-            )}
-        </button>
+<button
+    type="button"
+    onClick={() => setShowFilters((v) => !v)}
+    className="inline-flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-white px-5 py-3.5 font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-md"
+>
+    <div className="flex items-center gap-2">
+        <Filter size={18} strokeWidth={2} />
+        <span>{showFilters ? "Hide Filters" : "Filter Salary"}</span>
+    </div>
+
+    {showFilters ? (
+        <ChevronUp size={16} strokeWidth={2.5} />
+    ) : (
+        <ChevronDown size={16} strokeWidth={2.5} />
+    )}
+</button>
     </div>
 
     {showFilters && (
@@ -467,6 +470,16 @@ export default function EmployeeSalary() {
             )}
         </div>
     )}
+
+
+    <div className=" mt-3">
+                <SalaryMetric
+                    label="Final Balance"
+                    value={`₹${formatCurrency(finalBalance)}`}
+                    tone="blue"
+                    icon={metricConfigs.finalBalance.icon}
+                />
+    </div>
 </section>
 
             {/* ====== METRIC CARDS â€“ darker text ====== */}
@@ -525,12 +538,7 @@ export default function EmployeeSalary() {
                     tone="violet"
                     icon={metricConfigs.bonus.icon}
                 />
-                <SalaryMetric
-                    label="Final Balance"
-                    value={`₹${formatCurrency(finalBalance)}`}
-                    tone="blue"
-                    icon={metricConfigs.finalBalance.icon}
-                />
+
             </section>
 
             {/* ====== ENTRIES TABLE ====== */}
