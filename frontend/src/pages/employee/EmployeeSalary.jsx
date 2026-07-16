@@ -342,9 +342,9 @@ export default function EmployeeSalary() {
                     My Salary
                 </span>
 
-<span className="ml-[65px] sm:ml-0 rounded-full border border-emerald-300 bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800 shadow-sm">
-    Live
-</span>
+                <span className="rounded-full border border-emerald-300 bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800 shadow-sm">
+                    Live
+                </span>
             </h1>
 
             <p className="mt-3 max-w-xl text-sm font-medium text-slate-600 sm:text-base">
