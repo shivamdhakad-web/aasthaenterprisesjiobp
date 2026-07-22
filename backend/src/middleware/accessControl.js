@@ -17,6 +17,7 @@ const policyRules = [
   { pattern: /^\/manager-dashboard-settings(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
   { pattern: /^\/manager-dashboard-settings(?:\/|$)/, methods: ["PUT"], roles: ["Admin"] },
   { pattern: /^\/admin-dashboard-settings(?:\/|$)/, methods: ["GET", "PUT"], roles: ["Admin"] },
+  { pattern: /^\/ai(?:\/|$)/, methods: ["POST"], roles: ["Admin", "Manager"] },
   { pattern: /^\/smart-calculator(?:\/|$)/, methods: ["GET", "POST", "DELETE"], roles: ["Admin", "Manager", "Employee"] },
    { pattern: /^\/density-calculator(?:\/|$)/, methods: ["GET", "POST", "DELETE"], roles: ["Admin", "Manager", "Employee"] },
   { pattern: /^\/employee(?:\/|$)/, methods: ["GET", "POST", "PUT"], roles: ["Employee"] },

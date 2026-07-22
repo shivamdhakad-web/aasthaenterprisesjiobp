@@ -1,4 +1,4 @@
-import { Download, FileSpreadsheet, FileText, Plus, X } from "lucide-react"
+import { Download, FileSpreadsheet, FileText, Plus, Sparkles, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -13,6 +13,7 @@ import {
   getExpenses,
   updateExpense,
 } from "../../services/expenseApi"
+import { getAiReportSummary } from "../../services/aiApi"
 
 const defaultCategories = ["Other", "Electricity", "Maintenance", "Salary", "Cleaning", "Miscellaneous"]
 const defaultPaymentModes = ["Cash", "UPI", "Bank"]
@@ -97,6 +98,8 @@ export default function Expenses() {
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkEntries, setBulkEntries] = useState([defaultBulkExpenseRow(user)])
   const [form, setForm] = useState(defaultForm(user))
+  const [aiSummary, setAiSummary] = useState("")
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
 
   useEffect(() => {
     load()
@@ -403,8 +406,19 @@ export default function Expenses() {
     doc.text(`Category: ${reportForm.category || "All Categories"}`, 14, 34)
     doc.text(`Total Amount: ${formatCurrency(total)}`, 14, 40)
 
+    let tableStartY = 48
+
+    if (aiSummary) {
+      doc.setFont("helvetica", "bold")
+      doc.text("AI Notes", 14, 48)
+      doc.setFont("helvetica", "normal")
+      const notes = doc.splitTextToSize(aiSummary, 180)
+      doc.text(notes, 14, 55)
+      tableStartY = 62 + notes.length * 5
+    }
+
     autoTable(doc, {
-      startY: 48,
+      startY: tableStartY,
       head: [["Date", "Category", "Description", "Amount", "Payment Mode", "Added By"]],
       body: reportData.map((expense) => [
         expense.date,
@@ -458,6 +472,60 @@ export default function Expenses() {
 
     setReportOpen(false)
     setNotice({ type: "success", text: "Report downloaded successfully." })
+  }
+
+  const buildExpenseAiPayload = () => {
+    const total = filteredData.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
+    const categoryTotals = filteredData.reduce((totals, expense) => {
+      const key = expense.category || "Uncategorized"
+      totals[key] = (totals[key] || 0) + Number(expense.amount || 0)
+      return totals
+    }, {})
+
+    return {
+      reportType: "Expense",
+      filters: {
+        fromDate: fromDateFilter || "All",
+        toDate: toDateFilter || "All",
+        category: category || "All Categories",
+        month: monthFilter || "All",
+      },
+      totals: {
+        records: filteredData.length,
+        totalAmount: total,
+        categoryTotals,
+      },
+      rows: filteredData.map((expense) => ({
+        date: expense.date,
+        category: expense.category,
+        description: expense.description,
+        amount: Number(expense.amount || 0),
+        paymentMode: expense.paymentMode,
+        addedBy: expense.addedBy,
+      })),
+    }
+  }
+
+  const generateAiSummary = async () => {
+    if (!filteredData.length) {
+      setNotice({ type: "error", text: "No expense data found for AI summary." })
+      return
+    }
+
+    setAiSummaryLoading(true)
+
+    try {
+      const result = await getAiReportSummary(buildExpenseAiPayload())
+      setAiSummary(result.summary || "")
+      setNotice({ type: "success", text: "AI summary generated successfully." })
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to generate AI summary right now.",
+      })
+    } finally {
+      setAiSummaryLoading(false)
+    }
   }
 
   const addInlineOption = (field) => {
@@ -542,8 +610,27 @@ export default function Expenses() {
             Generate Report
           </button>
         ) : null}
+
+        <button
+          onClick={generateAiSummary}
+          disabled={aiSummaryLoading}
+          className="hidden items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60 lg:inline-flex"
+        >
+          <Sparkles size={18} />
+          {aiSummaryLoading ? "Generating..." : "AI Summary"}
+        </button>
       </div>
     </div>
+
+      {aiSummary ? (
+        <div className="mb-5 rounded-3xl border border-emerald-200 bg-emerald-50/70 p-4 text-sm leading-6 text-emerald-900">
+          <div className="mb-2 flex items-center gap-2 font-semibold text-emerald-700">
+            <Sparkles size={18} />
+            AI Summary
+          </div>
+          <p className="whitespace-pre-line">{aiSummary}</p>
+        </div>
+      ) : null}
 
       <div className="mb-3 lg:hidden">
         <button
@@ -1049,6 +1136,11 @@ export default function Expenses() {
                 },
               }
             : null,
+          {
+            label: aiSummaryLoading ? "Generating AI..." : "AI Summary",
+            className: "bg-emerald-600",
+            onClick: generateAiSummary,
+          },
         ].filter(Boolean)}
       />
     </div>
@@ -1208,6 +1300,4 @@ function ConfirmDialog({
     </div>
   )
 }
-
-
 

@@ -15,6 +15,7 @@ const empty = () => ({
   invoiceAmount: "",
   transportCost: "",
   lfr: "",
+  rsp: "",
   remark: "",
 })
 
@@ -28,6 +29,8 @@ const getPurchaseAmount = (entry) =>
   )
 
 const getLfrAmount = (entry) => numberValue(entry.qty) * numberValue(entry.lfr)
+
+const getMargin = (entry) => numberValue(entry.rsp) - getPurchaseAmount(entry)
 
 export default function InvoiceDetailsPage() {
   return (
@@ -66,9 +69,10 @@ export default function InvoiceDetailsPage() {
           { key: "product" },
           { key: "lfr" },
           { key: "qty" },
+          { key: "rsp" },
         ],
-        searchFields: ["date", "product", "qty", "invoiceAmount", "transportCost", "lfr", "remark"],
-        searchPlaceholder: "Search date, product, invoice amount, remark",
+        searchFields: ["date", "product", "qty", "invoiceAmount", "transportCost", "lfr", "rsp", "remark"],
+        searchPlaceholder: "Search date, product, invoice amount, RSP, remark",
         fields: [
           { key: "date", label: "Date", type: "date" },
           { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },
@@ -76,6 +80,7 @@ export default function InvoiceDetailsPage() {
           { key: "invoiceAmount", label: "Invoice Amount", type: "number" },
           { key: "transportCost", label: "Transport Cost", type: "number" },
           { key: "lfr", label: "LFR", type: "number" },
+          { key: "rsp", label: "RSP", type: "number" },
           { key: "remark", label: "Remark", full: true },
         ],
         columns: [
@@ -86,11 +91,18 @@ export default function InvoiceDetailsPage() {
           { key: "transportCost", label: "Transport Cost", render: (entry) => formatNumber(entry.transportCost) },
           { key: "lfr", label: "LFR", render: (entry) => formatNumber(entry.lfr) },
           { key: "lfrAmount", label: "LFR Amount", render: (entry) => formatNumber(getLfrAmount(entry)) },
+          { key: "rsp", label: "RSP", render: (entry) => formatNumber(entry.rsp) },
           {
             key: "purchaseAmount",
             label: "Purchase Amount",
             render: (entry) => formatNumber(getPurchaseAmount(entry)),
             className: () => "font-semibold text-emerald-500",
+          },
+          {
+            key: "margin",
+            label: "Margin",
+            render: (entry) => formatNumber(getMargin(entry)),
+            className: (entry) => (getMargin(entry) >= 0 ? "font-semibold text-emerald-500" : "font-semibold text-rose-500"),
           },
           { key: "remark", label: "Remark" },
         ],
@@ -99,6 +111,8 @@ export default function InvoiceDetailsPage() {
           const invoiceAmount = numberValue(form.invoiceAmount)
           const transportCost = numberValue(form.transportCost)
           const lfr = numberValue(form.lfr)
+          const rsp = numberValue(form.rsp)
+          const purchaseAmount = qty ? (invoiceAmount + transportCost) / qty + lfr : 0
 
           return {
             ...form,
@@ -106,7 +120,8 @@ export default function InvoiceDetailsPage() {
             invoiceAmount,
             transportCost,
             lfr,
-            purchaseAmount: qty ? (invoiceAmount + transportCost) / qty + lfr : 0,
+            rsp,
+            purchaseAmount,
           }
         },
         summary: (entries) => {
@@ -139,11 +154,12 @@ export default function InvoiceDetailsPage() {
           const purchaseAmount = qty
             ? (numberValue(form.invoiceAmount) + numberValue(form.transportCost)) / qty + numberValue(form.lfr)
             : 0
+          const margin = numberValue(form.rsp) - purchaseAmount
 
           return {
-            label: "Calculated Purchase Amount",
-            value: formatNumber(purchaseAmount),
-            className: "text-emerald-500",
+            label: "Calculated Purchase Amount / Margin",
+            value: `${formatNumber(purchaseAmount)} / ${formatNumber(margin)}`,
+            className: margin >= 0 ? "text-emerald-500" : "text-rose-500",
           }
         },
         mobileTitle: (entry) => entry.product || "Product",
@@ -154,6 +170,8 @@ export default function InvoiceDetailsPage() {
           { key: "transportCost", label: "Transport", render: (entry) => formatNumber(entry.transportCost) },
           { key: "lfr", label: "LFR", render: (entry) => formatNumber(entry.lfr) },
           { key: "lfrAmount", label: "LFR Amount", render: (entry) => formatNumber(getLfrAmount(entry)) },
+          { key: "rsp", label: "RSP", render: (entry) => formatNumber(entry.rsp) },
+          { key: "margin", label: "Margin", render: (entry) => formatNumber(getMargin(entry)) },
         ],
       }}
     />

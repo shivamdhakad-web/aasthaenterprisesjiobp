@@ -43,6 +43,7 @@ const billGeneratorRoutes = require("./routes/billGeneratorRoutes")
 const employeeDashboardSettingRoutes = require("./routes/employeeDashboardSettingRoutes")
 const managerDashboardSettingRoutes = require("./routes/managerDashboardSettingRoutes")
 const adminDashboardSettingRoutes = require("./routes/adminDashboardSettingRoutes")
+const aiRoutes = require("./routes/aiRoutes")
 const app = express()
 
 app.use(cors())
@@ -106,5 +107,6 @@ app.use("/api/bill-generator", billGeneratorRoutes)
 app.use("/api/employee-dashboard-settings", employeeDashboardSettingRoutes)
 app.use("/api/manager-dashboard-settings", managerDashboardSettingRoutes)
 app.use("/api/admin-dashboard-settings", adminDashboardSettingRoutes)
+app.use("/api/ai", aiRoutes)
 
 module.exports = app

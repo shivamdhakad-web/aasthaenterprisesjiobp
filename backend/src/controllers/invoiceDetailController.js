@@ -7,6 +7,7 @@ const buildPayload = (payload = {}, audit = {}) => {
   const invoiceAmount = numberValue(payload.invoiceAmount)
   const transportCost = numberValue(payload.transportCost)
   const lfr = numberValue(payload.lfr)
+  const rsp = numberValue(payload.rsp)
 
   return {
     ...payload,
@@ -16,6 +17,7 @@ const buildPayload = (payload = {}, audit = {}) => {
     invoiceAmount,
     transportCost,
     lfr,
+    rsp,
     purchaseAmount: Number(payload.purchaseAmount ?? (qty ? (invoiceAmount + transportCost) / qty + lfr : 0)),
     remark: payload.remark || "",
     ...audit,

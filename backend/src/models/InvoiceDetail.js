@@ -8,6 +8,7 @@ const invoiceDetailSchema = new mongoose.Schema(
     invoiceAmount: { type: Number, default: 0 },
     transportCost: { type: Number, default: 0 },
     lfr: { type: Number, default: 0 },
+    rsp: { type: Number, default: 0 },
     purchaseAmount: { type: Number, default: 0 },
     remark: { type: String, default: "" },
     createdBy: { type: String, default: "" },
