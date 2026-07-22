@@ -97,25 +97,23 @@ export default function DailySalesPage() {
           const msEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "ms")
           const hsdSale = hsdEntries.reduce((sum, entry) => sum + numberValue(entry.sale), 0)
           const msSale = msEntries.reduce((sum, entry) => sum + numberValue(entry.sale), 0)
-          const totalProfit = entries.reduce((sum, entry) => sum + getProfit(entry), 0)
+          const hsdProfit = hsdEntries.reduce((sum, entry) => sum + getProfit(entry), 0)
+          const msProfit = msEntries.reduce((sum, entry) => sum + getProfit(entry), 0)
           const hsdLossGain = hsdEntries.reduce((sum, entry) => sum + numberValue(entry.lossGain), 0)
           const msLossGain = msEntries.reduce((sum, entry) => sum + numberValue(entry.lossGain), 0)
-          const avgRateHsd = hsdEntries.length
-            ? hsdEntries.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / hsdEntries.length
-            : 0
-          const avgRateMs = msEntries.length
-            ? msEntries.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / msEntries.length
-            : 0
+          const avgHsdPrice = hsdSale ? hsdProfit / hsdSale : 0
+          const avgMsPrice = msSale ? msProfit / msSale : 0
 
           return [
             { label: "Entries", value: entries.length, tone: "blue" },
             { label: "HSD Sale", value: formatNumber(hsdSale), tone: "green" },
             { label: "MS Sale", value: formatNumber(msSale), tone: "amber" },
-            { label: "Avg Rate HSD", value: formatNumber(avgRateHsd.toFixed(2)), tone: "violet" },
-            { label: "Avg Rate MS", value: formatNumber(avgRateMs.toFixed(2)), tone: "blue" },
+            { label: "HSD Profit", value: formatNumber(hsdProfit), tone: "green" },
+            { label: "MS Profit", value: formatNumber(msProfit), tone: "amber" },
+            { label: "Avg HSD Price", value: formatNumber(avgHsdPrice.toFixed(2)), tone: "violet" },
+            { label: "Avg MS Price", value: formatNumber(avgMsPrice.toFixed(2)), tone: "blue" },
             { label: "HSD Loss / Gain", value: formatNumber(hsdLossGain.toFixed(2)), tone: hsdLossGain >= 0 ? "green" : "rose" },
             { label: "MS Loss / Gain", value: formatNumber(msLossGain.toFixed(2)), tone: msLossGain >= 0 ? "green" : "rose" },
-            { label: "Total Profit", value: formatNumber(totalProfit), tone: "green" },
           ]
         },
         preview: (form) => {
@@ -139,4 +137,3 @@ export default function DailySalesPage() {
     />
   )
 }
-

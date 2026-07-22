@@ -27,6 +27,8 @@ const getPurchaseAmount = (entry) =>
         : 0),
   )
 
+const getLfrAmount = (entry) => numberValue(entry.qty) * numberValue(entry.lfr)
+
 export default function InvoiceDetailsPage() {
   return (
     <SimpleAuditRegisterPage
@@ -83,6 +85,7 @@ export default function InvoiceDetailsPage() {
           { key: "invoiceAmount", label: "Invoice Amount", render: (entry) => formatNumber(entry.invoiceAmount) },
           { key: "transportCost", label: "Transport Cost", render: (entry) => formatNumber(entry.transportCost) },
           { key: "lfr", label: "LFR", render: (entry) => formatNumber(entry.lfr) },
+          { key: "lfrAmount", label: "LFR Amount", render: (entry) => formatNumber(getLfrAmount(entry)) },
           {
             key: "purchaseAmount",
             label: "Purchase Amount",
@@ -110,14 +113,21 @@ export default function InvoiceDetailsPage() {
           const hsdEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "hsd")
           const msEntries = entries.filter((entry) => String(entry.product || "").toLowerCase() === "ms")
           const sumField = (list, key) => list.reduce((sum, entry) => sum + numberValue(entry[key]), 0)
-          const avgPurchase = (list) =>
-            list.length ? list.reduce((sum, entry) => sum + getPurchaseAmount(entry), 0) / list.length : 0
+          const sumLfrAmount = (list) => list.reduce((sum, entry) => sum + getLfrAmount(entry), 0)
+          const avgPurchase = (list) => {
+            const totalQty = sumField(list, "qty")
+            if (!totalQty) return 0
+
+            return (sumField(list, "invoiceAmount") + sumField(list, "transportCost") + sumLfrAmount(list)) / totalQty
+          }
 
           return [
             { label: "HSD Total Qty", value: formatNumber(sumField(hsdEntries, "qty")), tone: "green" },
             { label: "MS Total Qty", value: formatNumber(sumField(msEntries, "qty")), tone: "amber" },
-            { label: "Avg Purchase Rate HSD", value: formatNumber(avgPurchase(hsdEntries).toFixed(2)), tone: "violet" },
-            { label: "Avg Purchase Rate MS", value: formatNumber(avgPurchase(msEntries).toFixed(2)), tone: "blue" },
+            { label: "Total HSD LFR Amount", value: formatNumber(sumLfrAmount(hsdEntries)), tone: "violet" },
+            { label: "Total MS LFR Amount", value: formatNumber(sumLfrAmount(msEntries)), tone: "blue" },
+            { label: "Avg Purchase Rate HSD", value: formatNumber(avgPurchase(hsdEntries).toFixed(2)), tone: "green" },
+            { label: "Avg Purchase Rate MS", value: formatNumber(avgPurchase(msEntries).toFixed(2)), tone: "amber" },
             { label: "Total Invoice Amount HSD", value: formatNumber(sumField(hsdEntries, "invoiceAmount")), tone: "green" },
             { label: "Total Transport Cost HSD", value: formatNumber(sumField(hsdEntries, "transportCost")), tone: "rose" },
             { label: "Total Invoice Amount MS", value: formatNumber(sumField(msEntries, "invoiceAmount")), tone: "amber" },
@@ -143,9 +153,9 @@ export default function InvoiceDetailsPage() {
           { key: "invoiceAmount", label: "Invoice", render: (entry) => formatNumber(entry.invoiceAmount) },
           { key: "transportCost", label: "Transport", render: (entry) => formatNumber(entry.transportCost) },
           { key: "lfr", label: "LFR", render: (entry) => formatNumber(entry.lfr) },
+          { key: "lfrAmount", label: "LFR Amount", render: (entry) => formatNumber(getLfrAmount(entry)) },
         ],
       }}
     />
   )
 }
-
