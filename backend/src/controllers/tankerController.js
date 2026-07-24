@@ -22,7 +22,7 @@ const buildDeliveryPayload = (payload = {}, audit = {}) => {
     finalTemp: numberValue(payload.finalTemp),
     fuelSales: numberValue(payload.fuelSales),
     unloadedQty,
-    lossGain: qty - unloadedQty,
+    lossGain: numberValue(payload.lossGain),
     supplier: payload.supplier || payload.transportName || "",
     fuel: payload.fuel || payload.product || "",
     invoice: payload.invoice || payload.truckNo || "",

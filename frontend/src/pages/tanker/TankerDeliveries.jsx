@@ -31,6 +31,7 @@ const emptyDelivery = () => ({
   finalTemp: "",
   fuelSales: "",
   unloadedQty: "",
+  lossGain: "",
 })
 
 const numberValue = (value) => Number(value || 0)
@@ -61,7 +62,7 @@ const normalizeDelivery = (delivery = {}) => ({
   transportName: delivery.transportName || delivery.supplier || "",
   product: delivery.product || delivery.fuel || "Diesel",
   qty: delivery.qty ?? delivery.quantity ?? "",
-  lossGain: delivery.lossGain ?? numberValue(delivery.qty ?? delivery.quantity) - numberValue(delivery.unloadedQty),
+  lossGain: delivery.lossGain ?? "",
 })
 
 const buildPayload = (form, user) => {
@@ -78,7 +79,7 @@ const buildPayload = (form, user) => {
     finalTemp: numberValue(form.finalTemp),
     fuelSales: numberValue(form.fuelSales),
     unloadedQty,
-    lossGain: qty - unloadedQty,
+    lossGain: numberValue(form.lossGain),
     supplier: form.transportName,
     fuel: form.product,
     invoice: form.truckNo,
@@ -844,18 +845,9 @@ function DeleteMonthModal({ value, setValue, onClose, onDelete }) {
 }
 
 function DeliveryModal({ title, form, setForm, productOptions, onClose, onSave, saving }) {
-  const lossGain = numberValue(form.qty) - numberValue(form.unloadedQty)
-
   return (
     <ModalShell title={title} onClose={onClose} maxWidth="max-w-2xl">
       <DeliveryFields form={form} setForm={setForm} productOptions={productOptions} />
-
-      <div className="mt-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
-        <p className="text-sm text-[color:var(--text-secondary)]">Loss / Gain</p>
-        <p className={`mt-2 text-2xl font-bold ${lossGain >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-          {formatLiters(lossGain)}
-        </p>
-      </div>
 
       <div className="mt-5 flex justify-end gap-3">
         <button
@@ -882,10 +874,7 @@ function DeliveryBulkModal({ rows, productOptions, updateRow, addRow, removeRow,
   return (
     <ModalShell title="Record Multiple Tanker Deliveries" onClose={onClose} maxWidth="max-w-3xl">
       <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
-        {rows.map((row, index) => {
-          const lossGain = numberValue(row.qty) - numberValue(row.unloadedQty)
-
-          return (
+        {rows.map((row, index) => (
             <div key={`bulk-tanker-${index}`} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="font-semibold text-[color:var(--text-strong)]">Entry {index + 1}</p>
@@ -906,16 +895,8 @@ function DeliveryBulkModal({ rows, productOptions, updateRow, addRow, removeRow,
                 productOptions={productOptions}
                 compact
               />
-
-              <div className="mt-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 text-sm">
-                <span className="text-[color:var(--text-secondary)]">Loss / Gain: </span>
-                <span className={`font-semibold ${lossGain >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                  {formatLiters(lossGain)}
-                </span>
-              </div>
             </div>
-          )
-        })}
+        ))}
       </div>
 
       <button
@@ -971,6 +952,7 @@ function DeliveryFields({ form, setForm, productOptions, compact = false }) {
       <input placeholder="Final Temp" value={form.finalTemp} onChange={(event) => update("finalTemp", event.target.value)} className="input" />
       <input placeholder="Fuel Sales" value={form.fuelSales} onChange={(event) => update("fuelSales", event.target.value)} className="input" />
       <input placeholder="Unloaded Qty" value={form.unloadedQty} onChange={(event) => update("unloadedQty", event.target.value)} className="input" />
+      <input placeholder="Loss/Gain" value={form.lossGain} onChange={(event) => update("lossGain", event.target.value)} className="input" />
     </div>
   )
 }

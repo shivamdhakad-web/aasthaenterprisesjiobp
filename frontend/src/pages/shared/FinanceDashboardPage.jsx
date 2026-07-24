@@ -73,6 +73,10 @@ const getMduLossGain = (entry) =>
 const getDcdProfit = (entry) =>
   Number(entry.profit ?? (numberValue(entry.salePrice) - numberValue(entry.purchasePrice)) * numberValue(entry.volume))
 
+const getDailySaleProfit = (entry) => Number(entry.profit ?? numberValue(entry.sale) * numberValue(entry.rate))
+
+const getLfrAmount = (entry) => numberValue(entry.qty) * numberValue(entry.lfr)
+
 const getPurchaseAmount = (entry) =>
   Number(
     entry.purchaseAmount ??
@@ -190,22 +194,34 @@ export default function FinanceDashboardPage() {
     const msDaily = dailySales.filter((entry) => String(entry.product || "").toLowerCase() === "ms")
     const hsdSale = hsdDaily.reduce((sum, entry) => sum + numberValue(entry.sale), 0)
     const msSale = msDaily.reduce((sum, entry) => sum + numberValue(entry.sale), 0)
+    const hsdDailyProfit = hsdDaily.reduce((sum, entry) => sum + getDailySaleProfit(entry), 0)
+    const msDailyProfit = msDaily.reduce((sum, entry) => sum + getDailySaleProfit(entry), 0)
     const hsdLossGain = hsdDaily.reduce((sum, entry) => sum + numberValue(entry.lossGain), 0)
     const msLossGain = msDaily.reduce((sum, entry) => sum + numberValue(entry.lossGain), 0)
-    const avgRateHsd = hsdDaily.length
-      ? hsdDaily.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / hsdDaily.length
-      : 0
-    const avgRateMs = msDaily.length
-      ? msDaily.reduce((sum, entry) => sum + numberValue(entry.rate), 0) / msDaily.length
-      : 0
+    const avgRateHsd = hsdSale ? hsdDailyProfit / hsdSale : 0
+    const avgRateMs = msSale ? msDailyProfit / msSale : 0
 
     const hsdInvoices = invoiceDetails.filter((entry) => String(entry.product || "").toLowerCase() === "hsd")
     const msInvoices = invoiceDetails.filter((entry) => String(entry.product || "").toLowerCase() === "ms")
-    const avgPurchaseHsd = hsdInvoices.length
-      ? hsdInvoices.reduce((sum, entry) => sum + getPurchaseAmount(entry), 0) / hsdInvoices.length
+    const invoiceTotals = (list) =>
+      list.reduce(
+        (totals, entry) => ({
+          qty: totals.qty + numberValue(entry.qty),
+          invoiceAmount: totals.invoiceAmount + numberValue(entry.invoiceAmount),
+          transportCost: totals.transportCost + numberValue(entry.transportCost),
+          lfrAmount: totals.lfrAmount + getLfrAmount(entry),
+        }),
+        { qty: 0, invoiceAmount: 0, transportCost: 0, lfrAmount: 0 },
+      )
+    const hsdInvoiceTotals = invoiceTotals(hsdInvoices)
+    const msInvoiceTotals = invoiceTotals(msInvoices)
+    const avgPurchaseHsd = hsdInvoiceTotals.qty
+      ? (hsdInvoiceTotals.invoiceAmount + hsdInvoiceTotals.transportCost + hsdInvoiceTotals.lfrAmount) /
+        hsdInvoiceTotals.qty
       : 0
-    const avgPurchaseMs = msInvoices.length
-      ? msInvoices.reduce((sum, entry) => sum + getPurchaseAmount(entry), 0) / msInvoices.length
+    const avgPurchaseMs = msInvoiceTotals.qty
+      ? (msInvoiceTotals.invoiceAmount + msInvoiceTotals.transportCost + msInvoiceTotals.lfrAmount) /
+        msInvoiceTotals.qty
       : 0
 
     const msMargin = avgRateMs - avgPurchaseMs
@@ -368,7 +384,6 @@ export default function FinanceDashboardPage() {
     </div>
   )
 }
-
 
 
 

@@ -73,6 +73,11 @@ export default function InvoiceDetailsPage() {
         ],
         searchFields: ["date", "product", "qty", "invoiceAmount", "transportCost", "lfr", "rsp", "remark"],
         searchPlaceholder: "Search date, product, invoice amount, RSP, remark",
+        categoryFilter: {
+          keys: ["product", "qty"],
+          allLabel: "All Categories",
+          options: ["MS", "HSD", "19000", "22000", "24000", "12000", "14000"],
+        },
         fields: [
           { key: "date", label: "Date", type: "date" },
           { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },

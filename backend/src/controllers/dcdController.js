@@ -10,6 +10,7 @@ const buildPayload = (payload = {}, audit = {}) => {
   return {
     ...payload,
     date: payload.date,
+    product: payload.product || "",
     volume,
     purchasePrice,
     salePrice,

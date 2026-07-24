@@ -97,6 +97,14 @@ export default function Expenses() {
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkEntries, setBulkEntries] = useState([defaultBulkExpenseRow(user)])
+  const [bulkDefaults, setBulkDefaults] = useState({
+    date: getToday(),
+    category: defaultCategories[0],
+  })
+  const [bulkDefaultsApplied, setBulkDefaultsApplied] = useState({
+    date: false,
+    category: false,
+  })
   const [form, setForm] = useState(defaultForm(user))
   const [aiSummary, setAiSummary] = useState("")
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
@@ -168,7 +176,14 @@ export default function Expenses() {
       return
     }
 
-    setBulkEntries([defaultBulkExpenseRow(user)])
+    const defaults = {
+      date: getToday(),
+      category: defaultCategories[0],
+    }
+
+    setBulkDefaults(defaults)
+    setBulkDefaultsApplied({ date: false, category: false })
+    setBulkEntries([{ ...defaultBulkExpenseRow(user), ...defaults }])
     setBulkOpen(true)
   }
 
@@ -268,8 +283,22 @@ export default function Expenses() {
     )
   }
 
+  const updateBulkDefault = (key, value) => {
+    setBulkDefaults((current) => ({ ...current, [key]: value }))
+
+    setBulkDefaultsApplied((current) => {
+      const shouldApplyRows = !current[key]
+
+      if (shouldApplyRows) {
+        setBulkEntries((entries) => entries.map((entry) => ({ ...entry, [key]: value })))
+      }
+
+      return { ...current, [key]: true }
+    })
+  }
+
   const addBulkEntryRow = () => {
-    setBulkEntries((current) => [...current, defaultBulkExpenseRow(user)])
+    setBulkEntries((current) => [...current, { ...defaultBulkExpenseRow(user), ...bulkDefaults }])
   }
 
   const removeBulkEntryRow = (index) => {
@@ -303,6 +332,8 @@ export default function Expenses() {
       }
 
       setBulkOpen(false)
+      setBulkDefaults({ date: getToday(), category: defaultCategories[0] })
+      setBulkDefaultsApplied({ date: false, category: false })
       setBulkEntries([defaultBulkExpenseRow(user)])
       setNotice({
         type: "success",
@@ -911,7 +942,45 @@ export default function Expenses() {
       ) : null}
 
       {bulkOpen ? (
-        <ModalShell title="Add Multiple Expenses" onClose={() => setBulkOpen(false)}>
+        <ModalShell
+          title="Add Multiple Expenses"
+          onClose={() => {
+            setBulkOpen(false)
+            setBulkDefaults({ date: getToday(), category: defaultCategories[0] })
+            setBulkDefaultsApplied({ date: false, category: false })
+          }}
+        >
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Default Date
+              </span>
+              <input
+                type="date"
+                value={bulkDefaults.date}
+                onChange={(event) => updateBulkDefault("date", event.target.value)}
+                className="input"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Default Category
+              </span>
+              <select
+                value={bulkDefaults.category}
+                onChange={(event) => updateBulkDefault("category", event.target.value)}
+                className="input"
+              >
+                {categoryOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
             {bulkEntries.map((entry, index) => (
               <div key={`${index}-${entry.date}`} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4">

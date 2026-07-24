@@ -53,6 +53,11 @@ export default function DailySalesPage() {
         ],
         searchFields: ["date", "product", "sale", "rate", "lossGain", "profit", "remark"],
         searchPlaceholder: "Search date, product, sale, remark",
+        categoryFilter: {
+          key: "product",
+          allLabel: "All Categories",
+          options: ["MS", "HSD"],
+        },
         fields: [
           { key: "date", label: "Date", type: "date" },
           { key: "product", label: "Product", type: "select", options: ["HSD", "MS"] },

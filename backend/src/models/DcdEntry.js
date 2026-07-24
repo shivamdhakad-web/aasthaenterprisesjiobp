@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const dcdEntrySchema = new mongoose.Schema(
   {
     date: { type: String, required: true },
+    product: { type: String, default: "" },
     volume: { type: Number, default: 0 },
     purchasePrice: { type: Number, default: 0 },
     salePrice: { type: Number, default: 0 },

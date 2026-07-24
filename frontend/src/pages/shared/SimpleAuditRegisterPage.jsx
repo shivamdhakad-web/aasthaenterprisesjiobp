@@ -45,6 +45,7 @@ export default function SimpleAuditRegisterPage({ config }) {
 
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("")
   const [monthFilter, setMonthFilter] = useState(currentMonth())
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
@@ -82,6 +83,7 @@ export default function SimpleAuditRegisterPage({ config }) {
   }
 
   const hasDateRangeFilter = Boolean(fromDate || toDate)
+  const categoryFilterConfig = config.categoryFilter
 
   const filteredEntries = useMemo(
     () =>
@@ -97,10 +99,16 @@ export default function SimpleAuditRegisterPage({ config }) {
         const matchesFromDate = !fromDate || (entryDate && entryDate >= fromDate)
         const matchesToDate = !toDate || (entryDate && entryDate <= toDate)
         const matchesMonth = hasDateRangeFilter || !monthFilter || entryMonth === monthFilter
+        const matchesCategory =
+          !categoryFilterConfig ||
+          !categoryFilter ||
+          (categoryFilterConfig.keys || [categoryFilterConfig.key]).some(
+            (key) => String(entry[key] || "").toLowerCase() === categoryFilter.toLowerCase(),
+          )
 
-        return matchesSearch && matchesMonth && matchesFromDate && matchesToDate
+        return matchesSearch && matchesCategory && matchesMonth && matchesFromDate && matchesToDate
       }),
-    [config.searchFields, entries, fromDate, hasDateRangeFilter, monthFilter, search, toDate],
+    [categoryFilter, categoryFilterConfig, config.searchFields, entries, fromDate, hasDateRangeFilter, monthFilter, search, toDate],
   )
 
   const summary = config.summary(filteredEntries)
@@ -270,6 +278,7 @@ export default function SimpleAuditRegisterPage({ config }) {
 
   const clearFilters = () => {
     setSearch("")
+    setCategoryFilter("")
     setMonthFilter(currentMonth())
     setFromDate("")
     setToDate("")
@@ -415,7 +424,22 @@ export default function SimpleAuditRegisterPage({ config }) {
 </div>
 
 <div className="mb-5 rounded-3xl border border-[var(--border-color)] bg-white p-3 shadow-sm">
-  <div className="grid gap-3 lg:grid-cols-[250px_210px_210px_auto]">
+  <div className={`grid gap-3 ${categoryFilterConfig ? "lg:grid-cols-[220px_190px_190px_190px_auto]" : "lg:grid-cols-[250px_210px_210px_auto]"}`}>
+    {categoryFilterConfig ? (
+      <select
+        value={categoryFilter}
+        onChange={(event) => setCategoryFilter(event.target.value)}
+        className="input"
+      >
+        <option value="">{categoryFilterConfig.allLabel || "All Categories"}</option>
+        {(categoryFilterConfig.options || []).map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    ) : null}
+
     <input
       type="month"
       value={monthFilter}
@@ -454,7 +478,7 @@ export default function SimpleAuditRegisterPage({ config }) {
               {config.columns.map((column) => (
                 <th key={column.key}>{column.label}</th>
               ))}
-              <th>Audit</th>
+              <th className="min-w-[170px]">Audit</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -466,11 +490,9 @@ export default function SimpleAuditRegisterPage({ config }) {
                     {column.render ? column.render(entry) : entry[column.key] || "-"}
                   </td>
                 ))}
-                <td className="text-left text-xs leading-5 text-[color:var(--text-secondary)]">
-                  <div>Edited: {formatDateTime(entry.lastEditedAt)}</div>
-                  <div>
-                    By: {entry.lastEditedBy || "-"} {entry.lastEditedByRole ? `(${entry.lastEditedByRole})` : ""}
-                  </div>
+                <td className="min-w-[170px] whitespace-nowrap text-center text-[11px] leading-4 text-[color:var(--text-secondary)]">
+                  Edited: {formatDateTime(entry.lastEditedAt)} | By: {entry.lastEditedBy || "-"}{" "}
+                  {entry.lastEditedByRole ? `(${entry.lastEditedByRole})` : ""}
                 </td>
                 <td>
                   <div className="flex items-center justify-center gap-3">
@@ -714,7 +736,15 @@ function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, pre
 
         <div className="grid gap-3 sm:grid-cols-2">
           {fields.map((field) =>
-            field.type === "select" ? (
+            field.type === "select" && field.allowCustomOption ? (
+              <CustomSelectField
+                key={field.key}
+                field={field}
+                value={form[field.key] ?? ""}
+                onChange={(value) => update(field.key, value)}
+                className={field.full ? "sm:col-span-2" : ""}
+              />
+            ) : field.type === "select" ? (
               <select
                 key={field.key}
                 value={form[field.key] ?? ""}
@@ -796,7 +826,14 @@ function BulkEntryModal({
         {defaultFields.length ? (
           <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {defaultFields.map((field) =>
-              field.type === "select" ? (
+              field.type === "select" && field.allowCustomOption ? (
+                <CustomSelectField
+                  key={field.key}
+                  field={{ ...field, label: `Default ${field.label}` }}
+                  value={bulkDefaults[field.key] ?? ""}
+                  onChange={(value) => updateBulkDefault(field.key, value)}
+                />
+              ) : field.type === "select" ? (
                 <label key={field.key} className="block">
                   <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                     Default {field.label}
@@ -843,7 +880,15 @@ function BulkEntryModal({
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleFields.map((field) =>
-                  field.type === "select" ? (
+                  field.type === "select" && field.allowCustomOption ? (
+                    <CustomSelectField
+                      key={field.key}
+                      field={field}
+                      value={row[field.key] ?? ""}
+                      onChange={(value) => updateRow(index, field.key, value)}
+                      className={field.full ? "lg:col-span-3" : ""}
+                    />
+                  ) : field.type === "select" ? (
                     <select
                       key={field.key}
                       value={row[field.key] ?? ""}
@@ -887,6 +932,61 @@ function BulkEntryModal({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function CustomSelectField({ field, value, onChange, className = "" }) {
+  const [adding, setAdding] = useState(false)
+  const [customValue, setCustomValue] = useState("")
+
+  const addOption = () => {
+    const nextValue = customValue.trim()
+
+    if (!nextValue) {
+      return
+    }
+
+    field.onAddOption?.(nextValue)
+    onChange(nextValue)
+    setCustomValue("")
+    setAdding(false)
+  }
+
+  return (
+    <div className={className}>
+      <div className="flex gap-2">
+        <select value={value} onChange={(event) => onChange(event.target.value)} className="input min-w-0 flex-1">
+          <option value="">{field.label}</option>
+          {(field.options || []).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => setAdding((current) => !current)}
+          title={`Add ${field.label}`}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-xl font-semibold text-[color:var(--text-primary)]"
+        >
+          +
+        </button>
+      </div>
+
+      {adding ? (
+        <div className="mt-2 flex gap-2">
+          <input
+            value={customValue}
+            onChange={(event) => setCustomValue(event.target.value)}
+            placeholder={`New ${field.label}`}
+            className="input min-w-0 flex-1"
+          />
+          <button type="button" onClick={addOption} className="rounded-xl bg-blue-600 px-4 py-2 text-white">
+            Add
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
