@@ -37,19 +37,33 @@ export function ThemeProvider({ children }) {
   }, [theme])
 
   useEffect(() => {
-    const activeZoom = ZOOM_STEPS.includes(Number(zoomLevel)) ? Number(zoomLevel) : DEFAULT_ZOOM
-    const zoomFactor = activeZoom / 100
-    const screenVh = (100 / zoomFactor).toFixed(3) + "vh"
+    const applyZoom = () => {
+      const isMobile = window.innerWidth < 768
+      const activeZoom = isMobile
+        ? 100
+        : ZOOM_STEPS.includes(Number(zoomLevel))
+        ? Number(zoomLevel)
+        : DEFAULT_ZOOM
 
-    document.documentElement.style.zoom = `${activeZoom}%`
-    document.documentElement.style.setProperty("--app-screen-height", screenVh)
-    document.documentElement.style.setProperty("--app-zoom-factor", String(zoomFactor))
+      const zoomFactor = activeZoom / 100
+      const screenVh = (100 / zoomFactor).toFixed(3) + "vh"
 
-    const bg = theme === "day" ? "#f4f5ef" : "#04060b"
-    document.documentElement.style.backgroundColor = bg
-    document.body.style.backgroundColor = bg
+      document.documentElement.style.zoom = `${activeZoom}%`
+      document.documentElement.style.setProperty("--app-screen-height", screenVh)
+      document.documentElement.style.setProperty("--app-zoom-factor", String(zoomFactor))
 
-    window.localStorage.setItem(ZOOM_STORAGE_KEY, String(activeZoom))
+      const bg = theme === "day" ? "#f4f5ef" : "#04060b"
+      document.documentElement.style.backgroundColor = bg
+      document.body.style.backgroundColor = bg
+
+      if (!isMobile) {
+        window.localStorage.setItem(ZOOM_STORAGE_KEY, String(activeZoom))
+      }
+    }
+
+    applyZoom()
+    window.addEventListener("resize", applyZoom)
+    return () => window.removeEventListener("resize", applyZoom)
   }, [zoomLevel, theme])
 
   const zoomIn = () => {

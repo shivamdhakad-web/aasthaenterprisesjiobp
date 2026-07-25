@@ -34,6 +34,8 @@ export default function DcdPage() {
         description: "Track date, volume, purchase price, sale price, profit, shift, remarks, and audit history.",
         pageKey: "dcd",
         iconBg: "bg-orange-50",
+        badgeStyle: "bg-orange-100 text-orange-700",
+        lineStyle: "bg-orange-200",
         icon: (
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -122,7 +124,6 @@ export default function DcdPage() {
             : 0
 
           return [
-            { label: "Entries", value: entries.length, tone: "blue" },
             { label: "Total Volume", value: formatNumber(totalVolume), tone: "green" },
             { label: "Total Profit", value: formatNumber(totalProfit), tone: totalProfit >= 0 ? "green" : "rose" },
             { label: "Avg Sale Price", value: formatNumber(avgSale), tone: "amber" },

@@ -23,6 +23,8 @@ export default function DailySalesPage() {
         description: "Track product sales, rate, loss/gain, profit, remarks, and audit history.",
         pageKey: "dailySales",
         iconBg: "bg-blue-50",
+        badgeStyle: "bg-blue-100 text-blue-700",
+        lineStyle: "bg-blue-200",
         icon: (
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -110,7 +112,6 @@ export default function DailySalesPage() {
           const avgMsPrice = msSale ? msProfit / msSale : 0
 
           return [
-            { label: "Entries", value: entries.length, tone: "blue" },
             { label: "HSD Sale", value: formatNumber(hsdSale), tone: "green" },
             { label: "MS Sale", value: formatNumber(msSale), tone: "amber" },
             { label: "HSD Profit", value: formatNumber(hsdProfit), tone: "green" },

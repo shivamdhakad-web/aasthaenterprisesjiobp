@@ -347,28 +347,24 @@ export default function SimpleAuditRegisterPage({ config }) {
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-5">
     
-      <div className="mb-4 rounded-2xl border border-[var(--border-color)] bg-white px-4 py-3 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Fuel Pump SVG */}
-          <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${config.iconBg || "bg-emerald-50"}`}
-        >
-          {config.icon}
-        </div>
-
-          <div>
+      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${config.iconBg || "bg-emerald-50"}`}>
+              {config.icon}
+            </div>
 
             <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
               {config.title}
             </h1>
-            
+            <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${config.badgeStyle || "bg-emerald-100 text-emerald-700"}`}>
+              {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
+            </span>
           </div>
-        </div>
 
-        <div className="h-1 w-16 rounded-full bg-emerald-200"></div>
+          <div className={`h-1 w-16 rounded-full ${config.lineStyle || "bg-emerald-200"}`}></div>
+        </div>
       </div>
-    </div>
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
@@ -471,9 +467,9 @@ export default function SimpleAuditRegisterPage({ config }) {
   </div>
 </div>
 
-      <div className="hidden min-w-0 max-w-full overflow-x-auto rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] sm:block">
+      <div className="hidden max-h-[620px] min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-[0_16px_32px_rgba(16,24,20,0.05)] sm:block">
         <table className="table min-w-[980px] text-sm">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-[var(--bg-panel)] shadow-sm">
             <tr>
               {config.columns.map((column) => (
                 <th key={column.key}>{column.label}</th>

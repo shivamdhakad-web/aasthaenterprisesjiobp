@@ -41,6 +41,8 @@ export default function InvoiceDetailsPage() {
         description: "Track product invoice quantity, invoice amount, transport cost, LFR, purchase amount, remarks, and audit history.",
         pageKey: "invoiceDetails",
         iconBg: "bg-violet-50",
+        badgeStyle: "bg-violet-100 text-violet-700",
+        lineStyle: "bg-violet-200",
         icon: (
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -24,6 +24,9 @@ export default function MduPage() {
         kicker: "MDU DSR Register",
         description: "Track opening stock, decant, sales, physical stock, loss/gain, rate, remarks, and audit history.",
         pageKey: "mdu",
+        iconBg: "bg-emerald-50",
+        badgeStyle: "bg-emerald-100 text-emerald-700",
+        lineStyle: "bg-emerald-200",
         icon: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-emerald-600">
           <rect x="6" y="3" width="8" height="18" rx="2" />
@@ -93,7 +96,6 @@ export default function MduPage() {
           const otherProfit = lossGain * avgRate
 
           return [
-            { label: "Entries", value: entries.length, tone: "blue" },
             { label: "Total Decant", value: formatNumber(totalDecant), tone: "green" },
             { label: "Total Sale", value: formatNumber(totalSale), tone: "amber" },
             { label: "Avg Rate", value: formatNumber(avgRate.toFixed(2)), tone: "violet" },

@@ -150,7 +150,7 @@ export default function Topbar({ toggleSidebar }) {
   const displayZoom = zoomLevel || 90
 
   return (
-    <div className="theme-topbar relative z-[2000] flex items-center justify-between border-b px-4 py-4 transition-colors duration-300 lg:px-5">
+    <div className="theme-topbar relative z-10 flex items-center justify-between border-b px-4 py-4 transition-colors duration-300 lg:px-5">
       <div className="flex w-full items-center gap-3">
         <button
           onClick={toggleSidebar}
@@ -171,8 +171,8 @@ export default function Topbar({ toggleSidebar }) {
       </div>
 
       <div className="ml-4 flex items-center gap-3">
-        {/* UI ZOOM CONTROLLER */}
-        <div className="relative zoom-menu">
+        {/* UI ZOOM CONTROLLER - Hidden on mobile (<768px), visible on desktop */}
+        <div className="relative zoom-menu hidden md:block">
           <button
             onClick={() => setShowZoomMenu(!showZoomMenu)}
             title={`UI Display Zoom: ${displayZoom}%`}
@@ -183,7 +183,7 @@ export default function Topbar({ toggleSidebar }) {
           </button>
 
           {showZoomMenu ? (
-            <div className="theme-surface absolute right-0 z-[2200] mt-2 w-52 overflow-hidden rounded-2xl border p-3 shadow-2xl">
+            <div className="theme-surface absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border p-3 shadow-2xl">
               <div className="mb-2 flex items-center justify-between border-b border-[color:var(--border-color)] pb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--text-muted)]">
                   UI DISPLAY ZOOM
@@ -248,7 +248,7 @@ export default function Topbar({ toggleSidebar }) {
           ) : null}
         </Link>
 
-        <div className="relative z-[2100] profile-menu">
+        <div className="relative z-20 profile-menu">
           <div
             onClick={() => setOpenMenu(!openMenu)}
             className="flex cursor-pointer items-center gap-3 rounded-2xl px-1 py-1 select-none"
@@ -265,7 +265,7 @@ export default function Topbar({ toggleSidebar }) {
           </div>
 
           {openMenu ? (
-            <div className="theme-surface absolute right-0 z-[2200] mt-2 w-44 overflow-hidden rounded-xl border shadow-2xl">
+            <div className="theme-surface absolute right-0 z-30 mt-2 w-44 overflow-hidden rounded-xl border shadow-2xl">
               <div className="border-b border-[color:var(--border-strong)] px-3 py-2 text-xs text-[color:var(--text-secondary)]">
                 Signed in as
                 <div className="theme-text-strong text-sm font-medium">{user?.role}</div>
