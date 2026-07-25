@@ -1,4 +1,4 @@
-﻿const mongoose = require("mongoose")
+const mongoose = require("mongoose")
 
 const contactSchema = new mongoose.Schema(
   {
@@ -71,6 +71,10 @@ const settingsSchema = new mongoose.Schema(
     contacts: {
       type: [contactSchema],
       default: [],
+    },
+    secureNotesPassword: {
+      type: String,
+      default: process.env.SECURE_NOTES_PASSWORD || "jiobp",
     },
     loginPasswords: {
       type: loginPasswordsSchema,

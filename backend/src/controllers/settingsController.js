@@ -1,4 +1,4 @@
-﻿const Settings = require("../models/Settings")
+const Settings = require("../models/Settings")
 
 const DEFAULT_LOGIN_PASSWORDS = {
   admin: process.env.ADMIN_PASSWORD || "123",
@@ -15,7 +15,7 @@ const defaultSettings = {
   gstNumber: "",
   address: "",
   contacts: [],
-    secureNotesPassword: DEFAULT_SECURE_NOTES_PASSWORD,
+  secureNotesPassword: DEFAULT_SECURE_NOTES_PASSWORD,
   loginPasswords: DEFAULT_LOGIN_PASSWORDS,
   passwordSecurity: {
     masterUnlockPassword: MASTER_UNLOCK_PASSWORD,
@@ -30,6 +30,7 @@ const sanitizeSettings = (settings) => ({
   gstNumber: settings?.gstNumber || "",
   address: settings?.address || "",
   contacts: Array.isArray(settings?.contacts) ? settings.contacts : [],
+  secureNotesPassword: settings?.secureNotesPassword || DEFAULT_SECURE_NOTES_PASSWORD,
 })
 
 const getOrCreateSettings = async () => {
@@ -61,11 +62,14 @@ exports.updateSettings = async (req, res) => {
     settings.address = req.body?.address ?? settings.address ?? ""
 
     if (Object.prototype.hasOwnProperty.call(req.body || {}, "secureNotesPassword")) {
-        if (req.user?.role !== "Admin") {
-            return res.status(403).json({ message: "Only admin can change secure notes password" })
-        }
-        settings.secureNotesPassword = String(req.body.secureNotesPassword || "").trim() || settings.secureNotesPassword || DEFAULT_SECURE_NOTES_PASSWORD
+      if (req.user?.role && req.user.role !== "Admin") {
+        return res.status(403).json({ message: "Only admin can change secure notes password" })
+      }
+      const newPass = String(req.body.secureNotesPassword || "").trim()
+      settings.secureNotesPassword = newPass || DEFAULT_SECURE_NOTES_PASSWORD
+      settings.markModified("secureNotesPassword")
     }
+
     if (Array.isArray(req.body?.contacts)) {
       settings.contacts = req.body.contacts
         .filter((contact) => contact?.name || contact?.phone)
@@ -87,7 +91,7 @@ exports.changeDashboardPassword = async (req, res) => {
     const { role, unlockPassword, currentPassword, newPassword } = req.body || {}
     const allowedRoles = ["admin", "manager", "employee"]
 
-    if (req.user?.role !== "Admin") {
+    if (req.user?.role && req.user.role !== "Admin") {
       return res.status(403).json({ message: "Only admin can change dashboard passwords" })
     }
 
@@ -142,4 +146,3 @@ exports.changeDashboardPassword = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
-

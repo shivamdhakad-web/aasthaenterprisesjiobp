@@ -1,4 +1,4 @@
-import { Bell, Menu, MoonStar, Search, SunMedium } from "lucide-react"
+import { Bell, Menu, MoonStar, Search, SunMedium, ZoomIn, RotateCcw } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "../../contexts/AuthContext"
@@ -50,10 +50,11 @@ const getRouteScore = (entry, query) => {
 
 export default function Topbar({ toggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false)
+  const [showZoomMenu, setShowZoomMenu] = useState(false)
   const [notifyCount, setNotifyCount] = useState(0)
   const [searchText, setSearchText] = useState("")
   const { user, logout } = useAuth()
-  const { theme, isDayTheme, toggleTheme } = useTheme()
+  const { theme, isDayTheme, toggleTheme, zoomLevel = 90, zoomIn, zoomOut, resetZoom } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const displayName =
@@ -96,6 +97,9 @@ export default function Topbar({ toggleSidebar }) {
     const handleClick = (event) => {
       if (!event.target.closest(".profile-menu")) {
         setOpenMenu(false)
+      }
+      if (!event.target.closest(".zoom-menu")) {
+        setShowZoomMenu(false)
       }
     }
 
@@ -143,6 +147,7 @@ export default function Topbar({ toggleSidebar }) {
   }, [location.pathname, navigate, searchText, searchableRoutes])
 
   const ThemeIcon = theme === "day" ? MoonStar : SunMedium
+  const displayZoom = zoomLevel || 90
 
   return (
     <div className="theme-topbar relative z-[2000] flex items-center justify-between border-b px-4 py-4 transition-colors duration-300 lg:px-5">
@@ -166,6 +171,59 @@ export default function Topbar({ toggleSidebar }) {
       </div>
 
       <div className="ml-4 flex items-center gap-3">
+        {/* UI ZOOM CONTROLLER */}
+        <div className="relative zoom-menu">
+          <button
+            onClick={() => setShowZoomMenu(!showZoomMenu)}
+            title={`UI Display Zoom: ${displayZoom}%`}
+            className="inline-flex h-12 items-center gap-1.5 rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-panel)] px-3 text-xs font-semibold text-[color:var(--text-strong)] shadow-sm transition hover:bg-[var(--bg-soft)]"
+          >
+            <ZoomIn size={16} className="text-emerald-500" />
+            <span>{displayZoom}%</span>
+          </button>
+
+          {showZoomMenu ? (
+            <div className="theme-surface absolute right-0 z-[2200] mt-2 w-52 overflow-hidden rounded-2xl border p-3 shadow-2xl">
+              <div className="mb-2 flex items-center justify-between border-b border-[color:var(--border-color)] pb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--text-muted)]">
+                  UI DISPLAY ZOOM
+                </span>
+                <span className="rounded-lg bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-500">
+                  {displayZoom}%
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 py-1">
+                <button
+                  onClick={() => zoomOut?.()}
+                  disabled={displayZoom <= 80}
+                  className="flex h-9 w-10 items-center justify-center rounded-xl border border-[color:var(--border-color)] bg-[var(--bg-soft)] font-bold text-[color:var(--text-strong)] transition hover:bg-[var(--bg-hover)] disabled:opacity-30"
+                >
+                  -
+                </button>
+                <span className="text-xs font-semibold text-[color:var(--text-strong)]">
+                  {displayZoom}%
+                </span>
+                <button
+                  onClick={() => zoomIn?.()}
+                  disabled={displayZoom >= 150}
+                  className="flex h-9 w-10 items-center justify-center rounded-xl border border-[color:var(--border-color)] bg-[var(--bg-soft)] font-bold text-[color:var(--text-strong)] transition hover:bg-[var(--bg-hover)] disabled:opacity-30"
+                >
+                  +
+                </button>
+              </div>
+
+              <button
+                onClick={() => resetZoom?.()}
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[color:var(--border-color)] bg-[var(--bg-soft)] py-2 text-xs font-medium text-[color:var(--text-secondary)] transition hover:bg-[var(--bg-hover)] hover:text-[color:var(--text-strong)]"
+              >
+                <RotateCcw size={13} />
+                Reset to Default (90%)
+              </button>
+            </div>
+          ) : null}
+        </div>
+
         <button
           onClick={toggleTheme}
           title={theme === "day" ? "Switch to night theme" : "Switch to day theme"}
@@ -226,4 +284,3 @@ export default function Topbar({ toggleSidebar }) {
     </div>
   )
 }
-

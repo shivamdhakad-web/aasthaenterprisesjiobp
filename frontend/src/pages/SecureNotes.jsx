@@ -1,4 +1,4 @@
-﻿import { Copy, Eye, EyeOff, Globe, LockKeyhole, NotebookPen, Plus, Trash2, User } from "lucide-react"
+import { Copy, Eye, EyeOff, Globe, LockKeyhole, NotebookPen, Plus, Trash2, User, Loader2 } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import MobileActionFab from "../components/MobileActionFab"
 import SecureNoteModal from "../components/SecureNoteModal"
@@ -33,10 +33,9 @@ export default function SecureNotes() {
   const [vaultPassword, setVaultPassword] = useState("")
   const [vaultExpectedPassword, setVaultExpectedPassword] = useState("jiobp")
   const [vaultError, setVaultError] = useState("")
-  const [passwordLoading, setPasswordLoading] = useState(true)
+  const [passwordLoading, setPasswordLoading] = useState(false)
   const [copied, setCopied] = useState("")
   const [expandedCard, setExpandedCard] = useState(null)
-
 
   useEffect(() => {
     let active = true
@@ -45,15 +44,11 @@ export default function SecureNotes() {
       try {
         const data = await getSettings()
         if (active) {
-          setVaultExpectedPassword(String(data?.secureNotesPassword || "jiobp"))
+          setVaultExpectedPassword(String(data?.secureNotesPassword || "jiobp").trim())
         }
-      } catch (error) {
+      } catch {
         if (active) {
           setVaultExpectedPassword("jiobp")
-        }
-      } finally {
-        if (active) {
-          setPasswordLoading(false)
         }
       }
     }
@@ -64,6 +59,7 @@ export default function SecureNotes() {
       active = false
     }
   }, [])
+
   const loadNotes = async () => {
     const data = await getNotes()
     setNotes(data)
@@ -89,6 +85,39 @@ export default function SecureNotes() {
 
     return () => clearTimeout(timer)
   }, [vaultUnlocked])
+
+  const handleUnlock = async () => {
+    if (!vaultPassword) {
+      setVaultError("Please enter vault password")
+      return
+    }
+
+    setPasswordLoading(true)
+    setVaultError("")
+    try {
+      const data = await getSettings()
+      const expected = String(data?.secureNotesPassword || "jiobp").trim()
+      setVaultExpectedPassword(expected)
+
+      if (vaultPassword.trim() === expected) {
+        setVaultUnlocked(true)
+        setVaultPassword("")
+        setVaultError("")
+      } else {
+        setVaultError("Wrong password")
+      }
+    } catch {
+      if (vaultPassword.trim() === vaultExpectedPassword.trim()) {
+        setVaultUnlocked(true)
+        setVaultPassword("")
+        setVaultError("")
+      } else {
+        setVaultError("Wrong password")
+      }
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
 
   const filtered = useMemo(
     () =>
@@ -124,57 +153,64 @@ export default function SecureNotes() {
 
   if (!vaultUnlocked) {
     return (
-      <div className="flex min-h-[calc(100vh-120px)] items-center justify-center p-4 sm:p-6">
+      <div className="flex min-h-[calc(100vh-120px)] items-center justify-center p-4 sm:p-6 font-sans">
         <div className={`${vaultCardClass} w-full max-w-md p-6 sm:p-8`}>
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--bg-soft)] text-[color:var(--accent-strong)]">
-            <LockKeyhole size={26} />
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <LockKeyhole size={28} />
           </div>
-          <h1 className="text-center text-2xl font-semibold text-[color:var(--text-strong)]">
+          <h1 className="text-center text-2xl font-black tracking-tight text-[color:var(--text-strong)]">
             Secure Notes Vault
           </h1>
+          <p className="mt-1 text-center text-xs font-semibold text-[color:var(--text-secondary)]">
+            Enter your vault password to access protected station notes
+          </p>
 
-          <div className="mt-6 space-y-3">
-<input
-  type="password"
-  value={vaultPassword}
-  onChange={(event) => {
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleUnlock()
+            }}
+            className="mt-6 space-y-3"
+          >
+            <input
+              type="password"
+              value={vaultPassword}
+              onChange={(event) => {
                 setVaultPassword(event.target.value)
                 setVaultError("")
               }}
-  placeholder="Enter vault password"
-  className="input"
-/>
-            {vaultError ? <p className="text-sm font-medium text-red-500">{vaultError}</p> : null}
+              placeholder="Enter vault password"
+              className="input w-full"
+              autoFocus
+            />
+            {vaultError ? <p className="text-xs font-bold text-red-500">{vaultError}</p> : null}
             <button
-              type="button"
-              onClick={() => {
-                if (vaultPassword.trim() === vaultExpectedPassword.trim()) {
-                  setVaultUnlocked(true)
-                  setVaultPassword("")
-                  setVaultError("")
-                  return
-                }
-
-                setVaultError("Wrong password")
-              }}
+              type="submit"
               disabled={passwordLoading}
-              className="btn btn-green w-full disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn btn-green w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {passwordLoading ? "Loading..." : "Unlock Vault"}
+              {passwordLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Verifying Password...</span>
+                </>
+              ) : (
+                "Unlock Vault"
+              )}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
+    <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6 font-sans">
       <section className={`${vaultCardClass} p-5 sm:p-6`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Secure Notes</h1>
-            <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+            <h1 className="text-2xl font-black text-[color:var(--text-strong)] tracking-tight">Secure Notes</h1>
+            <p className="mt-1 text-xs font-semibold text-[color:var(--text-secondary)]">
               Website, username, password aur private notes ko secure vault me manage karo.
             </p>
           </div>
@@ -189,7 +225,7 @@ export default function SecureNotes() {
             <button
               type="button"
               onClick={() => openModal()}
-              className="hidden rounded-2xl bg-[var(--accent-strong)] px-5 py-3 text-sm font-medium text-white shadow-[0_16px_40px_rgba(37,99,235,0.24)] sm:inline-flex sm:items-center sm:justify-center"
+              className="hidden rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-emerald-700 sm:inline-flex sm:items-center sm:justify-center"
             >
               + Add Note
             </button>
@@ -209,7 +245,7 @@ export default function SecureNotes() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-lg font-semibold">{note.title || "Untitled note"}</p>
+                  <p className="truncate text-lg font-bold">{note.title || "Untitled note"}</p>
                   <p className="mt-1 text-xs uppercase tracking-[0.28em] opacity-70">Secure Entry</p>
                 </div>
                 <button
@@ -217,7 +253,7 @@ export default function SecureNotes() {
                   onClick={() =>
                     setExpandedCard((current) => (current === note._id ? null : note._id))
                   }
-                  className="rounded-xl border border-current/15 bg-white/40 px-3 py-2 text-xs font-medium backdrop-blur"
+                  className="rounded-xl border border-current/15 bg-white/40 px-3 py-2 text-xs font-bold backdrop-blur"
                 >
                   {expanded ? "Hide" : "Open"}
                 </button>
@@ -261,7 +297,7 @@ export default function SecureNotes() {
                       </button>
                     </div>
                   </div>
-                  <p className="break-all text-sm font-medium">
+                  <p className="break-all text-sm font-semibold">
                     {showPassword === note._id ? note.password || "-" : "********"}
                   </p>
                 </div>
@@ -290,14 +326,14 @@ export default function SecureNotes() {
                 <button
                   type="button"
                   onClick={() => openModal(note)}
-                  className="flex-1 rounded-2xl border border-current/15 bg-white/55 px-4 py-3 text-sm font-medium backdrop-blur"
+                  className="flex-1 rounded-2xl border border-current/15 bg-white/55 px-4 py-3 text-sm font-semibold backdrop-blur"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(note._id)}
-                  className="inline-flex items-center justify-center rounded-2xl border border-current/15 bg-white/55 px-4 py-3 text-sm font-medium backdrop-blur"
+                  className="inline-flex items-center justify-center rounded-2xl border border-current/15 bg-white/55 px-4 py-3 text-sm font-semibold backdrop-blur"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -309,13 +345,13 @@ export default function SecureNotes() {
         <button
           type="button"
           onClick={() => openModal()}
-          className="hidden rounded-[28px] border-2 border-dashed border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 text-left text-[color:var(--text-secondary)] transition hover:border-[var(--accent-strong)] hover:text-[color:var(--accent-strong)] sm:block"
+          className="hidden rounded-[28px] border-2 border-dashed border-[var(--border-strong)] bg-[var(--bg-panel)] p-6 text-left text-[color:var(--text-secondary)] transition hover:border-emerald-500 hover:text-emerald-600 sm:block"
         >
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--bg-soft)]">
             <Plus size={24} />
           </div>
-          <p className="text-lg font-semibold">Add New Note</p>
-          <p className="mt-2 text-sm">Quickly create another secure vault record.</p>
+          <p className="text-lg font-bold">Add New Note</p>
+          <p className="mt-2 text-sm font-medium">Quickly create another secure vault record.</p>
         </button>
       </section>
 
@@ -330,14 +366,14 @@ export default function SecureNotes() {
         actions={[
           {
             label: "Add Note",
-            className: "bg-green-600",
+            className: "bg-emerald-600",
             onClick: () => openModal(),
           },
         ]}
       />
 
       {copied ? (
-        <div className="fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-[0_20px_40px_rgba(5,150,105,0.24)]">
+        <div className="fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-[0_20px_40px_rgba(5,150,105,0.24)]">
           {copied}
         </div>
       ) : null}
@@ -361,11 +397,7 @@ function InfoRow({ icon, label, value, onCopy }) {
           <Copy size={14} />
         </button>
       </div>
-      <p className="break-all text-sm font-medium">{value}</p>
+      <p className="break-all text-sm font-semibold">{value}</p>
     </div>
   )
 }
-
-
-
-

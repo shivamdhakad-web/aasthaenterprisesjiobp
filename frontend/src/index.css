@@ -6,20 +6,26 @@
   scrollbar-color: var(--border-color) transparent;
 }
 
+html {
+  background-color: var(--bg-main);
+  min-height: 100%;
+}
+
 html,
 body,
 #root {
-  min-height: 100%;
   margin: 0;
   max-width: 100%;
   overflow-x: hidden;
+  background-color: var(--bg-main);
 }
 
 body {
-  background: var(--bg-main);
+  min-height: 100vh;
+  background-color: var(--bg-main);
   color: var(--text-primary);
   font-family: "Plus Jakarta Sans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
 }
 
@@ -227,29 +233,6 @@ textarea {
 :root[data-theme="day"] .bg-\[\#0f172a\],
 :root[data-theme="day"] .bg-\[\#1A1D26\],
 :root[data-theme="day"] .bg-\[\#1a1d26\],
-:root[data-theme="day"] .bg-\[\#1A1F2E\],
-:root[data-theme="day"] .bg-\[\#1a1f2e\] {
-  background-color: var(--bg-hover) !important;
-}
-
-:root[data-theme="day"] .from-\[\#0B0F17\] {
-  --tw-gradient-from: #ffffff var(--tw-gradient-from-position) !important;
-  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-}
-
-:root[data-theme="day"] .via-\[\#112018\],
-:root[data-theme="day"] .via-\[\#0E1A2A\] {
-  --tw-gradient-to: rgb(239 248 232 / 0) var(--tw-gradient-to-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), #eff8e8 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
-}
-
-:root[data-theme="day"] .to-\[\#0B0F17\] {
-  --tw-gradient-to: #f6fbf0 var(--tw-gradient-to-position) !important;
-}
-
-:root[data-theme="day"] .border-\[\#1A1D26\],
-:root[data-theme="day"] .border-\[\#1a1d26\],
 :root[data-theme="day"] .border-\[\#1A1F2E\],
 :root[data-theme="day"] .border-\[\#1a1f2e\],
 :root[data-theme="day"] .border-\[\#1E293B\],
