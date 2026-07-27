@@ -22,7 +22,7 @@ const buildMultipleState = (employeeId = "") => ({
   employeeId,
   date: getTodayString(),
   defaultDateApplied: false,
-  entries: [buildEmptyRow(employeeId), buildEmptyRow(employeeId)],
+  entries: [buildEmptyRow(employeeId)],
 })
 
 export default function AttendanceModal({
@@ -108,12 +108,9 @@ export default function AttendanceModal({
               ? "Add Multiple Attendance Entries"
               : "Add Attendance Entry"}
         </h2>
-        <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
-          Current date is filled by default. Use multiple mode to add several attendance records in one save.
-        </p>
 
         {entryMode === "multiple" && !editData ? (
-          <div className="mt-5 space-y-4">
+          <div className="mt-3 space-y-2">
             <div className="grid gap-3 sm:grid-cols-2">
               {showEmployeeSelector ? (
                 <label className="block">
@@ -243,7 +240,8 @@ export default function AttendanceModal({
                         Shortage (+ / -)
                       </span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={entry.shortage}
                         onChange={(event) => updateBulkRow(index, "shortage", event.target.value)}
                         placeholder="0"
@@ -256,7 +254,8 @@ export default function AttendanceModal({
                         Advance Cash
                       </span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={entry.advanceCash}
                         onChange={(event) => updateBulkRow(index, "advanceCash", event.target.value)}
                         placeholder="0"
@@ -269,7 +268,8 @@ export default function AttendanceModal({
                         Advance Petrol
                       </span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={entry.advancePetrol}
                         onChange={(event) => updateBulkRow(index, "advancePetrol", event.target.value)}
                         placeholder="0"
@@ -282,7 +282,8 @@ export default function AttendanceModal({
                         Bonus Amount
                       </span>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={entry.bonusAmount}
                         onChange={(event) => updateBulkRow(index, "bonusAmount", event.target.value)}
                         placeholder="0"
@@ -361,28 +362,28 @@ export default function AttendanceModal({
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                 Shortage (+ / -)
               </span>
-              <input type="number" name="shortage" placeholder="0" value={form.shortage} onChange={handleChange} className="input" />
+              <input type="text" inputMode="decimal" name="shortage" placeholder="0" value={form.shortage} onChange={handleChange} className="input" />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                 Advance Cash
               </span>
-              <input type="number" name="advanceCash" placeholder="0" value={form.advanceCash} onChange={handleChange} className="input" />
+              <input type="text" inputMode="decimal" name="advanceCash" placeholder="0" value={form.advanceCash} onChange={handleChange} className="input" />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                 Advance Petrol
               </span>
-              <input type="number" name="advancePetrol" placeholder="0" value={form.advancePetrol} onChange={handleChange} className="input" />
+              <input type="text" inputMode="decimal" name="advancePetrol" placeholder="0" value={form.advancePetrol} onChange={handleChange} className="input" />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                 Bonus Amount
               </span>
-              <input type="number" name="bonusAmount" placeholder="0" value={form.bonusAmount} onChange={handleChange} className="input" />
+              <input type="text" inputMode="decimal" name="bonusAmount" placeholder="0" value={form.bonusAmount} onChange={handleChange} className="input" />
             </label>
 
             <label className="block sm:col-span-2">

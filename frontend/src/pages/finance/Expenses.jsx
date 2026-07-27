@@ -950,7 +950,7 @@ export default function Expenses() {
             setBulkDefaultsApplied({ date: false, category: false })
           }}
         >
-          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+          <div className="mb-2 grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                 Default Date

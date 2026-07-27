@@ -593,7 +593,7 @@ export default function CardSwipe() {
       </h1>
 
       <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-        {entries.length} Entries
+        {filteredEntries.length} Entries
       </span>
     </div>
 
@@ -832,7 +832,7 @@ export default function CardSwipe() {
               <option value="excel">Excel</option>
             </select>
           </div>
-          <div className="mt-4 flex justify-end gap-3">
+          <div className="mt-2 flex justify-end gap-3">
             <button
               onClick={() => setReportOpen(false)}
               className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-[color:var(--text-primary)]"
@@ -848,7 +848,7 @@ export default function CardSwipe() {
 
       {bulkOpen ? (
         <ModalShell title="Add Multiple Card Swipe Entries" onClose={closeBulkModal}>
-          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+          <div className="mb-2 grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                 Default Date
@@ -868,7 +868,7 @@ export default function CardSwipe() {
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="1, 2, 3"
+                placeholder="1, 1.5, 2, 3"
                 value={bulkDefaults.chargePercent}
                 onChange={(event) => updateBulkDefaultChargePercent(event.target.value)}
                 className="input"
@@ -1142,4 +1142,3 @@ function ConfirmDialog({
     </div>
   )
 }
-

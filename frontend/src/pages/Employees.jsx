@@ -459,6 +459,25 @@ export default function Employees() {
     const records = allAttendanceByEmployee[employee._id] || []
     return calculateAttendanceSummary(employee, records).final
   }
+
+  const getAttendanceDateKey = (value) => (value ? String(value).slice(0, 10) : "")
+
+  const isNonBonusAttendance = (entry) => String(entry.status || "present").toLowerCase() !== "bonus"
+
+  const hasDuplicateAttendance = ({ employeeId, date, excludeId = "" }) => {
+    const dateKey = getAttendanceDateKey(date)
+
+    if (!employeeId || !dateKey) {
+      return false
+    }
+
+    return (allAttendanceByEmployee[employeeId] || []).some(
+      (entry) =>
+        entry._id !== excludeId &&
+        isNonBonusAttendance(entry) &&
+        getAttendanceDateKey(entry.date) === dateKey,
+    )
+  }
   const summaryCards = useMemo(
     () => [
       {
@@ -772,6 +791,22 @@ export default function Employees() {
       return
     }
 
+    if (
+      mode !== "multiple" &&
+      isNonBonusAttendance(payload) &&
+      hasDuplicateAttendance({
+        employeeId: targetEmployeeId,
+        date: payload.date,
+        excludeId: editAttendance?._id || "",
+      })
+    ) {
+      setNotice({
+        type: "error",
+        message: "Attendance entry already exists for this employee on this date.",
+      })
+      return
+    }
+
     setAttendanceSaving(true)
 
     try {
@@ -796,6 +831,33 @@ export default function Employees() {
 
         if (missingEmployee) {
           setNotice({ type: "error", message: "Please select an employee for every attendance row." })
+          setAttendanceSaving(false)
+          return
+        }
+
+        const seenAttendanceKeys = new Set()
+        const hasDuplicateRow = validEntries.some((entry) => {
+          if (!isNonBonusAttendance(entry)) {
+            return false
+          }
+
+          const rowEmployeeId = entry.employeeId || targetEmployeeId
+          const dateKey = getAttendanceDateKey(entry.date)
+          const rowKey = `${rowEmployeeId}-${dateKey}`
+
+          if (seenAttendanceKeys.has(rowKey) || hasDuplicateAttendance({ employeeId: rowEmployeeId, date: entry.date })) {
+            return true
+          }
+
+          seenAttendanceKeys.add(rowKey)
+          return false
+        })
+
+        if (hasDuplicateRow) {
+          setNotice({
+            type: "error",
+            message: "Attendance entry already exists for this employee on this date.",
+          })
           setAttendanceSaving(false)
           return
         }
@@ -1898,8 +1960,8 @@ function BonusModal({ form, employees, saving, onChange, onClose, onSave }) {
               Payment
             </span>
             <input
-              type="number"
-              min="0"
+              type="text"
+              inputMode="decimal"
               value={form.payment}
               onChange={(event) => onChange({ payment: event.target.value })}
               placeholder="Enter bonus amount"

@@ -132,10 +132,7 @@ export default function SimpleAuditRegisterPage({ config }) {
 
     const defaults = buildBulkDefaults(config)
     setBulkDefaults(defaults)
-    setBulkRows([
-      { ...config.empty(), ...defaults.values },
-      { ...config.empty(), ...defaults.values },
-    ])
+    setBulkRows([{ ...config.empty(), ...defaults.values }])
     setBulkOpen(true)
   }
 
@@ -757,7 +754,8 @@ function EntryModal({ title, fields, form, setForm, onClose, onSave, saving, pre
             ) : (
               <input
                 key={field.key}
-                type={field.type || "text"}
+                type={field.type === "number" ? "text" : field.type || "text"}
+                inputMode={field.type === "number" ? "decimal" : undefined}
                 value={form[field.key] ?? ""}
                 placeholder={field.label}
                 onChange={(event) => update(field.key, event.target.value)}
@@ -812,7 +810,6 @@ function BulkEntryModal({
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">{title}</h2>
-            <p className="mt-1 text-sm text-[color:var(--text-secondary)]">Fill multiple rows and save them together.</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-2">
             <X size={16} />
@@ -853,7 +850,8 @@ function BulkEntryModal({
                     Default {field.label}
                   </span>
                   <input
-                    type={field.type || "text"}
+                    type={field.type === "number" ? "text" : field.type || "text"}
+                    inputMode={field.type === "number" ? "decimal" : undefined}
                     value={bulkDefaults[field.key] ?? ""}
                     placeholder={field.label}
                     onChange={(event) => updateBulkDefault(field.key, event.target.value)}
@@ -901,7 +899,8 @@ function BulkEntryModal({
                   ) : (
                     <input
                       key={field.key}
-                      type={field.type || "text"}
+                      type={field.type === "number" ? "text" : field.type || "text"}
+                      inputMode={field.type === "number" ? "decimal" : undefined}
                       value={row[field.key] ?? ""}
                       placeholder={field.label}
                       onChange={(event) => updateRow(index, field.key, event.target.value)}
