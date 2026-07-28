@@ -4,7 +4,7 @@ const policyRules = [
   { pattern: /^\/approvals(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
 
   { pattern: /^\/notifications$/, methods: ["POST"], roles: ["Admin"] },
-  { pattern: /^\/notifications(?:\/|$)/, methods: ["GET", "PUT"], roles: ["Admin", "Manager", "Employee"] },
+  { pattern: /^\/notifications(?:\/|$)/, methods: ["GET", "PUT", "DELETE"], roles: ["Admin", "Manager", "Employee"] },
 
   { pattern: /^\/salary\/summary(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager", "Employee"] },
   { pattern: /^\/leaves\/[^/]+\/decision$/, methods: ["PUT"], roles: ["Admin"] },
@@ -60,6 +60,8 @@ const policyRules = [
   { pattern: /^\/customers(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
   { pattern: /^\/customers(?:\/|$)/, methods: ["POST", "PUT", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/settings(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
+  { pattern: /^\/settings\/secure-notes\/verify$/, methods: ["POST"], roles: ["Admin", "Manager"] },
+  { pattern: /^\/settings\/secure-notes\/password\/change$/, methods: ["POST"], roles: ["Admin"] },
   { pattern: /^\/settings(?:\/|$)/, methods: ["POST", "PUT", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/ttdrivers(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },
   { pattern: /^\/ttdrivers(?:\/|$)/, methods: ["POST", "PUT", "DELETE"], roles: ["Admin"] },

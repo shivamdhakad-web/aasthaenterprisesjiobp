@@ -146,3 +146,73 @@ exports.changeDashboardPassword = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+
+exports.verifySecureNotesPassword = async (req, res) => {
+  try {
+    const { password } = req.body || {}
+    const settings = await getOrCreateSettings()
+    const storedPassword = settings?.secureNotesPassword || DEFAULT_SECURE_NOTES_PASSWORD
+
+    if (!String(password || "").trim()) {
+      return res.status(400).json({ message: "Vault password is required" })
+    }
+
+    if (String(password).trim() !== String(storedPassword).trim()) {
+      return res.status(401).json({ message: "Wrong password" })
+    }
+
+    res.json({ message: "Vault password verified" })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+exports.changeSecureNotesPassword = async (req, res) => {
+  try {
+    const { unlockPassword, currentPassword, newPassword } = req.body || {}
+
+    if (req.user?.role && req.user.role !== "Admin") {
+      return res.status(403).json({ message: "Only admin can change secure notes password" })
+    }
+
+    if (!String(unlockPassword || "").trim()) {
+      return res.status(400).json({ message: "Master unlock password is required" })
+    }
+
+    if (!String(currentPassword || "").trim()) {
+      return res.status(400).json({ message: "Current vault password is required" })
+    }
+
+    if (!String(newPassword || "").trim()) {
+      return res.status(400).json({ message: "New vault password is required" })
+    }
+
+    if (String(newPassword).trim().length < 3) {
+      return res.status(400).json({ message: "New vault password must be at least 3 characters" })
+    }
+
+    const settings = await getOrCreateSettings()
+    const storedUnlockPassword = settings?.passwordSecurity?.masterUnlockPassword || MASTER_UNLOCK_PASSWORD
+    const storedVaultPassword = settings?.secureNotesPassword || DEFAULT_SECURE_NOTES_PASSWORD
+
+    if (String(unlockPassword).trim() !== String(storedUnlockPassword).trim()) {
+      return res.status(400).json({ message: "Master unlock password is incorrect" })
+    }
+
+    if (String(currentPassword).trim() !== String(storedVaultPassword).trim()) {
+      return res.status(400).json({ message: "Current vault password is incorrect" })
+    }
+
+    if (String(newPassword).trim() === String(storedVaultPassword).trim()) {
+      return res.status(400).json({ message: "New vault password must be different from current password" })
+    }
+
+    settings.secureNotesPassword = String(newPassword).trim()
+    settings.markModified("secureNotesPassword")
+    await settings.save()
+
+    res.json({ message: "Secure Notes password updated successfully" })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}

@@ -26,6 +26,16 @@ export const changeDashboardPassword = async (payload) => {
   return data
 }
 
+export const verifySecureNotesPassword = async (payload) => {
+  const { data } = await api.post("/settings/secure-notes/verify", payload)
+  return data
+}
+
+export const changeSecureNotesPassword = async (payload) => {
+  const { data } = await api.post("/settings/secure-notes/password/change", payload)
+  return data
+}
+
 export const getFuelPrices = async () => {
   const res = await api.get(`/settings/fuel-prices`)
   return res.data

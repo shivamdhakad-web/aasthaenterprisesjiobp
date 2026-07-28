@@ -2,6 +2,7 @@
 import { useAuth } from "../contexts/AuthContext"
 import {
   changeDashboardPassword,
+  changeSecureNotesPassword,
   getSettings,
   updateSettings,
 } from "../services/settingsApi"
@@ -17,6 +18,13 @@ const defaultSettings = {
 
 const defaultPasswordForm = {
   role: "admin",
+  unlockPassword: "",
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+}
+
+const defaultVaultPasswordForm = {
   unlockPassword: "",
   currentPassword: "",
   newPassword: "",
@@ -50,6 +58,9 @@ export default function Settings() {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordForm, setPasswordForm] = useState(defaultPasswordForm)
+  const [vaultPasswordSaving, setVaultPasswordSaving] = useState(false)
+  const [vaultPasswordModalOpen, setVaultPasswordModalOpen] = useState(false)
+  const [vaultPasswordForm, setVaultPasswordForm] = useState(defaultVaultPasswordForm)
 
   const isAdmin = user?.role === "Admin"
 
@@ -98,13 +109,58 @@ export default function Settings() {
   const save = async () => {
     setSaving(true)
     try {
-      const response = await updateSettings(settings)
+      const { secureNotesPassword: _secureNotesPassword, ...stationSettings } = settings
+      const response = await updateSettings(stationSettings)
       window.alert(response?.message || "Settings saved")
       await loadSettings()
     } catch (error) {
       window.alert(error?.response?.data?.message || "Settings save nahi ho paye")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const closeVaultPasswordModal = () => {
+    setVaultPasswordModalOpen(false)
+    setVaultPasswordForm(defaultVaultPasswordForm)
+  }
+
+  const submitVaultPasswordChange = async () => {
+    if (!vaultPasswordForm.unlockPassword.trim()) {
+      window.alert("Master unlock password required hai")
+      return
+    }
+
+    if (!vaultPasswordForm.currentPassword.trim()) {
+      window.alert("Current vault password required hai")
+      return
+    }
+
+    if (!vaultPasswordForm.newPassword.trim()) {
+      window.alert("New vault password required hai")
+      return
+    }
+
+    if (vaultPasswordForm.newPassword.trim() !== vaultPasswordForm.confirmPassword.trim()) {
+      window.alert("New vault password aur confirm password match nahi kar rahe")
+      return
+    }
+
+    setVaultPasswordSaving(true)
+    try {
+      const response = await changeSecureNotesPassword({
+        unlockPassword: vaultPasswordForm.unlockPassword,
+        currentPassword: vaultPasswordForm.currentPassword,
+        newPassword: vaultPasswordForm.newPassword,
+      })
+
+      window.alert(response?.message || "Secure Notes password updated successfully")
+      closeVaultPasswordModal()
+      await loadSettings()
+    } catch (error) {
+      window.alert(error?.response?.data?.message || "Secure Notes password change nahi ho paya")
+    } finally {
+      setVaultPasswordSaving(false)
     }
   }
 
@@ -222,22 +278,15 @@ export default function Settings() {
         <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
           <h2 className="text-xl font-semibold text-[color:var(--text-strong)]">Secure Notes Password</h2>
           <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-            This password unlocks the Secure Notes vault. Admin can update it anytime from here.
+            This password unlocks the Secure Notes vault. Change it with master unlock, current password, and new password.
           </p>
-          <div className="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-            <Field
-              label="Vault Password"
-              type="password"
-              value={settings.secureNotesPassword}
-              onChange={(value) => updateField("secureNotesPassword", value)}
-            />
+          <div className="mt-5 flex justify-end">
             <button
               type="button"
-              onClick={save}
-              disabled={saving}
+              onClick={() => setVaultPasswordModalOpen(true)}
               className="rounded-2xl bg-green-600 px-6 py-4 font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {saving ? "Saving..." : "Save Vault Password"}
+              Change Vault Password
             </button>
           </div>
         </section>
@@ -356,6 +405,60 @@ export default function Settings() {
                 className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {passwordSaving ? "Saving..." : "Save Password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {vaultPasswordModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_24px_48px_rgba(16,24,20,0.16)]">
+            <h3 className="text-xl font-semibold text-[color:var(--text-strong)]">
+              Change Secure Notes Password
+            </h3>
+            <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
+              Pehle master unlock password do, phir current vault password, phir new vault password.
+            </p>
+
+            <div className="mt-5 grid gap-4">
+              <PasswordInput
+                label="JioBP Master Unlock Password"
+                value={vaultPasswordForm.unlockPassword}
+                onChange={(value) => setVaultPasswordForm((current) => ({ ...current, unlockPassword: value }))}
+              />
+              <PasswordInput
+                label="Current Vault Password"
+                value={vaultPasswordForm.currentPassword}
+                onChange={(value) => setVaultPasswordForm((current) => ({ ...current, currentPassword: value }))}
+              />
+              <PasswordInput
+                label="New Vault Password"
+                value={vaultPasswordForm.newPassword}
+                onChange={(value) => setVaultPasswordForm((current) => ({ ...current, newPassword: value }))}
+              />
+              <PasswordInput
+                label="Confirm New Vault Password"
+                value={vaultPasswordForm.confirmPassword}
+                onChange={(value) => setVaultPasswordForm((current) => ({ ...current, confirmPassword: value }))}
+              />
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeVaultPasswordModal}
+                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitVaultPasswordChange}
+                disabled={vaultPasswordSaving}
+                className="rounded-2xl bg-green-600 px-5 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {vaultPasswordSaving ? "Saving..." : "Save Vault Password"}
               </button>
             </div>
           </div>

@@ -146,3 +146,21 @@ exports.markNotificationRead = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+
+exports.deleteNotification = async (req, res) => {
+  try {
+    if (req.user.role !== "Admin") {
+      return res.status(403).json({ message: "Only Admin can delete notifications" })
+    }
+
+    const notification = await Notification.findByIdAndDelete(req.params.id)
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" })
+    }
+
+    res.json({ message: "Notification deleted successfully" })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}

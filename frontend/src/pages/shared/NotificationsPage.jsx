@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getEmployeeChoices } from "../../services/authApi";
 import {
+  deleteNotification,
   getNotifications,
   markNotificationRead,
   sendNotification,
@@ -21,6 +22,8 @@ export default function NotificationsPage() {
   const [employees, setEmployees] = useState([]);
   const [form, setForm] = useState(defaultForm);
   const [isModalOpen, setIsModalOpen] = useState(false); // modal state (mobile only)
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [notice, setNotice] = useState({ type: "", text: "" });
 
   const load = async () => {
     const data = await getNotifications();
@@ -34,6 +37,15 @@ export default function NotificationsPage() {
       getEmployeeChoices().then(setEmployees).catch(() => setEmployees([]));
     }
   }, [user?.role]);
+
+  useEffect(() => {
+    if (!notice.text) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => setNotice({ type: "", text: "" }), 2800);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
 
   const handleSend = async () => {
     const payload = {
@@ -61,6 +73,24 @@ export default function NotificationsPage() {
   const handleModalSubmit = async () => {
     await handleSend();
     closeModal();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget?._id) {
+      return;
+    }
+
+    try {
+      await deleteNotification(deleteTarget._id);
+      setDeleteTarget(null);
+      setNotice({ type: "success", text: "Notification deleted successfully." });
+      await load();
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to delete notification.",
+      });
+    }
   };
 
   // Shared form fields (used in both desktop box and mobile modal)
@@ -143,6 +173,18 @@ export default function NotificationsPage() {
         </div>
       )}
 
+      {notice.text ? (
+        <div
+          className={`rounded-2xl border p-4 text-sm font-semibold ${
+            notice.type === "success"
+              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+              : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
+          }`}
+        >
+          {notice.text}
+        </div>
+      ) : null}
+
       {/* Notifications List */}
       <div className="grid gap-4">
         {notifications.map((item) => (
@@ -186,17 +228,29 @@ export default function NotificationsPage() {
                 )}
               </div>
 
-              {user?.role !== "Admin" && !item.isRead && (
-                <button
-                  onClick={async () => {
-                    await markNotificationRead(item._id);
-                    load();
-                  }}
-                  className="rounded-lg bg-green-600 px-4 py-2 text-white"
-                >
-                  Mark Read
-                </button>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {user?.role !== "Admin" && !item.isRead && (
+                  <button
+                    onClick={async () => {
+                      await markNotificationRead(item._id);
+                      load();
+                    }}
+                    className="rounded-lg bg-green-600 px-4 py-2 text-white"
+                  >
+                    Mark Read
+                  </button>
+                )}
+
+                {user?.role === "Admin" && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(item)}
+                    className="rounded-lg bg-red-600 px-4 py-2 text-white"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -245,6 +299,42 @@ export default function NotificationsPage() {
           </div>
         </div>
       )}
+
+      {deleteTarget ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold text-white">Delete Notification</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-300">
+              This notification will be deleted for everyone it was sent to.
+            </p>
+            <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm font-semibold text-red-200">
+              {deleteTarget.title}
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg border border-[#1F2937] bg-[#04060B] px-4 py-2 text-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-lg bg-red-600 px-4 py-2 text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

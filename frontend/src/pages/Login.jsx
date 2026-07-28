@@ -31,7 +31,8 @@ export default function Login() {
     return "/"
   }
 
-  const handleLogin = async () => {
+  const handleLogin = async (event) => {
+    event?.preventDefault()
     setError("")
 
     try {
@@ -67,7 +68,7 @@ export default function Login() {
 
   return (
     <div className="flex h-screen items-center justify-center bg-[var(--bg-main)] px-4 transition-colors duration-300">
-      <div className="theme-surface w-full max-w-[420px] rounded-2xl border p-8 text-center">
+      <form onSubmit={handleLogin} className="theme-surface w-full max-w-[420px] rounded-2xl border p-8 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--text-muted)]">Role-Based Secure Login</p>
         <h2 className="theme-text-strong mt-3 text-2xl font-semibold leading-tight tracking-tight">
   {stage === "employee" ? (
@@ -123,7 +124,7 @@ export default function Login() {
         {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
 
         <button
-          onClick={handleLogin}
+          type="submit"
           className="mt-5 w-full rounded-lg bg-green-500 px-5 py-3 text-white"
         >
           {stage === "employee" ? "Open Employee Dashboard" : "Login"}
@@ -131,6 +132,7 @@ export default function Login() {
 
         {stage === "employee" ? (
           <button
+            type="button"
             onClick={() => {
               setStage("password")
               setSelectedEmployee("")
@@ -148,7 +150,7 @@ export default function Login() {
             <p key={hint}>{hint}</p>
           ))}
         </div> */}
-      </div>
+      </form>
     </div>
   )
 }

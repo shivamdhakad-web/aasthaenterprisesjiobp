@@ -14,3 +14,8 @@ export const markNotificationRead = async (id) => {
   const { data } = await api.put(`/notifications/${id}/read`)
   return data
 }
+
+export const deleteNotification = async (id) => {
+  const { data } = await api.delete(`/notifications/${id}`)
+  return data
+}
