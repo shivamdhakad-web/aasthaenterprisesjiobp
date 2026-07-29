@@ -214,6 +214,15 @@ export default function TankerDeliveries() {
     setBulkOpen(true)
   }
 
+  const openReportModal = () => {
+    if (!canManagerUse("generateReport")) {
+      setNotice({ type: "error", text: "You do not have access to generate tanker reports." })
+      return
+    }
+
+    setReportOpen(true)
+  }
+
   const closeModal = () => {
     setOpen(false)
     setEdit(null)
@@ -514,13 +523,15 @@ export default function TankerDeliveries() {
             </button>
           ) : null}
 
-          <button
-            type="button"
-            onClick={() => setReportOpen(true)}
-            className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm"
-          >
-            Generate Report
-          </button>
+          {canManagerUse("generateReport") ? (
+            <button
+              type="button"
+              onClick={openReportModal}
+              className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm"
+            >
+              Generate Report
+            </button>
+          ) : null}
 
           {canManagerUse("deleteDelivery") ? (
             <button
@@ -779,11 +790,13 @@ export default function TankerDeliveries() {
 
       <MobileActionFab
         actions={[
-          {
-            label: "Generate Report",
-            className: "bg-purple-600",
-            onClick: () => setReportOpen(true),
-          },
+          canManagerUse("generateReport")
+            ? {
+                label: "Generate Report",
+                className: "bg-purple-600",
+                onClick: openReportModal,
+              }
+            : null,
           canManagerUse("deleteDelivery")
             ? {
                 label: "Delete Month",

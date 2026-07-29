@@ -287,6 +287,11 @@ export default function SimpleAuditRegisterPage({ config }) {
   }
 
   const exportReport = () => {
+    if (!canManagerUse("generateReport")) {
+      setNotice({ type: "error", text: "You do not have access to generate reports." })
+      return
+    }
+
     const fileBase = `${config.title.replace(/\s+/g, "_")}_Report`
     const headers = config.columns.map((column) => column.label)
     const rows = filteredEntries.map((entry) => config.columns.map((column) => getReportValue(entry, column)))
@@ -317,6 +322,15 @@ export default function SimpleAuditRegisterPage({ config }) {
     }
 
     setReportOpen(false)
+  }
+
+  const openReportModal = () => {
+    if (!canManagerUse("generateReport")) {
+      setNotice({ type: "error", text: "You do not have access to generate reports." })
+      return
+    }
+
+    setReportOpen(true)
   }
 
   const deleteSelectedMonth = async () => {
@@ -392,13 +406,15 @@ export default function SimpleAuditRegisterPage({ config }) {
 
 
 
-    <button
-      type="button"
-      onClick={() => setReportOpen(true)}
-      className="rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm"
-    >
-      Generate Report
-    </button>
+    {canManagerUse("generateReport") ? (
+      <button
+        type="button"
+        onClick={openReportModal}
+        className="rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm"
+      >
+        Generate Report
+      </button>
+    ) : null}
 
 
     {canManagerUse("deleteEntry") && (
@@ -657,11 +673,13 @@ export default function SimpleAuditRegisterPage({ config }) {
 
       <MobileActionFab
         actions={[
-          {
-            label: "Generate Report",
-            className: "bg-purple-600",
-            onClick: () => setReportOpen(true),
-          },
+          canManagerUse("generateReport")
+            ? {
+                label: "Generate Report",
+                className: "bg-purple-600",
+                onClick: openReportModal,
+              }
+            : null,
           canManagerUse("deleteEntry")
             ? {
                 label: "Delete Month",

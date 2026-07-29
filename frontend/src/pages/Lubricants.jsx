@@ -6,6 +6,7 @@ import * as XLSX from "xlsx"
 
 import MobileActionFab from "../components/MobileActionFab"
 import { useAuth } from "../contexts/AuthContext"
+import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
 import {
   addLubricant,
   addProduct,
@@ -76,6 +77,8 @@ const defaultProductForm = () => ({
 
 export default function Lubricants() {
   const { user } = useAuth()
+  const isManager = user?.role === "Manager"
+  const { canUse } = useManagerDashboardSettings("lubricants", isManager)
   const [data, setData] = useState([])
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState("")
@@ -117,6 +120,9 @@ export default function Lubricants() {
   })
   const [form, setForm] = useState(defaultSaleForm(user))
   const [productForm, setProductForm] = useState(defaultProductForm())
+
+  const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
+  const showNoAccess = (message) => setNotice({ type: "error", text: message })
 
   useEffect(() => {
     loadSales()
@@ -270,6 +276,15 @@ export default function Lubricants() {
   }
 
   const openSaleModal = (entry = null) => {
+    if (entry && !canManagerUse("editSale")) {
+      showNoAccess("You do not have access to edit lubricant sales.")
+      return
+    }
+    if (!entry && !canManagerUse("addSale")) {
+      showNoAccess("You do not have access to add lubricant sales.")
+      return
+    }
+
     if (entry) {
       setEdit(entry)
       setForm({
@@ -287,10 +302,20 @@ export default function Lubricants() {
   }
 
   const openEntryModePrompt = () => {
+    if (!canManagerUse("addSale")) {
+      showNoAccess("You do not have access to add lubricant sales.")
+      return
+    }
+
     setEntryModePrompt(true)
   }
 
   const openBulkSaleModal = () => {
+    if (!canManagerUse("addSale")) {
+      showNoAccess("You do not have access to add lubricant sales.")
+      return
+    }
+
     const defaults = defaultBulkSaleDefaults()
     setBulkDefaults(defaults)
     setBulkRows([buildBulkSaleRow(user, defaults)])
@@ -347,6 +372,11 @@ export default function Lubricants() {
   }
 
   const saveBulkSales = async () => {
+    if (!canManagerUse("addSale")) {
+      showNoAccess("You do not have access to add lubricant sales.")
+      return
+    }
+
     const invalid = bulkRows.some((row) => !row.date || !row.product || !row.price || !row.quantity || !row.soldBy)
 
     if (invalid) {
@@ -391,12 +421,22 @@ export default function Lubricants() {
   }
 
   const openCreateProductModal = () => {
+    if (!canManagerUse("addProduct")) {
+      showNoAccess("You do not have access to add lubricant products.")
+      return
+    }
+
     resetProductForm()
     setProductMode("create")
     setProductModal(true)
   }
 
   const openEditProductModal = (product) => {
+    if (!canManagerUse("editProduct")) {
+      showNoAccess("You do not have access to edit lubricant products.")
+      return
+    }
+
     setActiveProduct(product)
     setProductMode("edit")
     setProductForm({
@@ -410,6 +450,11 @@ export default function Lubricants() {
   }
 
   const openAddStockModal = (product) => {
+    if (!canManagerUse("addStock")) {
+      showNoAccess("You do not have access to add lubricant stock.")
+      return
+    }
+
     setActiveProduct(product)
     setProductMode("stock")
     setProductForm({
@@ -433,6 +478,15 @@ export default function Lubricants() {
   }
 
   const saveSale = async () => {
+    if (edit && !canManagerUse("editSale")) {
+      showNoAccess("You do not have access to edit lubricant sales.")
+      return
+    }
+    if (!edit && !canManagerUse("addSale")) {
+      showNoAccess("You do not have access to add lubricant sales.")
+      return
+    }
+
     if (!form.date || !form.product || !form.quantity || !form.price || !form.soldBy) {
       setNotice({ type: "error", text: "Please complete all sale fields." })
       return
@@ -477,6 +531,19 @@ export default function Lubricants() {
   }
 
   const saveProduct = async () => {
+    if (productMode === "create" && !canManagerUse("addProduct")) {
+      showNoAccess("You do not have access to add lubricant products.")
+      return
+    }
+    if (productMode === "edit" && !canManagerUse("editProduct")) {
+      showNoAccess("You do not have access to edit lubricant products.")
+      return
+    }
+    if (productMode === "stock" && !canManagerUse("addStock")) {
+      showNoAccess("You do not have access to add lubricant stock.")
+      return
+    }
+
     setSavingProduct(true)
 
     try {
@@ -552,6 +619,11 @@ export default function Lubricants() {
   }
 
   const askDeleteSale = (entry) => {
+    if (!canManagerUse("deleteSale")) {
+      showNoAccess("You do not have access to delete lubricant sales.")
+      return
+    }
+
     setConfirmState({
       title: "Delete Sale Entry",
       description: `Delete the sale entry for ${entry.product} on ${entry.date}?`,
@@ -566,6 +638,11 @@ export default function Lubricants() {
   }
 
   const askDeleteProduct = (product) => {
+    if (!canManagerUse("deleteProduct")) {
+      showNoAccess("You do not have access to delete lubricant products.")
+      return
+    }
+
     setConfirmState({
       title: "Delete Product",
       description: `Delete the product ${product.name}?`,
@@ -580,6 +657,11 @@ export default function Lubricants() {
   }
 
   const confirmDeleteMonth = async () => {
+    if (!canManagerUse("deleteMonth")) {
+      showNoAccess("You do not have access to delete month records.")
+      return
+    }
+
     if (!monthDeleteForm.month || !monthDeleteForm.year) {
       setNotice({ type: "error", text: "Please select the month and year first." })
       return
@@ -652,6 +734,11 @@ export default function Lubricants() {
   }
 
   const handleGenerate = () => {
+    if (!canManagerUse("generateReport")) {
+      showNoAccess("You do not have access to generate lubricant reports.")
+      return
+    }
+
     if (!reportData.length) {
       setNotice({ type: "error", text: "No report data found for the selected filters." })
       return
@@ -668,6 +755,11 @@ export default function Lubricants() {
   }
 
   const openReportModal = () => {
+    if (!canManagerUse("generateReport")) {
+      showNoAccess("You do not have access to generate lubricant reports.")
+      return
+    }
+
     setReportForm((current) => ({
       ...current,
       fromDate: fromDateFilter || current.fromDate,
@@ -732,33 +824,41 @@ export default function Lubricants() {
   />
 
   <div className="hidden gap-3 xl:ml-auto xl:flex">
-    <button
-      onClick={openCreateProductModal}
-      className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
-    >
-      + Add Product
-    </button>
+    {canManagerUse("addProduct") ? (
+      <button
+        onClick={openCreateProductModal}
+        className="rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm"
+      >
+        + Add Product
+      </button>
+    ) : null}
 
-    <button
-      onClick={openEntryModePrompt}
-      className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
-    >
-      + Add Sale
-    </button>
+    {canManagerUse("addSale") ? (
+      <button
+        onClick={openEntryModePrompt}
+        className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
+      >
+        + Add Sale
+      </button>
+    ) : null}
 
-    <button
-      onClick={openReportModal}
-      className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm"
-    >
-      Generate Report
-    </button>
+    {canManagerUse("generateReport") ? (
+      <button
+        onClick={openReportModal}
+        className="rounded-2xl bg-purple-600 px-5 py-3 font-medium text-white shadow-sm"
+      >
+        Generate Report
+      </button>
+    ) : null}
 
-        <button
-      onClick={() => setMonthDeleteOpen(true)}
-      className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 font-medium text-amber-700 shadow-sm"
-    >
-      Delete Month
-    </button>
+    {canManagerUse("deleteMonth") ? (
+      <button
+        onClick={() => setMonthDeleteOpen(true)}
+        className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 font-medium text-amber-700 shadow-sm"
+      >
+        Delete Month
+      </button>
+    ) : null}
 
 
   </div>
@@ -946,15 +1046,21 @@ export default function Lubricants() {
                       <td>{product.lastEditedAt ? `${formatDateTime(product.lastEditedAt)} - ${product.lastEditedBy || "-"}` : "-"}</td>
                       <td>
                         <div className="flex items-center justify-center gap-3">
-                          <button onClick={() => openAddStockModal(product)} className="text-green-500">
-                            Add Stock
-                          </button>
-                          <button onClick={() => openEditProductModal(product)} className="text-blue-500">
-                            Edit
-                          </button>
-                          <button onClick={() => askDeleteProduct(product)} className="text-red-500">
-                            Delete
-                          </button>
+                          {canManagerUse("addStock") ? (
+                            <button onClick={() => openAddStockModal(product)} className="text-green-500">
+                              Add Stock
+                            </button>
+                          ) : null}
+                          {canManagerUse("editProduct") ? (
+                            <button onClick={() => openEditProductModal(product)} className="text-blue-500">
+                              Edit
+                            </button>
+                          ) : null}
+                          {canManagerUse("deleteProduct") ? (
+                            <button onClick={() => askDeleteProduct(product)} className="text-red-500">
+                              Delete
+                            </button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -990,33 +1096,39 @@ export default function Lubricants() {
                       <InfoLine label="Added By" value={product.lastStockAddedBy || "-"} />
                       <InfoLine label="Last Edited" value={product.lastEditedAt ? `${formatDateTime(product.lastEditedAt)} - ${product.lastEditedBy || "-"}` : "-"} />
                       <div className="grid gap-2">
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            openAddStockModal(product)
-                          }}
-                          className="w-full rounded-xl border border-green-500/20 bg-green-500/10 py-2 text-sm text-green-500"
-                        >
-                          Add Stock
-                        </button>
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            openEditProductModal(product)
-                          }}
-                          className="w-full rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                        >
-                          Edit Product
-                        </button>
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            askDeleteProduct(product)
-                          }}
-                          className="w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                        >
-                          Delete
-                        </button>
+                        {canManagerUse("addStock") ? (
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              openAddStockModal(product)
+                            }}
+                            className="w-full rounded-xl border border-green-500/20 bg-green-500/10 py-2 text-sm text-green-500"
+                          >
+                            Add Stock
+                          </button>
+                        ) : null}
+                        {canManagerUse("editProduct") ? (
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              openEditProductModal(product)
+                            }}
+                            className="w-full rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                          >
+                            Edit Product
+                          </button>
+                        ) : null}
+                        {canManagerUse("deleteProduct") ? (
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              askDeleteProduct(product)
+                            }}
+                            className="w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                          >
+                            Delete
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   ) : null}
@@ -1071,12 +1183,16 @@ export default function Lubricants() {
                   </td>
                   <td>
                     <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => openSaleModal(entry)} className="text-blue-500">
-                        Edit
-                      </button>
-                      <button onClick={() => askDeleteSale(entry)} className="text-red-500">
-                        Delete
-                      </button>
+                      {canManagerUse("editSale") ? (
+                        <button onClick={() => openSaleModal(entry)} className="text-blue-500">
+                          Edit
+                        </button>
+                      ) : null}
+                      {canManagerUse("deleteSale") ? (
+                        <button onClick={() => askDeleteSale(entry)} className="text-red-500">
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -1124,24 +1240,28 @@ export default function Lubricants() {
                     <InfoLine label="Last Edited" value={entry.lastEditedAt ? formatDateTime(entry.lastEditedAt) : "Not edited yet"} />
                     <InfoLine label="Edited By" value={entry.lastEditedBy ? `${entry.lastEditedBy} (${entry.lastEditedByRole || "-"})` : "-"} />
                     <div className="flex gap-2">
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          openSaleModal(entry)
-                        }}
-                        className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          askDeleteSale(entry)
-                        }}
-                        className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                      >
-                        Delete
-                      </button>
+                      {canManagerUse("editSale") ? (
+                        <button
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            openSaleModal(entry)
+                          }}
+                          className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      {canManagerUse("deleteSale") ? (
+                        <button
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            askDeleteSale(entry)
+                          }}
+                          className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                        >
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -1564,27 +1684,35 @@ export default function Lubricants() {
 
       <MobileActionFab
         actions={[
-          {
-            label: "Add Sale",
-            className: "bg-red-600",
-            onClick: openEntryModePrompt,
-          },
-          {
-            label: "Add Product",
-            className: "bg-blue-600",
-            onClick: openCreateProductModal,
-          },
-          {
-            label: "Generate Report",
-            className: "bg-purple-600",
-            onClick: openReportModal,
-          },
-          {
-            label: "Delete Month",
-            className: "bg-amber-600",
-            onClick: () => setMonthDeleteOpen(true),
-          },
-        ]}
+          canManagerUse("addSale")
+            ? {
+                label: "Add Sale",
+                className: "bg-red-600",
+                onClick: openEntryModePrompt,
+              }
+            : null,
+          canManagerUse("addProduct")
+            ? {
+                label: "Add Product",
+                className: "bg-blue-600",
+                onClick: openCreateProductModal,
+              }
+            : null,
+          canManagerUse("generateReport")
+            ? {
+                label: "Generate Report",
+                className: "bg-purple-600",
+                onClick: openReportModal,
+              }
+            : null,
+          canManagerUse("deleteMonth")
+            ? {
+                label: "Delete Month",
+                className: "bg-amber-600",
+                onClick: () => setMonthDeleteOpen(true),
+              }
+            : null,
+        ].filter(Boolean)}
       />
     </div>
   )
@@ -1750,7 +1878,5 @@ function InfoLine({ label, value }) {
     </p>
   )
 }
-
-
 
 

@@ -115,8 +115,11 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addSale", label: "Add Sale", enabled: true },
       { key: "addProduct", label: "Add Product", enabled: true },
       { key: "addStock", label: "Add Stock", enabled: true },
+      { key: "editProduct", label: "Edit Product", enabled: true },
+      { key: "deleteProduct", label: "Delete Product", enabled: true },
       { key: "editSale", label: "Edit Sale", enabled: true },
       { key: "deleteSale", label: "Delete Sale", enabled: true },
+      { key: "deleteMonth", label: "Delete Month", enabled: true },
       { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
@@ -154,6 +157,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
       { key: "deleteEntry", label: "Delete Entry", enabled: true },
+      { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
   {
@@ -165,6 +169,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
       { key: "deleteEntry", label: "Delete Entry", enabled: true },
+      { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
   {
@@ -176,6 +181,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
       { key: "deleteEntry", label: "Delete Entry", enabled: true },
+      { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
   {
@@ -187,6 +193,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
       { key: "deleteEntry", label: "Delete Entry", enabled: true },
+      { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
   {

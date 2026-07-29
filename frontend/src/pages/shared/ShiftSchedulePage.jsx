@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
+import { useAuth } from "../../contexts/AuthContext";
+import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings";
 import { getEmployees } from "../../services/employeeApi";
 import {
   addShiftSchedule,
@@ -33,6 +35,11 @@ const baseForm = {
 const getDisplayTarget = (item) => (item.appliesToAll ? "All Employees" : item.employeeId?.name || "-");
 
 export default function ShiftSchedulePage() {
+  const { user } = useAuth();
+  const isManager = user?.role === "Manager";
+  const { canUse } = useManagerDashboardSettings("shifts", isManager);
+  const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey);
+
   const [employees, setEmployees] = useState([]);
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
@@ -54,6 +61,11 @@ export default function ShiftSchedulePage() {
   }, []);
 
   const openForm = (item = null) => {
+    if (!canManagerUse("saveSchedule")) {
+      setConfirmDialog({ open: true, message: "You do not have access to save schedules." });
+      return;
+    }
+
     if (item) {
       setEditing(item);
       setForm({
@@ -81,6 +93,11 @@ export default function ShiftSchedulePage() {
   };
 
   const submit = async () => {
+    if (!canManagerUse("saveSchedule")) {
+      setConfirmDialog({ open: true, message: "You do not have access to save schedules." });
+      return;
+    }
+
     if (editing) {
       await updateShiftSchedule(editing._id, form);
       setConfirmDialog({ open: true, message: "Schedule updated successfully!" });
@@ -90,6 +107,16 @@ export default function ShiftSchedulePage() {
     }
     closeModal();
     load();
+  };
+
+  const handleDelete = async (id) => {
+    if (!canManagerUse("deleteSchedule")) {
+      setConfirmDialog({ open: true, message: "You do not have access to delete schedules." });
+      return;
+    }
+
+    await deleteShiftSchedule(id);
+    await load();
   };
 
   const filteredItems = useMemo(() => {
@@ -118,11 +145,13 @@ export default function ShiftSchedulePage() {
       </section>
 
       {/* Desktop Add Button */}
-      <div className="hidden sm:flex sm:justify-end">
-        <button onClick={() => openForm()} className="btn btn-green">
-          + New Schedule
-        </button>
-      </div>
+      {canManagerUse("saveSchedule") ? (
+        <div className="hidden sm:flex sm:justify-end">
+          <button onClick={() => openForm()} className="btn btn-green">
+            + New Schedule
+          </button>
+        </div>
+      ) : null}
 
       {/* Search & Reset Section */}
       <section className="rounded-2xl p-0">
@@ -166,12 +195,16 @@ export default function ShiftSchedulePage() {
                   <td>{item.notes || "-"}</td>
                   <td>
                     <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => openForm(item)} className="text-blue-500">
-                        Edit
-                      </button>
-                      <button onClick={() => deleteShiftSchedule(item._id).then(load)} className="text-red-500">
-                        Delete
-                      </button>
+                      {canManagerUse("saveSchedule") ? (
+                        <button onClick={() => openForm(item)} className="text-blue-500">
+                          Edit
+                        </button>
+                      ) : null}
+                      {canManagerUse("deleteSchedule") ? (
+                        <button onClick={() => handleDelete(item._id)} className="text-red-500">
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -229,25 +262,28 @@ export default function ShiftSchedulePage() {
           <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
             {/* Optionally add extra info like "Assigned by" if available, but we keep simple */}
             <div className="flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openForm(item);
-                }}
-                className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-              >
-                Edit
-              </button>
-              <button
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await deleteShiftSchedule(item._id);
-                  await load();
-                }}
-                className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-              >
-                Delete
-              </button>
+              {canManagerUse("saveSchedule") ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openForm(item);
+                  }}
+                  className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                >
+                  Edit
+                </button>
+              ) : null}
+              {canManagerUse("deleteSchedule") ? (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await handleDelete(item._id);
+                  }}
+                  className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                >
+                  Delete
+                </button>
+              ) : null}
             </div>
           </div>
         )}
@@ -381,12 +417,14 @@ export default function ShiftSchedulePage() {
       {/* Mobile FAB */}
       <MobileActionFab
         actions={[
-          {
-            label: editing ? "Edit Schedule" : "New Schedule",
-            className: "bg-green-600",
-            onClick: () => openForm(),
-          },
-        ]}
+          canManagerUse("saveSchedule")
+            ? {
+                label: editing ? "Edit Schedule" : "New Schedule",
+                className: "bg-green-600",
+                onClick: () => openForm(),
+              }
+            : null,
+        ].filter(Boolean)}
       />
     </div>
   );

@@ -346,6 +346,16 @@ export default function CardSwipe() {
     setModalOpen(true)
   }
 
+  const openEditModal = (entry) => {
+    if (!canManagerUse("editEntry")) {
+      setNotice({ type: "error", text: "You do not have access to edit card swipe entries." })
+      return
+    }
+
+    setEditData(entry)
+    setModalOpen(true)
+  }
+
   const openEntryModePrompt = () => {
     if (!canManagerUse("addEntry")) {
       setNotice({ type: "error", text: "You do not have access to add card swipe entries." })
@@ -647,9 +657,11 @@ export default function CardSwipe() {
       </button>
     ) : null}
 
-    <button type="button" className="btn btn-red" onClick={askDeleteMonth}>
-          Delete Month
-        </button>
+    {canManagerUse("deleteMonth") ? (
+      <button type="button" className="btn btn-red" onClick={askDeleteMonth}>
+        Delete Month
+      </button>
+    ) : null}
   </div>
       </div>
 
@@ -710,18 +722,19 @@ export default function CardSwipe() {
                 </td>
                 <td>
                   <div className="flex items-center justify-center gap-3">
-                    <button
-                      className="text-blue-500"
-                      onClick={() => {
-                        setEditData(entry)
-                        setModalOpen(true)
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button className="text-red-500" onClick={() => askDeleteEntry(entry)}>
-                      Delete
-                    </button>
+                    {canManagerUse("editEntry") ? (
+                      <button
+                        className="text-blue-500"
+                        onClick={() => openEditModal(entry)}
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {canManagerUse("deleteEntry") ? (
+                      <button className="text-red-500" onClick={() => askDeleteEntry(entry)}>
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>
@@ -769,25 +782,28 @@ export default function CardSwipe() {
                   <InfoLine label="Last Edited" value={entry.lastEditedAt ? formatDateTime(entry.lastEditedAt) : "Not edited yet"} />
                   <InfoLine label="Edited By" value={entry.lastEditedBy ? `${entry.lastEditedBy} (${entry.lastEditedByRole || "-"})` : "-"} />
                   <div className="flex gap-2">
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        setEditData(entry)
-                        setModalOpen(true)
-                      }}
-                      className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        askDeleteEntry(entry)
-                      }}
-                      className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                    >
-                      Delete
-                    </button>
+                    {canManagerUse("editEntry") ? (
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openEditModal(entry)
+                        }}
+                        className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {canManagerUse("deleteEntry") ? (
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          askDeleteEntry(entry)
+                        }}
+                        className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                      >
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               ) : null}
@@ -1002,22 +1018,28 @@ export default function CardSwipe() {
 
       <MobileActionFab
         actions={[
-          {
-            label: "Add Entry",
-            className: "bg-blue-600",
-            onClick: openEntryModePrompt,
-          },
-          {
-            label: "Generate Report",
-            className: "bg-purple-600",
-            onClick: openReportModal,
-          },
-          {
-            label: "Delete Month",
-            className: "bg-red-600",
-            onClick: askDeleteMonth,
-          },
-        ]}
+          canManagerUse("addEntry")
+            ? {
+                label: "Add Entry",
+                className: "bg-blue-600",
+                onClick: openEntryModePrompt,
+              }
+            : null,
+          canManagerUse("generateReport")
+            ? {
+                label: "Generate Report",
+                className: "bg-purple-600",
+                onClick: openReportModal,
+              }
+            : null,
+          canManagerUse("deleteMonth")
+            ? {
+                label: "Delete Month",
+                className: "bg-red-600",
+                onClick: askDeleteMonth,
+              }
+            : null,
+        ].filter(Boolean)}
       />
     </div>
   )

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
+import { useAuth } from "../../contexts/AuthContext";
+import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings";
 import { getEmployees } from "../../services/employeeApi";
 import { addTask, deleteTask, getTasks, updateTask } from "../../services/taskApi";
 
@@ -33,6 +35,9 @@ const getStatusColor = (status) => {
 };
 
 export default function TasksPage() {
+  const { user } = useAuth();
+  const isManager = user?.role === "Manager";
+  const { canUse } = useManagerDashboardSettings("tasks", isManager);
   const [employees, setEmployees] = useState([]);
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
@@ -53,7 +58,18 @@ export default function TasksPage() {
     load();
   }, []);
 
+  const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey);
+
   const openForm = (item = null) => {
+    if (item && !canManagerUse("updateTask")) {
+      setConfirmDialog({ open: true, message: "You do not have access to update tasks." });
+      return;
+    }
+    if (!item && !canManagerUse("assignTask")) {
+      setConfirmDialog({ open: true, message: "You do not have access to assign tasks." });
+      return;
+    }
+
     if (item) {
       setEditing(item);
       setForm({
@@ -81,14 +97,32 @@ export default function TasksPage() {
 
   const submit = async () => {
     if (editing) {
+      if (!canManagerUse("updateTask")) {
+        setConfirmDialog({ open: true, message: "You do not have access to update tasks." });
+        return;
+      }
       await updateTask(editing._id, form);
       setConfirmDialog({ open: true, message: "Task updated successfully!" });
     } else {
+      if (!canManagerUse("assignTask")) {
+        setConfirmDialog({ open: true, message: "You do not have access to assign tasks." });
+        return;
+      }
       await addTask(form);
       setConfirmDialog({ open: true, message: "Task assigned successfully!" });
     }
     closeModal();
     load();
+  };
+
+  const handleDelete = async (id) => {
+    if (!canManagerUse("deleteTask")) {
+      setConfirmDialog({ open: true, message: "You do not have access to delete tasks." });
+      return;
+    }
+
+    await deleteTask(id);
+    await load();
   };
 
   const filteredItems = useMemo(() => {
@@ -112,11 +146,13 @@ export default function TasksPage() {
       </section>
 
       {/* Desktop Add Task Button */}
-      <div className="hidden sm:flex sm:justify-end">
-        <button onClick={() => openForm()} className="btn btn-green">
-          + New Task
-        </button>
-      </div>
+      {canManagerUse("assignTask") && (
+        <div className="hidden sm:flex sm:justify-end">
+          <button onClick={() => openForm()} className="btn btn-green">
+            + New Task
+          </button>
+        </div>
+      )}
 
       {/* Search & Filter Section */}
       <section className="rounded-2xl p-0">
@@ -172,12 +208,16 @@ export default function TasksPage() {
                   <td>{item.instructions || "-"}</td>
                   <td>
                     <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => openForm(item)} className="text-blue-500">
-                        Edit
-                      </button>
-                      <button onClick={() => deleteTask(item._id).then(load)} className="text-red-500">
-                        Delete
-                      </button>
+                      {canManagerUse("updateTask") && (
+                        <button onClick={() => openForm(item)} className="text-blue-500">
+                          Edit
+                        </button>
+                      )}
+                      {canManagerUse("deleteTask") && (
+                        <button onClick={() => handleDelete(item._id)} className="text-red-500">
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -221,25 +261,28 @@ export default function TasksPage() {
                 {isOpen && (
                   <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
                     <div className="flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openForm(item);
-                        }}
-                        className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await deleteTask(item._id);
-                          await load();
-                        }}
-                        className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                      >
-                        Delete
-                      </button>
+                      {canManagerUse("updateTask") && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openForm(item);
+                          }}
+                          className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {canManagerUse("deleteTask") && (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await handleDelete(item._id);
+                          }}
+                          className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -370,12 +413,14 @@ export default function TasksPage() {
       {/* Mobile FAB */}
       <MobileActionFab
         actions={[
-          {
-            label: "New Task",
-            className: "bg-green-600",
-            onClick: () => openForm(),
-          },
-        ]}
+          canManagerUse("assignTask")
+            ? {
+                label: "New Task",
+                className: "bg-green-600",
+                onClick: () => openForm(),
+              }
+            : null,
+        ].filter(Boolean)}
       />
     </div>
   );
