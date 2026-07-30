@@ -33,6 +33,18 @@ const getPreviousMonth = () => {
   return date.toISOString().slice(0, 7)
 }
 
+const getDaysInMonth = (value) => {
+  const dateKey = value ? String(value).slice(0, 10) : getCurrentMonth()
+  const [year, month] = dateKey.split("-").map(Number)
+
+  if (!year || !month) {
+    const today = new Date()
+    return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  }
+
+  return new Date(year, month, 0).getDate()
+}
+
 const statusMeta = {
   present: {
     label: "Present",
@@ -77,9 +89,6 @@ const getReportEntries = (entries, fromDate, toDate) => {
 
 const calculateAttendanceSummary = (employee, entries) => {
   const baseSalary = Number(employee?.salary || 0)
-  const perDay = baseSalary / 30
-  const doublePay = perDay * 2
-  const halfPay = perDay / 2
 
   let present = 0
   let half = 0
@@ -88,8 +97,11 @@ const calculateAttendanceSummary = (employee, entries) => {
   let shortage = 0
   let advance = 0
   let bonus = 0
+  let earned = 0
 
   entries.forEach((entry) => {
+    const perDay = baseSalary / getDaysInMonth(entry.date)
+
     if (entry.status === "present") {
       present += 1
     }
@@ -108,9 +120,19 @@ const calculateAttendanceSummary = (employee, entries) => {
 
     shortage += Number(entry.shortage || 0)
     advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+
+    if (entry.status === "present") {
+      earned += perDay
+    }
+    if (entry.status === "half") {
+      earned += perDay / 2
+    }
+    if (entry.status === "double") {
+      earned += perDay * 2
+    }
   })
 
-  const earned = Math.round(present * perDay + half * halfPay + doubleShift * doublePay)
+  earned = Math.round(earned)
   const final = Math.round(earned + bonus + shortage - advance)
 
   return {
