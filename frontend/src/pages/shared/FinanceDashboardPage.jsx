@@ -67,6 +67,18 @@ const formatNumber = (value) => Number(value || 0).toLocaleString("en-IN", { max
 const getDateKey = (value) => String(value || "").slice(0, 10)
 const getMonthKey = (value) => getDateKey(value).slice(0, 7)
 
+const getDaysInMonth = (value) => {
+  const dateKey = getDateKey(value) || currentMonth()
+  const [year, month] = dateKey.split("-").map(Number)
+
+  if (!year || !month) {
+    const date = new Date()
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  return new Date(year, month, 0).getDate()
+}
+
 const filterByPeriod = (entries, filters) => {
   const useDateRange = Boolean(filters.fromDate || filters.toDate)
   return (entries || []).filter((entry) => {
@@ -81,15 +93,17 @@ const filterByPeriod = (entries, filters) => {
 
 const calculateAttendanceSummary = (employee, entries) => {
   const baseSalary = Number(employee?.salary || 0)
-  const perDay = baseSalary / 30
   let present = 0
   let half = 0
   let doubleShift = 0
   let shortage = 0
   let advance = 0
   let bonus = 0
+  let earned = 0
 
   ;(entries || []).forEach((entry) => {
+    const perDay = baseSalary / getDaysInMonth(entry.date)
+
     if (entry.status === "present") present += 1
     if (entry.status === "half") half += 1
     if (entry.status === "double") doubleShift += 1
@@ -97,9 +111,13 @@ const calculateAttendanceSummary = (employee, entries) => {
 
     shortage += Number(entry.shortage || 0)
     advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+
+    if (entry.status === "present") earned += perDay
+    if (entry.status === "half") earned += perDay / 2
+    if (entry.status === "double") earned += perDay * 2
   })
 
-  const earned = Math.round(present * perDay + half * (perDay / 2) + doubleShift * (perDay * 2))
+  earned = Math.round(earned)
   return { earned, bonus, final: Math.round(earned + bonus + shortage - advance) }
 }
 
