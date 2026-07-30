@@ -25,6 +25,17 @@ const buildDayRange = (date) => {
   }
 }
 
+const getDaysInMonth = (value) => {
+  const date = value ? new Date(value) : new Date()
+
+  if (Number.isNaN(date.getTime())) {
+    const today = new Date()
+    return new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
+  }
+
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+}
+
 exports.getSalarySummary = async (req, res) => {
   try {
     const employeeId = req.params.employeeId || req.user.employeeId
@@ -59,7 +70,6 @@ exports.getSalarySummary = async (req, res) => {
     const attendance = await EmployeeAttendance.find(attendanceQuery).sort({ date: 1 })
 
     const monthlySalary = Number(employee.salary || 0)
-    const perDay = monthlySalary / 30
 
     let present = 0
     let absent = 0
@@ -68,8 +78,11 @@ exports.getSalarySummary = async (req, res) => {
     let shortage = 0
     let advance = 0
     let bonus = 0
+    let earned = 0
 
     attendance.forEach((entry) => {
+      const perDay = monthlySalary / getDaysInMonth(entry.date)
+
       if (entry.status === "present") present += 1
       if (entry.status === "absent") absent += 1
       if (entry.status === "double") doubleShift += 1
@@ -78,10 +91,11 @@ exports.getSalarySummary = async (req, res) => {
 
       shortage += Number(entry.shortage || 0)
       advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
-    })
 
-    const earned =
-      present * perDay + doubleShift * perDay * 2 + halfShift * perDay * 0.5
+      if (entry.status === "present") earned += perDay
+      if (entry.status === "double") earned += perDay * 2
+      if (entry.status === "half") earned += perDay * 0.5
+    })
 
     res.json({
       employee: {
