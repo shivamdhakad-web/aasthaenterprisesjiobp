@@ -385,6 +385,19 @@ export default function Employees() {
     [selectedEmployee, attendance],
   )
 
+  const searchFinalSummary = useMemo(() => {
+    const records = attendance.filter((entry) => {
+      if (!selectedMonth) {
+        return true
+      }
+
+      const entryMonth = entry.date ? new Date(entry.date).toISOString().slice(0, 7) : ""
+      return entryMonth && entryMonth <= selectedMonth
+    })
+
+    return calculateAttendanceSummary(selectedEmployee, records)
+  }, [attendance, selectedEmployee, selectedMonth])
+
   const lastMonthAdvance = useMemo(() => {
     const previousMonth = getPreviousMonth()
     return attendance.reduce((total, entry) => {
@@ -568,6 +581,24 @@ export default function Employees() {
         ring: "border-violet-200 bg-violet-50/80",
       },
       {
+        key: "searchFinalBalance",
+        label: "Search Final Balance",
+        value: formatCurrency(searchFinalSummary.final),
+        accent: Number(searchFinalSummary.final) >= 0 ? "text-blue-600" : "text-rose-600",
+        ring: Number(searchFinalSummary.final) >= 0
+          ? "border-blue-200 bg-blue-50/80"
+          : "border-rose-200 bg-rose-50/80",
+      },
+      {
+        key: "searchMonthBalance",
+        label: "Search Month Balance",
+        value: formatCurrency(summary.final),
+        accent: Number(summary.final) >= 0 ? "text-cyan-600" : "text-rose-600",
+        ring: Number(summary.final) >= 0
+          ? "border-cyan-200 bg-cyan-50/80"
+          : "border-rose-200 bg-rose-50/80",
+      },
+      {
         key: "final",
         label: "Final Balance",
         value: formatCurrency(allTimeSummary.final),
@@ -577,7 +608,7 @@ export default function Employees() {
           : "border-rose-200 bg-rose-50/80",
       },
     ],
-    [allTimeSummary, lastMonthAdvance, summary],
+    [allTimeSummary, lastMonthAdvance, searchFinalSummary, summary],
   )
 
   const salaryTopCards = useMemo(

@@ -2,15 +2,23 @@ const BillGenerator = require("../models/BillGenerator")
 
 const numberValue = (value) => Number(value || 0)
 
-const cleanupOldBills = () =>
-  BillGenerator.deleteMany({
-    createdAt: { $lt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
-  })
+let expiryIndexChecked = false
+
+const disableBillExpiryIndex = async () => {
+  if (expiryIndexChecked) return
+  expiryIndexChecked = true
+
+  try {
+    await BillGenerator.collection.dropIndex("expiresAt_1")
+  } catch (_error) {
+    // The index only exists on older deployments that had auto-delete enabled.
+  }
+}
 
 const buildPayload = (payload = {}, audit = {}) => {
   const items = Array.isArray(payload.items)
     ? payload.items
-        .filter((item) => item.product || item.description || item.quantity || item.rate)
+        .filter((item) => item.product || item.date || item.quantity || item.rate)
         .map((item) => {
           const quantity = numberValue(item.quantity)
           const rate = numberValue(item.rate)
@@ -19,6 +27,8 @@ const buildPayload = (payload = {}, audit = {}) => {
           return {
             product: item.product || "",
             description: item.description || "",
+            date: item.date || payload.billDate || "",
+            unit: item.unit || "Ltr",
             quantity,
             rate,
             amount,
@@ -43,19 +53,18 @@ const buildPayload = (payload = {}, audit = {}) => {
     discount,
     grandTotal,
     createdBy: payload.createdBy || audit.createdBy || "",
-    expiresAt: payload.expiresAt || new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
     ...audit,
   }
 }
 
 exports.getBills = async (_req, res) => {
-  await cleanupOldBills()
+  await disableBillExpiryIndex()
   const data = await BillGenerator.find().sort({ createdAt: -1 })
   res.json(data)
 }
 
 exports.addBill = async (req, res) => {
-  await cleanupOldBills()
+  await disableBillExpiryIndex()
   const payload = buildPayload(req.body, {
     createdBy: req.body.createdBy || req.user?.name || "Admin",
   })
@@ -65,7 +74,7 @@ exports.addBill = async (req, res) => {
 }
 
 exports.updateBill = async (req, res) => {
-  await cleanupOldBills()
+  await disableBillExpiryIndex()
   const bill = await BillGenerator.findByIdAndUpdate(
     req.params.id,
     buildPayload(req.body, {

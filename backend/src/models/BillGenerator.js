@@ -4,6 +4,8 @@ const billItemSchema = new mongoose.Schema(
   {
     product: { type: String, default: "" },
     description: { type: String, default: "" },
+    date: { type: String, default: "" },
+    unit: { type: String, default: "Ltr" },
     quantity: { type: Number, default: 0 },
     rate: { type: Number, default: 0 },
     amount: { type: Number, default: 0 },
@@ -28,11 +30,6 @@ const billGeneratorSchema = new mongoose.Schema(
     lastEditedAt: { type: Date },
     lastEditedBy: { type: String, default: "" },
     lastEditedByRole: { type: String, default: "" },
-    expiresAt: {
-      type: Date,
-      default: () => new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      index: { expires: 0 },
-    },
   },
   { timestamps: true },
 )
