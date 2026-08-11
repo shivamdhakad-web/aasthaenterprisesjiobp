@@ -12,7 +12,7 @@ date:{type:Date,required:true},
 
 status:{
 type:String,
-enum:["present","absent","double","half","bonus"],
+enum:["present","present_half","absent","double","half","bonus"],
 default:"present"
 },
 
@@ -55,3 +55,5 @@ lastEditedByRole:{type:String,default:""}
 },{timestamps:true})
 
 module.exports = mongoose.model("EmployeeAttendance",attendanceSchema)
+
+

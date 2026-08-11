@@ -74,6 +74,7 @@ exports.getSalarySummary = async (req, res) => {
     let present = 0
     let absent = 0
     let doubleShift = 0
+    let presentHalfShift = 0
     let halfShift = 0
     let shortage = 0
     let advance = 0
@@ -86,6 +87,7 @@ exports.getSalarySummary = async (req, res) => {
       if (entry.status === "present") present += 1
       if (entry.status === "absent") absent += 1
       if (entry.status === "double") doubleShift += 1
+      if (entry.status === "present_half") presentHalfShift += 1
       if (entry.status === "half") halfShift += 1
       if (entry.status === "bonus") bonus += Number(entry.bonusAmount || 0)
 
@@ -94,6 +96,7 @@ exports.getSalarySummary = async (req, res) => {
 
       if (entry.status === "present") earned += perDay
       if (entry.status === "double") earned += perDay * 2
+      if (entry.status === "present_half") earned += perDay * 1.5
       if (entry.status === "half") earned += perDay * 0.5
     })
 
@@ -112,6 +115,7 @@ exports.getSalarySummary = async (req, res) => {
         present,
         absent,
         double: doubleShift,
+        presentHalf: presentHalfShift,
         half: halfShift,
         shortage,
         advance,
@@ -125,3 +129,6 @@ exports.getSalarySummary = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+
+
+

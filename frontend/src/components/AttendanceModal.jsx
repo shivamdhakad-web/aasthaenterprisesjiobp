@@ -228,6 +228,7 @@ export default function AttendanceModal({
                         className="input"
                       >
                         <option value="present">Present</option>
+                        <option value="present_half">Present + Half Shift</option>
                         <option value="half">Half Shift</option>
                         <option value="absent">Absent</option>
                         <option value="double">Double Shift</option>
@@ -351,7 +352,8 @@ export default function AttendanceModal({
               </span>
               <select name="status" value={form.status} onChange={handleChange} className="input">
                 <option value="present">Present</option>
-                <option value="half">Half Shift</option>
+                <option value="present_half">Present + Half Shift</option>
+                        <option value="half">Half Shift</option>
                 <option value="absent">Absent</option>
                 <option value="double">Double Shift</option>
                 <option value="bonus">Bonus</option>
@@ -423,5 +425,8 @@ export default function AttendanceModal({
     </div>
   )
 }
+
+
+
 
 

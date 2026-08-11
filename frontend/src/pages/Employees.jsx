@@ -51,6 +51,11 @@ const statusMeta = {
     numberClass: "text-emerald-500",
     cardClass: "border-emerald-200 bg-emerald-50/80",
   },
+  present_half: {
+    label: "Present + Half Shift",
+    numberClass: "text-teal-500",
+    cardClass: "border-teal-200 bg-teal-50/80",
+  },
   half: {
     label: "Half Shift",
     numberClass: "text-amber-500",
@@ -91,6 +96,7 @@ const calculateAttendanceSummary = (employee, entries) => {
   const baseSalary = Number(employee?.salary || 0)
 
   let present = 0
+  let presentHalf = 0
   let half = 0
   let absent = 0
   let doubleShift = 0
@@ -104,6 +110,9 @@ const calculateAttendanceSummary = (employee, entries) => {
 
     if (entry.status === "present") {
       present += 1
+    }
+    if (entry.status === "present_half") {
+      presentHalf += 1
     }
     if (entry.status === "half") {
       half += 1
@@ -124,6 +133,9 @@ const calculateAttendanceSummary = (employee, entries) => {
     if (entry.status === "present") {
       earned += perDay
     }
+    if (entry.status === "present_half") {
+      earned += perDay * 1.5
+    }
     if (entry.status === "half") {
       earned += perDay / 2
     }
@@ -137,6 +149,7 @@ const calculateAttendanceSummary = (employee, entries) => {
 
   return {
     present,
+    presentHalf,
     half,
     absent,
     doubleShift,
@@ -170,9 +183,10 @@ const buildAttendanceReportPdf = ({ employee, entries, fromDate, toDate }) => {
   doc.text("Summary", 14, 68)
   doc.setFont("helvetica", "normal")
   doc.text(`Present: ${summary.present}`, 14, 76)
-  doc.text(`Half Shift: ${summary.half}`, 62, 76)
-  doc.text(`Absent: ${summary.absent}`, 112, 76)
-  doc.text(`Double Shift: ${summary.doubleShift}`, 155, 76)
+  doc.text(`Present + Half: ${summary.presentHalf}`, 52, 76)
+  doc.text(`Half Shift: ${summary.half}`, 124, 76)
+  doc.text(`Absent: ${summary.absent}`, 14, 84)
+  doc.text(`Double Shift: ${summary.doubleShift}`, 62, 84)
   doc.text(`Earned: ${formatCurrency(summary.earned)}`, 14, 84)
   doc.text(`Bonus: ${formatCurrency(summary.bonus)}`, 78, 84)
   doc.text(`Shortage: ${formatCurrency(summary.shortage)}`, 140, 84)
@@ -212,6 +226,7 @@ const buildAttendanceReportExcel = ({ employee, entries, fromDate, toDate }) => 
       From: fromDate || "All Dates",
       To: toDate || "All Dates",
       Present: summary.present,
+      PresentHalfShift: summary.presentHalf,
       HalfShift: summary.half,
       Absent: summary.absent,
       DoubleShift: summary.doubleShift,
@@ -521,6 +536,13 @@ export default function Employees() {
         value: summary.present,
         accent: "text-emerald-500",
         ring: "border-emerald-200 bg-emerald-50/80",
+      },
+      {
+        key: "presentHalf",
+        label: "Present + Half Shift",
+        value: summary.presentHalf,
+        accent: "text-teal-500",
+        ring: "border-teal-200 bg-teal-50/80",
       },
       {
         key: "half",
@@ -2110,3 +2132,6 @@ function ConfirmDialog({
     </div>
   )
 }
+
+
+

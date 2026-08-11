@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getSalarySummary } from "../../services/salaryApi";
 import {
     Calendar,
@@ -58,6 +58,12 @@ const metricConfigs = {
         tone: "green",
         label: "Present",
         gradient: "from-emerald-500 to-teal-400",
+    },
+    presentHalf: {
+        icon: Clock,
+        tone: "cyan",
+        label: "Present + Half",
+        gradient: "from-teal-500 to-cyan-400",
     },
     half: {
         icon: Clock,
@@ -188,6 +194,7 @@ function SalaryEntryCard({ entry }) {
     const statusConfig = {
         absent: { tone: "rose", label: "Absent" },
         bonus: { tone: "violet", label: "Bonus" },
+        present_half: { tone: "cyan", label: "Present + Half" },
         half: { tone: "amber", label: "Half" },
         present: { tone: "emerald", label: "Present" },
         double: { tone: "cyan", label: "Double" },
@@ -227,15 +234,15 @@ function SalaryEntryCard({ entry }) {
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--border-color)] pt-4 text-sm">
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Cash:</span>
-                    <span className="font-semibold">₹{formatCurrency(entry.advanceCash)}</span>
+                    <span className="font-semibold">?{formatCurrency(entry.advanceCash)}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Petrol:</span>
-                    <span className="font-semibold">₹{formatCurrency(entry.advancePetrol)}</span>
+                    <span className="font-semibold">?{formatCurrency(entry.advancePetrol)}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Bonus:</span>
-                    <span className="font-semibold">₹{formatCurrency(getEntryBonus(entry))}</span>
+                    <span className="font-semibold">?{formatCurrency(getEntryBonus(entry))}</span>
                 </span>
                 {entry.remark && (
                     <span className="flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-xs text-[color:var(--text-muted)]">
@@ -325,7 +332,7 @@ export default function EmployeeSalary() {
 
     return (
         <div className="mx-auto w-full max-w-[1500px] space-y-6 px-4 pb-12 text-[color:var(--text-primary)] sm:px-6 lg:px-8">
-            {/* ====== FIXED â€œMy Salaryâ€ CARD ====== */}
+            {/* ====== FIXED “My Salary” CARD ====== */}
 <section className="relative mt-2 overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-7 shadow-[0_18px_45px_rgba(16,185,129,0.10)]">
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.10),transparent_30%)]" />
     <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-200/30 blur-3xl" />
@@ -475,21 +482,27 @@ export default function EmployeeSalary() {
     <div className=" mt-3">
                 <SalaryMetric
                     label="Final Balance"
-                    value={`₹${formatCurrency(finalBalance)}`}
+                    value={`?${formatCurrency(finalBalance)}`}
                     tone="blue"
                     icon={metricConfigs.finalBalance.icon}
                 />
     </div>
 </section>
 
-            {/* ====== METRIC CARDS â€“ darker text ====== */}
+            {/* ====== METRIC CARDS – darker text ====== */}
             <section className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5">
                 <SalaryMetric
                     label="Present"
                     value={breakdown.present || 0}
                     tone="green"
                     icon={metricConfigs.present.icon}
+                />                <SalaryMetric
+                    label="Present + Half"
+                    value={breakdown.presentHalf || 0}
+                    tone="cyan"
+                    icon={metricConfigs.presentHalf.icon}
                 />
+
                 <SalaryMetric
                     label="Half"
                     value={breakdown.half || 0}
@@ -510,31 +523,31 @@ export default function EmployeeSalary() {
                 />
                 <SalaryMetric
                     label="Earned"
-                    value={`₹${formatCurrency(breakdown.earned)}`}
+                    value={`?${formatCurrency(breakdown.earned)}`}
                     tone="green"
                     icon={metricConfigs.earned.icon}
                 />
                 <SalaryMetric
                     label="Shortage"
-                    value={`₹${formatCurrency(breakdown.shortage)}`}
+                    value={`?${formatCurrency(breakdown.shortage)}`}
                     tone="rose"
                     icon={metricConfigs.shortage.icon}
                 />
                 <SalaryMetric
                     label="Advance"
-                    value={`₹${formatCurrency(breakdown.advance)}`}
+                    value={`?${formatCurrency(breakdown.advance)}`}
                     tone="amber"
                     icon={metricConfigs.advance.icon}
                 />
                 <SalaryMetric
                     label="Last Month Advance"
-                    value={`₹${formatCurrency(lastMonthAdvance)}`}
+                    value={`?${formatCurrency(lastMonthAdvance)}`}
                     tone="amber"
                     icon={metricConfigs.advance.icon}
                 />
                 <SalaryMetric
                     label="Bonus"
-                    value={`₹${formatCurrency(breakdown.bonus)}`}
+                    value={`?${formatCurrency(breakdown.bonus)}`}
                     tone="violet"
                     icon={metricConfigs.bonus.icon}
                 />
@@ -615,8 +628,10 @@ export default function EmployeeSalary() {
                                                         ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
                                                         : entry.status?.toLowerCase() === "bonus"
                                                             ? "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400"
-                                                            : entry.status?.toLowerCase() === "half"
-                                                                ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+                                                            : entry.status?.toLowerCase() === "present_half"
+                                                                ? "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-400"
+                                                                : entry.status?.toLowerCase() === "half"
+                                                                    ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
                                                                 : entry.status?.toLowerCase() === "double"
                                                                     ? "bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10 dark:text-cyan-400"
                                                                     : "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
@@ -630,16 +645,16 @@ export default function EmployeeSalary() {
                                                 shortage < 0 ? "text-rose-500" : "text-emerald-500"
                                             }`}
                                         >
-                                            ₹{formatCurrency(shortage)}
+                                            ?{formatCurrency(shortage)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ₹{formatCurrency(entry.advanceCash)}
+                                            ?{formatCurrency(entry.advanceCash)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ₹{formatCurrency(entry.advancePetrol)}
+                                            ?{formatCurrency(entry.advancePetrol)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ₹{formatCurrency(getEntryBonus(entry))}
+                                            ?{formatCurrency(getEntryBonus(entry))}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-[color:var(--text-muted)]">
                                             {entry.remark || "-"}
@@ -668,6 +683,9 @@ export default function EmployeeSalary() {
         </div>
     );
 }
+
+
+
 
 
 
