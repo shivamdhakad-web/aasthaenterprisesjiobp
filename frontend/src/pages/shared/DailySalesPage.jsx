@@ -112,14 +112,14 @@ export default function DailySalesPage() {
           const avgMsPrice = msSale ? msProfit / msSale : 0
 
           return [
-            { label: "HSD Sale", value: formatNumber(hsdSale), tone: "green" },
-            { label: "MS Sale", value: formatNumber(msSale), tone: "amber" },
-            { label: "HSD Profit", value: formatNumber(hsdProfit), tone: "green" },
-            { label: "MS Profit", value: formatNumber(msProfit), tone: "amber" },
-            { label: "Avg HSD Price", value: formatNumber(avgHsdPrice.toFixed(2)), tone: "violet" },
-            { label: "Avg MS Price", value: formatNumber(avgMsPrice.toFixed(2)), tone: "blue" },
-            { label: "HSD Loss / Gain", value: formatNumber(hsdLossGain.toFixed(2)), tone: hsdLossGain >= 0 ? "green" : "rose" },
-            { label: "MS Loss / Gain", value: formatNumber(msLossGain.toFixed(2)), tone: msLossGain >= 0 ? "green" : "rose" },
+            { key: "hsdSale", label: "HSD Sale", value: formatNumber(hsdSale), tone: "green" },
+            { key: "msSale", label: "MS Sale", value: formatNumber(msSale), tone: "amber" },
+            { key: "hsdProfit", label: "HSD Profit", value: formatNumber(hsdProfit), tone: "green" },
+            { key: "msProfit", label: "MS Profit", value: formatNumber(msProfit), tone: "amber" },
+            { key: "avgHsdPrice", label: "Avg HSD Price", value: formatNumber(avgHsdPrice.toFixed(2)), tone: "violet" },
+            { key: "avgMsPrice", label: "Avg MS Price", value: formatNumber(avgMsPrice.toFixed(2)), tone: "blue" },
+            { key: "hsdLossGain", label: "HSD Loss / Gain", value: formatNumber(hsdLossGain.toFixed(2)), tone: hsdLossGain >= 0 ? "green" : "rose" },
+            { key: "msLossGain", label: "MS Loss / Gain", value: formatNumber(msLossGain.toFixed(2)), tone: msLossGain >= 0 ? "green" : "rose" },
           ]
         },
         preview: (form) => {

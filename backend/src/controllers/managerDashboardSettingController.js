@@ -38,6 +38,13 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Tanker Deliveries",
     path: "/manager/tanker-deliveries",
     order: 6,
+    cards: [
+      card("deliveries", "Deliveries"),
+      card("totalQuantity", "Total Quantity"),
+      card("unloadedQty", "Unloaded Qty"),
+      card("loss", "Loss"),
+      card("gain", "Gain"),
+    ],
     buttons: [
       { key: "addDelivery", label: "Add Delivery", enabled: true },
       { key: "editDelivery", label: "Edit Delivery", enabled: true },

@@ -90,8 +90,9 @@ const buildPayload = (form, user) => {
 export default function TankerDeliveries() {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
-  const { canUse } = useManagerDashboardSettings("tankerDeliveries", isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings("tankerDeliveries", isManager)
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
+  const canManagerShowCard = (cardKey) => !isManager || canShowCard(cardKey)
 
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
@@ -172,6 +173,14 @@ export default function TankerDeliveries() {
     const value = numberValue(item.lossGain)
     return value > 0 ? sum + value : sum
   }, 0)
+  const summaryCards = [
+    { key: "deliveries", label: "Deliveries", value: filteredData.length, tone: "blue" },
+    { key: "totalQuantity", label: "Total Quantity", value: formatLiters(totalQty), tone: "emerald" },
+    { key: "unloadedQty", label: "Unloaded Qty", value: formatLiters(totalUnloaded), tone: "violet" },
+    { key: "loss", label: "Loss", value: formatLiters(totalLoss), tone: "rose" },
+    { key: "gain", label: "Gain", value: formatLiters(totalGain), tone: "green" },
+  ]
+  const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
 
   const openCreate = () => {
     if (!canManagerUse("addDelivery")) {
@@ -497,13 +506,13 @@ export default function TankerDeliveries() {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
-        <SummaryCard label="Deliveries" value={filteredData.length} tone="blue" />
-        <SummaryCard label="Total Quantity" value={formatLiters(totalQty)} tone="emerald" />
-        <SummaryCard label="Unloaded Qty" value={formatLiters(totalUnloaded)} tone="violet" />
-        <SummaryCard label="Loss" value={formatLiters(totalLoss)} tone="rose" />
-        <SummaryCard label="Gain" value={formatLiters(totalGain)} tone="green" />
-      </div>
+      {visibleSummaryCards.length ? (
+        <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
+          {visibleSummaryCards.map((card) => (
+            <SummaryCard key={card.key} label={card.label} value={card.value} tone={card.tone} />
+          ))}
+        </div>
+      ) : null}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <input

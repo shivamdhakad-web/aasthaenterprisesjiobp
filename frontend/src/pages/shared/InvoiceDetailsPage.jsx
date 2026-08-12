@@ -144,16 +144,16 @@ export default function InvoiceDetailsPage() {
           }
 
           return [
-            { label: "HSD Total Qty", value: formatNumber(sumField(hsdEntries, "qty")), tone: "green" },
-            { label: "MS Total Qty", value: formatNumber(sumField(msEntries, "qty")), tone: "amber" },
-            { label: "Total HSD LFR Amount", value: formatNumber(sumLfrAmount(hsdEntries)), tone: "violet" },
-            { label: "Total MS LFR Amount", value: formatNumber(sumLfrAmount(msEntries)), tone: "blue" },
-            { label: "Avg Purchase Rate HSD", value: formatNumber(avgPurchase(hsdEntries).toFixed(2)), tone: "green" },
-            { label: "Avg Purchase Rate MS", value: formatNumber(avgPurchase(msEntries).toFixed(2)), tone: "amber" },
-            { label: "Total Invoice Amount HSD", value: formatNumber(sumField(hsdEntries, "invoiceAmount")), tone: "green" },
-            { label: "Total Transport Cost HSD", value: formatNumber(sumField(hsdEntries, "transportCost")), tone: "rose" },
-            { label: "Total Invoice Amount MS", value: formatNumber(sumField(msEntries, "invoiceAmount")), tone: "amber" },
-            { label: "Total Transport Cost MS", value: formatNumber(sumField(msEntries, "transportCost")), tone: "rose" },
+            { key: "hsdTotalQty", label: "HSD Total Qty", value: formatNumber(sumField(hsdEntries, "qty")), tone: "green" },
+            { key: "msTotalQty", label: "MS Total Qty", value: formatNumber(sumField(msEntries, "qty")), tone: "amber" },
+            { key: "totalHsdLfrAmount", label: "Total HSD LFR Amount", value: formatNumber(sumLfrAmount(hsdEntries)), tone: "violet" },
+            { key: "totalMsLfrAmount", label: "Total MS LFR Amount", value: formatNumber(sumLfrAmount(msEntries)), tone: "blue" },
+            { key: "avgPurchaseRateHsd", label: "Avg Purchase Rate HSD", value: formatNumber(avgPurchase(hsdEntries).toFixed(2)), tone: "green" },
+            { key: "avgPurchaseRateMs", label: "Avg Purchase Rate MS", value: formatNumber(avgPurchase(msEntries).toFixed(2)), tone: "amber" },
+            { key: "totalInvoiceAmountHsd", label: "Total Invoice Amount HSD", value: formatNumber(sumField(hsdEntries, "invoiceAmount")), tone: "green" },
+            { key: "totalTransportCostHsd", label: "Total Transport Cost HSD", value: formatNumber(sumField(hsdEntries, "transportCost")), tone: "rose" },
+            { key: "totalInvoiceAmountMs", label: "Total Invoice Amount MS", value: formatNumber(sumField(msEntries, "invoiceAmount")), tone: "amber" },
+            { key: "totalTransportCostMs", label: "Total Transport Cost MS", value: formatNumber(sumField(msEntries, "transportCost")), tone: "rose" },
           ]
         },
         preview: (form) => {
