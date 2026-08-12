@@ -293,8 +293,9 @@ const buildEmployeesDirectoryPdf = (employees, getAllFinalBalance = () => 0) => 
 export default function Employees() {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
-  const { canUse } = useManagerDashboardSettings("employees", isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings("employees", isManager)
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
+  const canManagerShowCard = (cardKey) => !isManager || canShowCard(cardKey)
   const [employees, setEmployees] = useState([])
   const [search, setSearch] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -632,6 +633,8 @@ export default function Employees() {
     ],
     [allTimeSummary, lastMonthAdvance, searchFinalSummary, summary],
   )
+  const visibleAllEmployeeSalaryCards = allEmployeeSalaryCards.filter((card) => canManagerShowCard(card.key))
+  const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
 
   const salaryTopCards = useMemo(
     () => [
@@ -1184,7 +1187,7 @@ export default function Employees() {
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-3">
-          {allEmployeeSalaryCards.map((card) => (
+          {visibleAllEmployeeSalaryCards.map((card) => (
             <SummaryCard
               key={card.key}
               label={card.label}
@@ -1544,7 +1547,7 @@ export default function Employees() {
           </div> */}
 
         <div className="mt-5 hidden gap-4 lg:grid sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => (
+          {visibleSummaryCards.map((card) => (
             <SummaryCard
               key={card.key}
               label={card.label}
@@ -1634,7 +1637,7 @@ export default function Employees() {
 
           <div className="mt-6 space-y-4 sm:hidden">
             <div className="grid grid-cols-2 gap-3">
-              {summaryCards.map((card) => (
+              {visibleSummaryCards.map((card) => (
                 <SummaryCard
                   key={card.key}
                   label={card.label}
@@ -2132,6 +2135,7 @@ function ConfirmDialog({
     </div>
   )
 }
+
 
 
 

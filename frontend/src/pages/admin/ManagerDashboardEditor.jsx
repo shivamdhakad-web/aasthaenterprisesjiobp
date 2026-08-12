@@ -59,6 +59,10 @@ export default function ManagerDashboardEditor() {
     (total, page) => total + (page.buttons || []).filter((button) => button.enabled !== false).length,
     0,
   )
+  const shownCardCount = pages.reduce(
+    (total, page) => total + (page.cards || []).filter((card) => card.enabled !== false).length,
+    0,
+  )
 
   const updatePage = (key, patch) => {
     setPages((current) =>
@@ -81,11 +85,35 @@ export default function ManagerDashboardEditor() {
     )
   }
 
+  const updateCard = (pageKey, cardKey, enabled) => {
+    setPages((current) =>
+      current.map((page) =>
+        page.key === pageKey
+          ? {
+              ...page,
+              cards: (page.cards || []).map((card) =>
+                card.key === cardKey ? { ...card, enabled } : card,
+              ),
+            }
+          : page,
+      ),
+    )
+  }
+
   const setAllButtons = (enabled) => {
     setPages((current) =>
       current.map((page) => ({
         ...page,
         buttons: (page.buttons || []).map((button) => ({ ...button, enabled })),
+      })),
+    )
+  }
+
+  const setAllCards = (enabled) => {
+    setPages((current) =>
+      current.map((page) => ({
+        ...page,
+        cards: (page.cards || []).map((card) => ({ ...card, enabled })),
       })),
     )
   }
@@ -142,13 +170,14 @@ export default function ManagerDashboardEditor() {
             </div>
             <h1 className="text-3xl font-bold text-[color:var(--text-strong)]">Manager Edit Dashboard</h1>
             <p className="mt-2 max-w-2xl text-sm text-[color:var(--text-secondary)]">
-              Control manager sidebar order, menu names, page visibility, and page-level action button access.
+              Control manager sidebar order, menu names, page visibility, action button access, and summary card visibility.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:justify-end">
             <SummaryPill label="Visible Pages" value={`${visibleCount}/${pages.length}`} />
             <SummaryPill label="Allowed Buttons" value={allowedButtonCount} />
+            <SummaryPill label="Shown Cards" value={shownCardCount} />
           </div>
         </div>
       </section>
@@ -182,6 +211,13 @@ export default function ManagerDashboardEditor() {
           </button>
           <button
             type="button"
+            onClick={() => setAllCards(true)}
+            className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 font-medium text-emerald-500"
+          >
+            Show All Cards
+          </button>
+          <button
+            type="button"
             onClick={setAllPagesVisible}
             className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 font-medium text-cyan-500"
           >
@@ -200,6 +236,13 @@ export default function ManagerDashboardEditor() {
             className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 font-medium text-red-500"
           >
             Block All Buttons
+          </button>
+          <button
+            type="button"
+            onClick={() => setAllCards(false)}
+            className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 font-medium text-rose-500"
+          >
+            Hide All Cards
           </button>
           <button
             type="button"
@@ -227,6 +270,7 @@ export default function ManagerDashboardEditor() {
                   <th>Page Name</th>
                   <th>Status</th>
                   <th>Button Access</th>
+                  <th>Card Access</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,6 +300,9 @@ export default function ManagerDashboardEditor() {
                     </td>
                     <td>
                       <ButtonAccessEditor page={page} onChange={updateButton} />
+                    </td>
+                    <td>
+                      <CardAccessEditor page={page} onChange={updateCard} />
                     </td>
                   </tr>
                 ))}
@@ -312,6 +359,16 @@ export default function ManagerDashboardEditor() {
                     This page has no manager action buttons.
                   </p>
                 )}
+
+                {page.cards?.length ? (
+                  <div className="mt-4 border-t border-[var(--border-color)] pt-4">
+                    <CardAccessEditor page={page} onChange={updateCard} />
+                  </div>
+                ) : (
+                  <p className="mt-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-sm text-[color:var(--text-secondary)]">
+                    This page has no summary cards.
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -352,6 +409,31 @@ function ButtonAccessEditor({ page, onChange }) {
           }`}
         >
           {button.label}: {button.enabled ? "Allowed" : "Blocked"}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function CardAccessEditor({ page, onChange }) {
+  if (!page.cards?.length) {
+    return <span className="text-sm text-[color:var(--text-secondary)]">No summary cards</span>
+  }
+
+  return (
+    <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
+      {page.cards.map((card) => (
+        <button
+          key={card.key}
+          type="button"
+          onClick={() => onChange(page.key, card.key, !card.enabled)}
+          className={`rounded-full border px-3 py-2 text-sm font-medium transition ${
+            card.enabled
+              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-500"
+              : "border-slate-400/30 bg-slate-100 text-slate-500"
+          }`}
+        >
+          {card.label}: {card.enabled ? "Shown" : "Hidden"}
         </button>
       ))}
     </div>

@@ -70,8 +70,9 @@ const defaultBulkExpenseRow = (user) => ({
 export default function Expenses() {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
-  const { canUse } = useManagerDashboardSettings("expenses", isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings("expenses", isManager)
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
+  const canManagerShowCard = (cardKey) => !isManager || canShowCard(cardKey)
   const [data, setData] = useState([])
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
@@ -410,6 +411,13 @@ export default function Expenses() {
 
     return { todayTotal, weekTotal, monthTotal, grandTotal }
   }, [filteredData, monthFilter])
+  const summaryCards = [
+    { key: "todayExpense", label: "Today Expense", value: formatCurrency(summary.todayTotal), tone: "rose" },
+    { key: "weekExpense", label: "Week Expense", value: formatCurrency(summary.weekTotal), tone: "amber" },
+    { key: "monthExpense", label: "Month Expense", value: formatCurrency(summary.monthTotal), tone: "blue" },
+    { key: "totalExpense", label: "Total Expense", value: formatCurrency(summary.grandTotal), tone: "violet" },
+  ]
+  const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
 
   const reportData = useMemo(
     () =>
@@ -600,12 +608,13 @@ export default function Expenses() {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <SummaryCard label="Today Expense" value={formatCurrency(summary.todayTotal)} tone="rose" />
-        <SummaryCard label="Week Expense" value={formatCurrency(summary.weekTotal)} tone="amber" />
-        <SummaryCard label="Month Expense" value={formatCurrency(summary.monthTotal)} tone="blue" />
-        <SummaryCard label="Total Expense" value={formatCurrency(summary.grandTotal)} tone="violet" />
-      </div>
+      {visibleSummaryCards.length ? (
+        <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
+          {visibleSummaryCards.map((card) => (
+            <SummaryCard key={card.key} label={card.label} value={card.value} tone={card.tone} />
+          ))}
+        </div>
+      ) : null}
 
     <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
       <input

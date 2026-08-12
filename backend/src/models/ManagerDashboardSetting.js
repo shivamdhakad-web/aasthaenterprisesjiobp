@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const buttonAccessSchema = new mongoose.Schema(
+const accessItemSchema = new mongoose.Schema(
   {
     key: {
       type: String,
@@ -41,7 +41,11 @@ const pageAccessSchema = new mongoose.Schema(
       default: false,
     },
     buttons: {
-      type: [buttonAccessSchema],
+      type: [accessItemSchema],
+      default: [],
+    },
+    cards: {
+      type: [accessItemSchema],
       default: [],
     },
   },
@@ -67,3 +71,4 @@ const managerDashboardSettingSchema = new mongoose.Schema(
 )
 
 module.exports = mongoose.model("ManagerDashboardSetting", managerDashboardSettingSchema)
+

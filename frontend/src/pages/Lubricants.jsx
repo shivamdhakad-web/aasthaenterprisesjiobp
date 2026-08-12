@@ -78,7 +78,7 @@ const defaultProductForm = () => ({
 export default function Lubricants() {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
-  const { canUse } = useManagerDashboardSettings("lubricants", isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings("lubricants", isManager)
   const [data, setData] = useState([])
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState("")
@@ -122,6 +122,7 @@ export default function Lubricants() {
   const [productForm, setProductForm] = useState(defaultProductForm())
 
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
+  const canManagerShowCard = (cardKey) => !isManager || canShowCard(cardKey)
   const showNoAccess = (message) => setNotice({ type: "error", text: message })
 
   useEffect(() => {
@@ -219,6 +220,16 @@ export default function Lubricants() {
       totalProfit,
     }
   }, [filtered, monthFilter])
+
+  const summaryCards = [
+    { key: "todaySales", label: "Today Sales", value: formatCurrency(summary.todaySales), tone: "blue" },
+    { key: "weekSales", label: "Week Sales", value: formatCurrency(summary.weekSales), tone: "amber" },
+    { key: "monthSales", label: "Month Sales", value: formatCurrency(summary.monthSales), tone: "violet" },
+    { key: "totalSales", label: "Total Sales", value: formatCurrency(summary.totalSales), tone: "indigo" },
+    { key: "monthProfit", label: "Month Profit", value: formatCurrency(summary.monthProfit), tone: "emerald" },
+    { key: "totalProfit", label: "Total Profit", value: formatCurrency(summary.totalProfit), tone: "green" },
+  ]
+  const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
 
   const profitRows = useMemo(
     () =>
@@ -806,14 +817,13 @@ export default function Lubricants() {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-6">
-        <SummaryCard label="Today Sales" value={formatCurrency(summary.todaySales)} tone="blue" />
-        <SummaryCard label="Week Sales" value={formatCurrency(summary.weekSales)} tone="amber" />
-        <SummaryCard label="Month Sales" value={formatCurrency(summary.monthSales)} tone="violet" />
-        <SummaryCard label="Total Sales" value={formatCurrency(summary.totalSales)} tone="indigo" />
-        <SummaryCard label="Month Profit" value={formatCurrency(summary.monthProfit)} tone="emerald" />
-        <SummaryCard label="Total Profit" value={formatCurrency(summary.totalProfit)} tone="green" />
-      </div>
+      {visibleSummaryCards.length ? (
+        <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-6">
+          {visibleSummaryCards.map((card) => (
+            <SummaryCard key={card.key} label={card.label} value={card.value} tone={card.tone} />
+          ))}
+        </div>
+      ) : null}
 
       <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
   <input
@@ -1878,5 +1888,3 @@ function InfoLine({ label, value }) {
     </p>
   )
 }
-
-

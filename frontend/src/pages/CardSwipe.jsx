@@ -65,8 +65,9 @@ const defaultBulkRow = (defaults = defaultBulkDefaults()) => ({
 export default function CardSwipe() {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
-  const { canUse } = useManagerDashboardSettings("cardSwipe", isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings("cardSwipe", isManager)
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
+  const canManagerShowCard = (cardKey) => !isManager || canShowCard(cardKey)
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
   const [month, setMonth] = useState(getCurrentMonth())
@@ -222,6 +223,19 @@ export default function CardSwipe() {
       return entryMonth === activeMonth ? total + Number(entry.charges || 0) : total
     }, 0)
   }, [entries, month])
+
+  const summaryCards = [
+    { key: "totalSwipe", label: "Total Swipe", value: formatCurrency(summary.totalAmount), tone: "blue" },
+    { key: "totalCharges", label: "Total Charges", value: formatCurrency(summary.totalCharges), tone: "amber" },
+    { key: "monthProfit", label: "Month Profit", value: formatCurrency(monthProfit), tone: "emerald" },
+    { key: "cashProfit", label: "Cash Profit", value: formatCurrency(summary.cashProfit), tone: "green" },
+    { key: "onlineProfit", label: "Online Profit", value: formatCurrency(summary.onlineProfit), tone: "violet" },
+    { key: "selfTotal", label: "Self Total", value: formatCurrency(summary.self), tone: "sky" },
+    { key: "selfCharges", label: "Self Charges", value: formatCurrency(summary.selfCharges), tone: "cyan" },
+    { key: "dsmTotal", label: "DSM Total", value: formatCurrency(summary.dsm), tone: "orange" },
+    { key: "dsmCharges", label: "DSM Charges", value: formatCurrency(summary.dsmCharges), tone: "rose" },
+  ]
+  const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
 
   const getReportData = () =>
     entries.filter((entry) => {
@@ -614,19 +628,13 @@ export default function CardSwipe() {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <SummaryCard label="Total Swipe" value={formatCurrency(summary.totalAmount)} tone="blue" />
-        <SummaryCard label="Total Charges" value={formatCurrency(summary.totalCharges)} tone="amber" />
-        <SummaryCard label="Month Profit" value={formatCurrency(monthProfit)} tone="emerald" />
-        {/* <SummaryCard label="Cash" value={formatCurrency(summary.cash)} tone="emerald" /> */}
-        <SummaryCard label="Cash Profit" value={formatCurrency(summary.cashProfit)} tone="green" />
-        {/* <SummaryCard label="Online" value={formatCurrency(summary.online)} tone="indigo" /> */}
-        <SummaryCard label="Online Profit" value={formatCurrency(summary.onlineProfit)} tone="violet" />
-        <SummaryCard label="Self Total" value={formatCurrency(summary.self)} tone="sky" />
-        <SummaryCard label="Self Charges" value={formatCurrency(summary.selfCharges)} tone="cyan" />
-        <SummaryCard label="DSM Total" value={formatCurrency(summary.dsm)} tone="orange" />
-        <SummaryCard label="DSM Charges" value={formatCurrency(summary.dsmCharges)} tone="rose" />
-      </div>
+      {visibleSummaryCards.length ? (
+        <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-5">
+          {visibleSummaryCards.map((card) => (
+            <SummaryCard key={card.key} label={card.label} value={card.value} tone={card.tone} />
+          ))}
+        </div>
+      ) : null}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
   <input

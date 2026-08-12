@@ -70,9 +70,28 @@ export default function useManagerDashboardSettings(pageKey = "", enabled = true
     return button?.enabled !== false
   }
 
+  const canShowCard = (cardKey) => {
+    if (!pageKey) {
+      return true
+    }
+
+    if (state.loading) {
+      return false
+    }
+
+    if (!page) {
+      return true
+    }
+
+    const card = page.cards?.find((item) => item.key === cardKey)
+    return card?.enabled !== false
+  }
+
   return {
     ...state,
     page,
     canUse,
+    canShowCard,
   }
 }
+

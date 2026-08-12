@@ -14,6 +14,11 @@ const numberValue = (value) => Number(value || 0)
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-")
 const formatNumber = (value, suffix = "") => `${Number(value || 0).toLocaleString("en-IN")}${suffix}`
+const normalizeCardKey = (value = "") =>
+  String(value)
+    .trim()
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, character) => character.toUpperCase())
+    .replace(/^[A-Z]/, (character) => character.toLowerCase())
 const formatDateTime = (value) => {
   if (!value) return "Not edited yet"
 
@@ -40,8 +45,9 @@ const buildBulkDefaults = (config) => {
 export default function SimpleAuditRegisterPage({ config }) {
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
-  const { canUse } = useManagerDashboardSettings(config.pageKey, isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings(config.pageKey, isManager)
   const canManagerUse = (key) => !isManager || canUse(key)
+  const canManagerShowCard = (key) => !isManager || canShowCard(key)
 
   const [entries, setEntries] = useState([])
   const [search, setSearch] = useState("")
@@ -112,6 +118,7 @@ export default function SimpleAuditRegisterPage({ config }) {
   )
 
   const summary = config.summary(filteredEntries)
+  const visibleSummary = summary.filter((item) => canManagerShowCard(item.key || normalizeCardKey(item.label)))
 
   const openCreate = () => {
     if (!canManagerUse("addEntry")) {
@@ -379,11 +386,13 @@ export default function SimpleAuditRegisterPage({ config }) {
 
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
-      <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {summary.map((item) => (
-          <SummaryCard key={item.label} {...item} />
-        ))}
-      </div>
+      {visibleSummary.length ? (
+        <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {visibleSummary.map((item) => (
+            <SummaryCard key={item.key || item.label} {...item} />
+          ))}
+        </div>
+      ) : null}
 
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
   <input

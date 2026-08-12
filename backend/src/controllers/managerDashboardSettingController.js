@@ -1,5 +1,6 @@
-﻿const ManagerDashboardSetting = require("../models/ManagerDashboardSetting")
+const ManagerDashboardSetting = require("../models/ManagerDashboardSetting")
 
+const card = (key, label) => ({ key, label, enabled: true })
 const DEFAULT_MANAGER_DASHBOARD_PAGES = [
   { key: "dashboard", label: "Dashboard", path: "/manager", order: 1, buttons: [] },
   {
@@ -49,6 +50,27 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Employees",
     path: "/manager/employees",
     order: 7,
+    cards: [
+      card("allTotalEarned", "All Employees Earned"),
+      card("allTotalBonus", "All Employees Bonus"),
+      card("allEarnedBonusTotal", "Earned + Bonus"),
+      card("allPositiveFinalBalance", "Positive Final Balance"),
+      card("allNegativeFinalBalance", "Negative Final Balance"),
+      card("allFinalBalance", "All Final Balance"),
+      card("present", "Present"),
+      card("presentHalf", "Present + Half Shift"),
+      card("half", "Half Shift"),
+      card("absent", "Absent"),
+      card("double", "Double Shift"),
+      card("earned", "Earned"),
+      card("shortage", "Shortage"),
+      card("advance", "Advance"),
+      card("lastMonthAdvance", "Last Month Advance"),
+      card("bonus", "Bonus"),
+      card("searchFinalBalance", "Search Final Balance"),
+      card("searchMonthBalance", "Search Month Balance"),
+      card("final", "Final Balance"),
+    ],
     buttons: [
       { key: "addEmployee", label: "Add Employee", enabled: true },
       { key: "editEmployee", label: "Edit Employee", enabled: true },
@@ -99,6 +121,12 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Expenses",
     path: "/manager/expenses",
     order: 11,
+    cards: [
+      card("todayExpense", "Today Expense"),
+      card("weekExpense", "Week Expense"),
+      card("monthExpense", "Month Expense"),
+      card("totalExpense", "Total Expense"),
+    ],
     buttons: [
       { key: "addExpense", label: "Add Expense", enabled: true },
       { key: "editExpense", label: "Edit Expense", enabled: true },
@@ -111,6 +139,14 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Lubricants",
     path: "/manager/lubricants",
     order: 12,
+    cards: [
+      card("todaySales", "Today Sales"),
+      card("weekSales", "Week Sales"),
+      card("monthSales", "Month Sales"),
+      card("totalSales", "Total Sales"),
+      card("monthProfit", "Month Profit"),
+      card("totalProfit", "Total Profit"),
+    ],
     buttons: [
       { key: "addSale", label: "Add Sale", enabled: true },
       { key: "addProduct", label: "Add Product", enabled: true },
@@ -140,6 +176,17 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Card Swipe",
     path: "/manager/card-swipe",
     order: 14,
+    cards: [
+      card("totalSwipe", "Total Swipe"),
+      card("totalCharges", "Total Charges"),
+      card("monthProfit", "Month Profit"),
+      card("cashProfit", "Cash Profit"),
+      card("onlineProfit", "Online Profit"),
+      card("selfTotal", "Self Total"),
+      card("selfCharges", "Self Charges"),
+      card("dsmTotal", "DSM Total"),
+      card("dsmCharges", "DSM Charges"),
+    ],
     buttons: [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
@@ -153,6 +200,11 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "D.C.D",
     path: "/manager/dcd",
     order: 15,
+    cards: [
+      card("totalVolume", "Total Volume"),
+      card("totalProfit", "Total Profit"),
+      card("avgSalePrice", "Avg Sale Price"),
+    ],
     buttons: [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
@@ -165,6 +217,14 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "M.D.U",
     path: "/manager/mdu",
     order: 16,
+    cards: [
+      card("totalDecant", "Total Decant"),
+      card("totalSale", "Total Sale"),
+      card("avgRate", "Avg Rate"),
+      card("profit", "Profit"),
+      card("lossGain", "Loss / Gain"),
+      card("otherProfit", "Other Profit"),
+    ],
     buttons: [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
@@ -177,6 +237,18 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Invoice Details",
     path: "/manager/invoice-details",
     order: 17,
+    cards: [
+      card("hsdTotalQty", "HSD Total Qty"),
+      card("msTotalQty", "MS Total Qty"),
+      card("totalHsdLfrAmount", "Total HSD LFR Amount"),
+      card("totalMsLfrAmount", "Total MS LFR Amount"),
+      card("avgPurchaseRateHsd", "Avg Purchase Rate HSD"),
+      card("avgPurchaseRateMs", "Avg Purchase Rate MS"),
+      card("totalInvoiceAmountHsd", "Total Invoice Amount HSD"),
+      card("totalTransportCostHsd", "Total Transport Cost HSD"),
+      card("totalInvoiceAmountMs", "Total Invoice Amount MS"),
+      card("totalTransportCostMs", "Total Transport Cost MS"),
+    ],
     buttons: [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
@@ -189,6 +261,16 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     label: "Daily Sales",
     path: "/manager/daily-sales",
     order: 18,
+    cards: [
+      card("hsdSale", "HSD Sale"),
+      card("msSale", "MS Sale"),
+      card("hsdProfit", "HSD Profit"),
+      card("msProfit", "MS Profit"),
+      card("avgHsdPrice", "Avg HSD Price"),
+      card("avgMsPrice", "Avg MS Price"),
+      card("hsdLossGain", "HSD Loss / Gain"),
+      card("msLossGain", "MS Loss / Gain"),
+    ],
     buttons: [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
@@ -275,7 +357,8 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
 const cloneDefaultPages = () =>
   DEFAULT_MANAGER_DASHBOARD_PAGES.map((page) => ({
     ...page,
-    buttons: page.buttons.map((button) => ({ ...button })),
+    buttons: (page.buttons || []).map((button) => ({ ...button })),
+    cards: (page.cards || []).map((item) => ({ ...item })),
   }))
 
 const mergePagesWithDefaults = (savedPages = []) => {
@@ -285,6 +368,7 @@ const mergePagesWithDefaults = (savedPages = []) => {
     .map((defaultPage) => {
       const savedPage = savedByKey.get(defaultPage.key) || {}
       const savedButtons = new Map((savedPage.buttons || []).map((button) => [button.key, button]))
+      const savedCards = new Map((savedPage.cards || []).map((item) => [item.key, item]))
 
       return {
         key: defaultPage.key,
@@ -301,6 +385,15 @@ const mergePagesWithDefaults = (savedPages = []) => {
             enabled: savedButton?.enabled !== false,
           }
         }),
+        cards: defaultPage.cards.map((item) => {
+          const savedCard = savedCards.get(item.key)
+
+          return {
+            key: item.key,
+            label: savedCard?.label || item.label,
+            enabled: savedCard?.enabled !== false,
+          }
+        }),
       }
     })
     .sort((a, b) => a.order - b.order)
@@ -312,6 +405,7 @@ const sanitizeIncomingPages = (pages = []) => {
   return cloneDefaultPages().map((defaultPage) => {
     const incoming = incomingByKey.get(defaultPage.key) || {}
     const incomingButtons = new Map((incoming.buttons || []).map((button) => [button.key, button]))
+    const incomingCards = new Map((incoming.cards || []).map((item) => [item.key, item]))
 
     return {
       key: defaultPage.key,
@@ -326,6 +420,15 @@ const sanitizeIncomingPages = (pages = []) => {
           key: button.key,
           label: button.label,
           enabled: incomingButton.enabled !== false,
+        }
+      }),
+      cards: defaultPage.cards.map((item) => {
+        const incomingCard = incomingCards.get(item.key) || {}
+
+        return {
+          key: item.key,
+          label: item.label,
+          enabled: incomingCard.enabled !== false,
         }
       }),
     }
@@ -385,6 +488,7 @@ exports.updateManagerDashboardSettings = async (req, res) => {
 }
 
 exports.DEFAULT_MANAGER_DASHBOARD_PAGES = DEFAULT_MANAGER_DASHBOARD_PAGES
+
 
 
 
