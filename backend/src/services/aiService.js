@@ -9,6 +9,7 @@ const DailySale = require("../models/DailySale")
 const TankerDelivery = require("../models/TankerDelivery")
 const MobileDispenser = require("../models/MobileDispenser")
 const Employee = require("../models/Employee")
+const EmployeeAttendance = require("../models/EmployeeAttendance")
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 const GROQ_API_BASE_URL = "https://api.groq.com/openai/v1"
@@ -417,7 +418,19 @@ const getRelevantWebsiteData = async (question = "", scope = "") => {
   const rangeStart = firstDate && secondDate ? [firstDate, secondDate].sort()[0] : ""
   const rangeEnd = firstDate && secondDate ? [firstDate, secondDate].sort()[1] : ""
   const requestedDate = firstDate && !secondDate ? firstDate : ""
-  const rows = await source.model.find().select(source.select).sort({ createdAt: -1 }).limit(1500).lean()
+  const rows = source.key === "employees"
+    ? (await EmployeeAttendance.find()
+      .select("employeeId date status shortage advanceCash advancePetrol bonusAmount remark")
+      .populate("employeeId", "name role shift")
+      .sort({ date: -1, createdAt: -1 })
+      .lean())
+      .map((entry) => ({
+        ...entry,
+        employeeName: entry.employeeId?.name || "Unknown employee",
+        role: entry.employeeId?.role || "",
+        shift: entry.employeeId?.shift || "",
+      }))
+    : await source.model.find().select(source.select).sort({ createdAt: -1 }).lean()
   const matchingRows = rangeStart
     ? rows.filter((row) => {
         const comparableDate = formatComparableDate(row.date)
@@ -425,7 +438,7 @@ const getRelevantWebsiteData = async (question = "", scope = "") => {
       })
     : requestedDate
       ? rows.filter((row) => formatComparableDate(row.date) === requestedDate)
-      : rows.slice(0, 40)
+    : rows
 
   return {
     sourceKey: source.key,
@@ -440,10 +453,29 @@ const getRelevantWebsiteData = async (question = "", scope = "") => {
 }
 
 const getSourceSummary = async (source) => {
-  const [allRows, recentRecords] = await Promise.all([
-    source.model.find().select(source.select).lean(),
-    source.model.find().select(source.select).sort({ createdAt: -1 }).limit(20).lean(),
-  ])
+  if (source.key === "employees") {
+    const allRows = await EmployeeAttendance.find()
+      .select("employeeId date status shortage advanceCash advancePetrol bonusAmount remark")
+      .populate("employeeId", "name role shift")
+      .sort({ date: -1, createdAt: -1 })
+      .lean()
+    return {
+      key: source.key,
+      page: "Staff Attendance & Payroll",
+      totalRecordCount: allRows.length,
+      allRecordsTotal: allRows.reduce((sum, row) => sum + Number(row.bonusAmount || 0), 0),
+      records: allRows.map((row) => ({
+        date: row.date,
+        employeeName: row.employeeId?.name || "Unknown employee",
+        role: row.employeeId?.role || "",
+        shift: row.employeeId?.shift || "",
+        status: row.status,
+        bonusAmount: row.bonusAmount,
+      })),
+    }
+  }
+
+  const allRows = await source.model.find().select(source.select).sort({ createdAt: -1 }).lean()
   const numericFields = {
     expenses: "amount",
     cardSwipe: "amount",
@@ -462,17 +494,21 @@ const getSourceSummary = async (source) => {
     page: source.label,
     totalRecordCount: allRows.length,
     allRecordsTotal: totalField ? allRows.reduce((sum, row) => sum + Number(row[totalField] || 0), 0) : undefined,
-    recentRecords,
+    records: allRows,
   }
 }
 
 const getScopeContext = async (question = "", scope = "") => {
   if (scope === "all") {
-    const summaries = await Promise.all(WEBSITE_DATA_SOURCES.map(getSourceSummary))
+    const [summaries, relevantQuestionData] = await Promise.all([
+      Promise.all(WEBSITE_DATA_SOURCES.map(getSourceSummary)),
+      getRelevantWebsiteData(question),
+    ])
     return {
       selectedScope: "All Operational Pages",
-      note: "Privacy-safe summaries and recent operational records. Employee phone numbers, passwords, secure notes, settings, and API keys are excluded.",
+      note: "Complete privacy-safe operational data. Employee phone numbers, passwords, secure notes, settings, and API keys are excluded.",
       pages: summaries,
+      relevantQuestionData,
     }
   }
 
@@ -569,6 +605,17 @@ const formatExactRecord = (sourceKey, row) => {
       ["Sale litres", row.saleLiter],
       ["Total KM", row.totalKM],
       ["Final profit", formatCurrency(row.finalProfit)],
+    ],
+    employees: [
+      ["Employee", row.employeeName],
+      ["Role", row.role],
+      ["Shift", row.shift],
+      ["Status", row.status],
+      ["Shortage", formatCurrency(row.shortage)],
+      ["Advance cash", formatCurrency(row.advanceCash)],
+      ["Advance petrol", formatCurrency(row.advancePetrol)],
+      ["Bonus", formatCurrency(row.bonusAmount)],
+      ["Remark", row.remark],
     ],
   }
 
@@ -698,7 +745,7 @@ const getResponseLanguageInstruction = (responseLanguage = "hinglish") => {
 }
 
 const buildChatSystemPrompt = (expenseContext, websiteData, responseLanguage) =>
-  `You are Aastha Enterprises Jio-bp Station assistant. Answer directly, accurately, and briefly. ${getResponseLanguageInstruction(responseLanguage)}\n\nEXPENSE SUMMARY (live):\n${JSON.stringify(expenseContext)}\n\nSELECTED DATA SCOPE (live, source of truth):\n${JSON.stringify(websiteData)}\n\nPrivacy: Employee phone numbers, passwords, secure notes, settings, and API keys are never included and must never be requested or invented.\n\nRules:\n- Answer website questions only from SELECTED DATA SCOPE or EXPENSE SUMMARY.\n- For total expense questions, give the Total Expense amount directly from EXPENSE SUMMARY.\n- For current-month expense questions, use currentMonthAmount and state currentMonth.\n- Do not invent website numbers or records.\n- If data is not in the selected scope, ask the admin to select the correct page or All Operational Pages.\n- For general questions not about website data, answer normally and directly.`
+  `You are Aastha Enterprises Jio-bp Station assistant. Answer directly, accurately, and briefly. ${getResponseLanguageInstruction(responseLanguage)}\n\nEXPENSE SUMMARY (live):\n${JSON.stringify(expenseContext)}\n\nSELECTED DATA SCOPE (live, source of truth):\n${JSON.stringify(websiteData)}\n\nPrivacy: Employee phone numbers, passwords, secure notes, settings, and API keys are never included and must never be requested or invented.\n\nRules:\n- Answer website questions only from SELECTED DATA SCOPE or EXPENSE SUMMARY.\n- When All Operational Pages is selected, use relevantQuestionData first for the admin's question; do not ask the admin to select a page again.\n- For total expense questions, give the Total Expense amount directly from EXPENSE SUMMARY.\n- For current-month expense questions, use currentMonthAmount and state currentMonth.\n- Do not invent website numbers or records.\n- Ask the admin to change scope only when a specific non-All scope is selected and the required data is outside it.\n- For general questions not about website data, answer normally and directly.`
 
 const buildDirectChatSystemPrompt = (responseLanguage) =>
   `You are a helpful general AI assistant. Answer the user's questions directly and accurately. ${getResponseLanguageInstruction(responseLanguage)} This is Direct AI Chat mode: do not claim access to the Jio-bp website, database, reports, or records.`
@@ -759,7 +806,6 @@ const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-
         ...chatMessages,
       ],
       temperature: 0.2,
-      max_tokens: 700,
     },
     {
       timeout: 0,
@@ -809,7 +855,7 @@ const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemi
         role: message.role === "assistant" ? "model" : "user",
         parts: [{ text: message.content }],
       })),
-      generationConfig: { temperature: 0.2, maxOutputTokens: 700 },
+      generationConfig: { temperature: 0.2 },
     },
     { timeout: 0 },
   )
