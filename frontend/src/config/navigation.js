@@ -1,5 +1,6 @@
 ﻿import {
   Activity,
+  Bot,
   CalendarDays,
   Bell,
   ClipboardCheck,
@@ -57,6 +58,7 @@ export const navigationByRole = {
     { key: "reminder", label: "Reminder", path: "/admin/reminder", icon: Bell },
     { key: "storage", label: "Storage", path: "/admin/storage", icon: HardDrive },
     { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", icon: Receipt },
+    { key: "aiChat", label: "AI Chat", path: "/admin/ai-chat", icon: Bot },
     { key: "settings", label: "Settings", path: "/admin/settings", icon: Settings },
   ],
   Manager: [

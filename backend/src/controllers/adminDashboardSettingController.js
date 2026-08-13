@@ -32,7 +32,8 @@ const DEFAULT_ADMIN_DASHBOARD_PAGES = [
   { key: "reminder", label: "Reminder", path: "/admin/reminder", order: 29 },
   { key: "storage", label: "Storage", path: "/admin/storage", order: 30 },
   { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 31 },
-  { key: "settings", label: "Settings", path: "/admin/settings", order: 32 },
+  { key: "aiChat", label: "AI Chat", path: "/admin/ai-chat", order: 32 },
+  { key: "settings", label: "Settings", path: "/admin/settings", order: 33 },
 ]
 
 const cloneDefaultPages = () => DEFAULT_ADMIN_DASHBOARD_PAGES.map((page) => ({ ...page }))

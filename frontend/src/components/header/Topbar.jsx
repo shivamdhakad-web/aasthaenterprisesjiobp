@@ -1,4 +1,4 @@
-import { Bell, Menu, MoonStar, Search, SunMedium, ZoomIn, RotateCcw } from "lucide-react"
+import { Bell, Bot, Menu, MoonStar, Search, SunMedium, ZoomIn, RotateCcw } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "../../contexts/AuthContext"
@@ -235,6 +235,19 @@ export default function Topbar({ toggleSidebar }) {
         >
           <ThemeIcon size={18} />
         </button>
+
+        {user?.role === "Admin" ? (
+          <Link
+            to="/admin/ai-chat"
+            title="Open AI Chat"
+            className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100"
+          >
+            <span className="absolute -top-2 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+              New
+            </span>
+            <Bot size={19} />
+          </Link>
+        ) : null}
 
         <Link
           to={notificationPathByRole[user?.role] || "/login"}

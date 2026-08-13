@@ -97,7 +97,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[var(--theme-home-overlay)] backdrop-blur-[2px]" />
 
         {/* NAVIGATION HEADER */}
-        <header className="relative z-20 w-full px-4 py-4 sm:px-8 lg:px-12 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-topbar)] backdrop-blur-md shadow-sm">
+        <header className="relative z-20 w-full px-3 py-3 sm:px-8 lg:px-20 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-topbar)] backdrop-blur-md shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-600/30 font-black">
               <Fuel size={22} className="animate-pulse" />
@@ -155,7 +155,7 @@ export default function Home() {
           </p>
 
           {/* MAIN BUTTON */}
-          <div className="w-full max-w-sm mb-8">
+          <div className="w-full max-w-sm mb-9">
             <button
               onClick={handleDashboardClick}
               className="w-full group inline-flex items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 px-8 py-4 text-base font-extrabold text-white shadow-xl shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-95"

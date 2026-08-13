@@ -44,6 +44,7 @@ import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
 import AdminDashboardEditor from "./pages/admin/AdminDashboardEditor"
 import BillGeneratorPage from "./pages/admin/BillGeneratorPage"
+import AiChatPage from "./pages/admin/AiChatPage"
 import SmartCalculatorPage from "./pages/shared/SmartCalculatorPage"
 import DensityCalculatorPage from "./pages/shared/DensityCalculatorPage"
 import DcdPage from "./pages/shared/DcdPage"
@@ -89,6 +90,7 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="storage" element={<StorageOverview />} />
             <Route path="bill-generator" element={<BillGeneratorPage />} />
+            <Route path="ai-chat" element={<AiChatPage />} />
             <Route path="lubricants" element={<Lubricants />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
