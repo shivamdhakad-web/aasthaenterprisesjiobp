@@ -18,7 +18,11 @@ const GROQ_CHAT_MODELS = [
   "mixtral-8x7b-32768",
   "gemma2-9b-it",
 ]
-const GEMINI_CHAT_MODELS = ["gemini-flash-latest"]
+const GEMINI_CHAT_MODELS = [
+  "gemini-flash-latest",
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+]
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -180,6 +184,125 @@ const formatComparableDate = (value) => {
   const month = String(date.getMonth() + 1).padStart(2, "0")
   const day = String(date.getDate()).padStart(2, "0")
   return `${year}-${month}-${day}`
+}
+
+const PHOTO_IMPORT_SCHEMAS = {
+  expenses: {
+    label: "Expenses",
+    fields: ["date", "category", "description", "amount", "paymentMode", "addedBy"],
+    numericFields: ["amount"],
+  },
+  cardSwipe: {
+    label: "Card Swipe Register",
+    fields: ["date", "time", "amount", "charges", "machine", "paymentMethod", "remark"],
+    numericFields: ["amount", "charges"],
+  },
+  dcd: {
+    label: "D.C.D",
+    fields: ["date", "product", "volume", "purchasePrice", "salePrice", "shift", "remark"],
+    numericFields: ["volume", "purchasePrice", "salePrice"],
+  },
+  mdu: {
+    label: "M.D.U",
+    fields: ["date", "openingStock", "decant", "sale", "physicalStock", "rate", "remark"],
+    numericFields: ["openingStock", "decant", "sale", "physicalStock", "rate"],
+  },
+  dailySales: {
+    label: "Daily Sales",
+    fields: ["date", "product", "sale", "rate", "lossGain", "remark"],
+    numericFields: ["sale", "rate", "lossGain"],
+  },
+  invoiceDetails: {
+    label: "Invoice Details",
+    fields: ["date", "product", "qty", "invoiceAmount", "transportCost", "lfr", "rsp", "remark"],
+    numericFields: ["qty", "invoiceAmount", "transportCost", "lfr", "rsp"],
+  },
+}
+
+const cleanImportedNumber = (value) => {
+  const cleaned = String(value ?? "")
+    .replace(/[,\s]/g, "")
+    .replace(/^(?:Rs\.?|INR|₹)/i, "")
+  return /^-?\d*(?:\.\d+)?$/.test(cleaned) && cleaned !== "" ? cleaned : ""
+}
+
+const extractJsonObject = (text = "") => {
+  const cleaned = String(text).replace(/```(?:json)?/gi, "").replace(/```/g, "").trim()
+  const start = cleaned.indexOf("{")
+  const end = cleaned.lastIndexOf("}")
+  return JSON.parse(start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned)
+}
+
+const extractPhotoEntries = async ({ imageDataUrl, pageKey }) => {
+  const schema = PHOTO_IMPORT_SCHEMAS[pageKey]
+  if (!schema) {
+    const error = new Error("Select a supported page for photo import.")
+    error.statusCode = 400
+    throw error
+  }
+
+  const imageMatch = String(imageDataUrl || "").match(/^data:([^;]+);base64,([\s\S]+)$/)
+  if (!imageMatch) {
+    const error = new Error("Please upload a valid image file.")
+    error.statusCode = 400
+    throw error
+  }
+
+  const [, mimeType, imageData] = imageMatch
+  if (!mimeType.startsWith("image/") || Buffer.byteLength(imageData, "base64") > 10 * 1024 * 1024) {
+    const error = new Error("Upload an image smaller than 10 MB.")
+    error.statusCode = 400
+    throw error
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    const error = new Error("Gemini API key is not configured.")
+    error.statusCode = 503
+    throw error
+  }
+
+  const prompt = `Read this handwritten or printed business register photo for the ${schema.label} page. Extract EVERY visible table row as a separate entry. Return JSON only in this exact shape: {"entries":[{...}]}. Use only these keys: ${schema.fields.join(", ")}. Use YYYY-MM-DD dates (Indian dates are day/month/year). Leave unclear values as an empty string. Do not invent values. Keep numeric fields as plain numbers without commas or currency symbols. Do not add any extra keys or explanation.`
+  const model = process.env.GEMINI_VISION_MODEL || "gemini-flash-latest"
+
+  const response = await axios.post(
+    `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${apiKey}`,
+    {
+      contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: imageData } }] }],
+      generationConfig: { temperature: 0, maxOutputTokens: 8192, responseMimeType: "application/json" },
+    },
+    { timeout: 0, headers: { "Content-Type": "application/json" } },
+  )
+
+  let parsed
+  try {
+    parsed = extractJsonObject(extractGeminiText(response.data))
+  } catch (_error) {
+    const error = new Error("The photo could not be read as structured entries. Try a clearer image.")
+    error.statusCode = 422
+    throw error
+  }
+
+  const entries = (Array.isArray(parsed?.entries) ? parsed.entries : Array.isArray(parsed) ? parsed : [])
+    .filter((entry) => entry && typeof entry === "object")
+    .map((entry) =>
+      schema.fields.reduce((row, field) => {
+        const value = entry[field]
+        if (field === "date") row[field] = formatComparableDate(value) || ""
+        else if (schema.numericFields.includes(field)) row[field] = cleanImportedNumber(value)
+        else row[field] = value === undefined || value === null ? "" : String(value).trim()
+        return row
+      }, {}),
+    )
+    .filter((entry) => Object.values(entry).some(Boolean))
+
+  if (!entries.length) {
+    const error = new Error("No entries were found in this photo. Try a clearer, well-lit photo.")
+    error.statusCode = 422
+    throw error
+  }
+
+  return { pageKey, pageLabel: schema.label, entries, provider: "gemini", model }
 }
 
 const getQuestionDates = (question = "") =>
@@ -568,11 +691,17 @@ const buildAllRecordsAnswer = async (question, scope) => {
   return `${source.label}: all ${rows.length} record(s).\n${recordLines}`
 }
 
-const buildChatSystemPrompt = (expenseContext, websiteData) =>
-  `You are Aastha Enterprises Jio-bp Station assistant. Answer directly, accurately, and briefly. Use English or simple Hinglish depending on the user's language.\n\nEXPENSE SUMMARY (live):\n${JSON.stringify(expenseContext)}\n\nSELECTED DATA SCOPE (live, source of truth):\n${JSON.stringify(websiteData)}\n\nPrivacy: Employee phone numbers, passwords, secure notes, settings, and API keys are never included and must never be requested or invented.\n\nRules:\n- Answer website questions only from SELECTED DATA SCOPE or EXPENSE SUMMARY.\n- For total expense questions, give the Total Expense amount directly from EXPENSE SUMMARY.\n- For current-month expense questions, use currentMonthAmount and state currentMonth.\n- Do not invent website numbers or records.\n- If data is not in the selected scope, ask the admin to select the correct page or All Operational Pages.\n- For general questions not about website data, answer normally and directly.`
+const getResponseLanguageInstruction = (responseLanguage = "hinglish") => {
+  if (responseLanguage === "hindi") return "Reply only in Hindi, using Devanagari script."
+  if (responseLanguage === "english") return "Reply only in clear English."
+  return "Reply only in simple Hinglish written with English letters."
+}
 
-const buildDirectChatSystemPrompt = () =>
-  "You are a helpful general AI assistant. Answer the user's questions directly and accurately in English or simple Hinglish depending on their language. This is Direct AI Chat mode: do not claim access to the Jio-bp website, database, reports, or records."
+const buildChatSystemPrompt = (expenseContext, websiteData, responseLanguage) =>
+  `You are Aastha Enterprises Jio-bp Station assistant. Answer directly, accurately, and briefly. ${getResponseLanguageInstruction(responseLanguage)}\n\nEXPENSE SUMMARY (live):\n${JSON.stringify(expenseContext)}\n\nSELECTED DATA SCOPE (live, source of truth):\n${JSON.stringify(websiteData)}\n\nPrivacy: Employee phone numbers, passwords, secure notes, settings, and API keys are never included and must never be requested or invented.\n\nRules:\n- Answer website questions only from SELECTED DATA SCOPE or EXPENSE SUMMARY.\n- For total expense questions, give the Total Expense amount directly from EXPENSE SUMMARY.\n- For current-month expense questions, use currentMonthAmount and state currentMonth.\n- Do not invent website numbers or records.\n- If data is not in the selected scope, ask the admin to select the correct page or All Operational Pages.\n- For general questions not about website data, answer normally and directly.`
+
+const buildDirectChatSystemPrompt = (responseLanguage) =>
+  `You are a helpful general AI assistant. Answer the user's questions directly and accurately. ${getResponseLanguageInstruction(responseLanguage)} This is Direct AI Chat mode: do not claim access to the Jio-bp website, database, reports, or records.`
 
 const getDirectWebsiteAnswer = async (question, scope) => {
   const [expenseContext, websiteData, directWebsiteData, allRecordsAnswer] = await Promise.all([
@@ -589,7 +718,7 @@ const getDirectWebsiteAnswer = async (question, scope) => {
   return { expenseContext, websiteData, answer }
 }
 
-const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-3.1-8b-instant", scope = "all" }) => {
+const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-3.1-8b-instant", scope = "all", responseLanguage = "hinglish" }) => {
   const apiKey = process.env.GROQ_API_KEY
 
   if (!apiKey) {
@@ -625,7 +754,7 @@ const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-
       messages: [
         {
           role: "system",
-          content: directMode ? buildDirectChatSystemPrompt() : buildChatSystemPrompt(expenseContext, websiteData),
+          content: directMode ? buildDirectChatSystemPrompt(responseLanguage) : buildChatSystemPrompt(expenseContext, websiteData, responseLanguage),
         },
         ...chatMessages,
       ],
@@ -648,7 +777,7 @@ const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-
   }
 }
 
-const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemini-flash-latest", scope = "all" }) => {
+const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemini-3.5-flash-lite", scope = "all", responseLanguage = "hinglish" }) => {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     const error = new Error("Gemini API key is not configured.")
@@ -675,7 +804,7 @@ const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemi
   const response = await axios.post(
     `${GEMINI_API_BASE_URL}/models/${selectedModel}:generateContent?key=${apiKey}`,
     {
-      systemInstruction: { parts: [{ text: directMode ? buildDirectChatSystemPrompt() : buildChatSystemPrompt(expenseContext, websiteData) }] },
+      systemInstruction: { parts: [{ text: directMode ? buildDirectChatSystemPrompt(responseLanguage) : buildChatSystemPrompt(expenseContext, websiteData, responseLanguage) }] },
       contents: chatMessages.map((message) => ({
         role: message.role === "assistant" ? "model" : "user",
         parts: [{ text: message.content }],
@@ -699,4 +828,5 @@ module.exports = {
   GROQ_CHAT_MODELS,
   GEMINI_CHAT_MODELS,
   AI_CHAT_SCOPES,
+  extractPhotoEntries,
 }

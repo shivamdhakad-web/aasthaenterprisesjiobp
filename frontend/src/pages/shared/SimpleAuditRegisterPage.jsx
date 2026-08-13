@@ -1,5 +1,5 @@
 import { X } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -72,10 +72,33 @@ export default function SimpleAuditRegisterPage({ config }) {
   const [bulkDefaults, setBulkDefaults] = useState(buildBulkDefaults(config))
   const [bulkRows, setBulkRows] = useState([config.empty()])
   const [bulkSaving, setBulkSaving] = useState(false)
+  const importedDraftHandled = useRef(false)
 
   useEffect(() => {
     load()
   }, [])
+
+  useEffect(() => {
+    if (importedDraftHandled.current) return
+
+    const rawDraft = sessionStorage.getItem("aiPhotoImportDraft")
+    if (!rawDraft) return
+
+    try {
+      const draft = JSON.parse(rawDraft)
+      if (draft?.pageKey !== config.pageKey || !Array.isArray(draft.entries)) return
+
+      importedDraftHandled.current = true
+      sessionStorage.removeItem("aiPhotoImportDraft")
+      const defaults = buildBulkDefaults(config)
+      setBulkDefaults(defaults)
+      setBulkRows(draft.entries.map((entry) => ({ ...config.empty(), ...entry })))
+      setBulkOpen(true)
+      setNotice({ type: "success", text: `${draft.entries.length} photo entries are ready to review and save.` })
+    } catch (_error) {
+      sessionStorage.removeItem("aiPhotoImportDraft")
+    }
+  }, [config])
 
   useEffect(() => {
     if (!notice.text) return undefined

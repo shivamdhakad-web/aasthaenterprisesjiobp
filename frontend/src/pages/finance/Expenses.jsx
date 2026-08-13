@@ -1,5 +1,5 @@
 import { Download, FileSpreadsheet, FileText, Plus, Sparkles, X } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -109,10 +109,31 @@ export default function Expenses() {
   const [form, setForm] = useState(defaultForm(user))
   const [aiSummary, setAiSummary] = useState("")
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
+  const importedDraftHandled = useRef(false)
 
   useEffect(() => {
     load()
   }, [])
+
+  useEffect(() => {
+    if (importedDraftHandled.current) return
+
+    const rawDraft = sessionStorage.getItem("aiPhotoImportDraft")
+    if (!rawDraft) return
+
+    try {
+      const draft = JSON.parse(rawDraft)
+      if (draft?.pageKey !== "expenses" || !Array.isArray(draft.entries)) return
+
+      importedDraftHandled.current = true
+      sessionStorage.removeItem("aiPhotoImportDraft")
+      setBulkEntries(draft.entries.map((entry) => ({ ...defaultBulkExpenseRow(user), ...entry })))
+      setBulkOpen(true)
+      setNotice({ type: "success", text: `${draft.entries.length} photo entries are ready to review and save.` })
+    } catch (_error) {
+      sessionStorage.removeItem("aiPhotoImportDraft")
+    }
+  }, [user])
 
   useEffect(() => {
     if (!notice.text) {

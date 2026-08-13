@@ -14,3 +14,8 @@ export const sendAiChatMessage = async (payload) => {
   const { data } = await api.post("/ai/chat", payload)
   return data
 }
+
+export const extractEntriesFromPhoto = async (payload) => {
+  const { data } = await api.post("/ai/photo-import", payload)
+  return data
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -92,9 +92,32 @@ export default function CardSwipe() {
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkDefaults, setBulkDefaults] = useState(defaultBulkDefaults())
   const [bulkRows, setBulkRows] = useState([defaultBulkRow()])
+  const importedDraftHandled = useRef(false)
 
   useEffect(() => {
     fetchEntries()
+  }, [])
+
+  useEffect(() => {
+    if (importedDraftHandled.current) return
+
+    const rawDraft = sessionStorage.getItem("aiPhotoImportDraft")
+    if (!rawDraft) return
+
+    try {
+      const draft = JSON.parse(rawDraft)
+      if (draft?.pageKey !== "cardSwipe" || !Array.isArray(draft.entries)) return
+
+      importedDraftHandled.current = true
+      sessionStorage.removeItem("aiPhotoImportDraft")
+      const defaults = defaultBulkDefaults()
+      setBulkDefaults(defaults)
+      setBulkRows(draft.entries.map((entry) => ({ ...defaultBulkRow(defaults), ...entry })))
+      setBulkOpen(true)
+      setNotice({ type: "success", text: `${draft.entries.length} photo entries are ready to review and save.` })
+    } catch (_error) {
+      sessionStorage.removeItem("aiPhotoImportDraft")
+    }
   }, [])
 
   useEffect(() => {
