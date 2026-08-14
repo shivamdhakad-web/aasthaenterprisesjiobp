@@ -311,6 +311,44 @@ const getQuestionDates = (question = "") =>
     .map((match) => formatComparableDate(match[1]))
     .filter(Boolean)
 
+const getDataRangeBounds = (dataRange = "all") => {
+  if (dataRange === "all") return null
+
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  if (dataRange === "currentMonth") {
+    return { start: firstDayOfCurrentMonth, end: today, label: "Current Month" }
+  }
+  if (dataRange === "lastMonth") {
+    return {
+      start: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+      end: new Date(now.getFullYear(), now.getMonth(), 0),
+      label: "Last Month",
+    }
+  }
+
+  const months = { "1m": 1, "2m": 2, "3m": 3, "6m": 6, "1y": 12 }[dataRange]
+  if (!months) return null
+
+  const start = new Date(today)
+  start.setMonth(start.getMonth() - months)
+  return { start, end: today, label: `Last ${months === 12 ? "1 Year" : `${months} Months`}` }
+}
+
+const filterRowsByDataRange = (rows, dataRange) => {
+  const bounds = getDataRangeBounds(dataRange)
+  if (!bounds) return rows
+
+  return rows.filter((row) => {
+    const dateText = formatComparableDate(row.date)
+    if (!dateText) return false
+    const rowDate = new Date(`${dateText}T00:00:00`)
+    return rowDate >= bounds.start && rowDate <= bounds.end
+  })
+}
+
 const WEBSITE_DATA_SOURCES = [
   {
     key: "expenses",
@@ -386,7 +424,7 @@ const WEBSITE_DATA_SOURCES = [
 
 const AI_CHAT_SCOPES = [
   { key: "direct", label: "Direct AI Chat" },
-  { key: "all", label: "All Operational Pages" },
+  { key: "all", label: "All Operational Registers" },
   ...WEBSITE_DATA_SOURCES.map(({ key, label }) => ({ key, label })),
 ]
 
@@ -401,7 +439,7 @@ const getDataSource = (question = "", scope = "") => {
   return WEBSITE_DATA_SOURCES.find((item) => item.terms.some((term) => normalizedQuestion.includes(term))) || null
 }
 
-const getRelevantWebsiteData = async (question = "", scope = "") => {
+const getRelevantWebsiteData = async (question = "", scope = "", dataRange = "all") => {
   const source = getDataSource(question, scope)
 
   if (!source) {
@@ -431,14 +469,15 @@ const getRelevantWebsiteData = async (question = "", scope = "") => {
         shift: entry.employeeId?.shift || "",
       }))
     : await source.model.find().select(source.select).sort({ createdAt: -1 }).lean()
+  const rangeRows = filterRowsByDataRange(rows, dataRange)
   const matchingRows = rangeStart
-    ? rows.filter((row) => {
+    ? rangeRows.filter((row) => {
         const comparableDate = formatComparableDate(row.date)
         return comparableDate >= rangeStart && comparableDate <= rangeEnd
       })
     : requestedDate
-      ? rows.filter((row) => formatComparableDate(row.date) === requestedDate)
-    : rows
+      ? rangeRows.filter((row) => formatComparableDate(row.date) === requestedDate)
+    : rangeRows
 
   return {
     sourceKey: source.key,
@@ -447,24 +486,28 @@ const getRelevantWebsiteData = async (question = "", scope = "") => {
     rangeStart: rangeStart || undefined,
     rangeEnd: rangeEnd || undefined,
     totalRecordsOnPage: rows.length,
+    dataRange: getDataRangeBounds(dataRange)?.label || "All Data",
+    dataRangeRecordCount: rangeRows.length,
     matchingRecordCount: matchingRows.length,
     records: matchingRows,
   }
 }
 
-const getSourceSummary = async (source) => {
+const getSourceSummary = async (source, dataRange = "all") => {
   if (source.key === "employees") {
     const allRows = await EmployeeAttendance.find()
       .select("employeeId date status shortage advanceCash advancePetrol bonusAmount remark")
       .populate("employeeId", "name role shift")
       .sort({ date: -1, createdAt: -1 })
       .lean()
+    const rangeRows = filterRowsByDataRange(allRows, dataRange)
     return {
       key: source.key,
       page: "Staff Attendance & Payroll",
-      totalRecordCount: allRows.length,
-      allRecordsTotal: allRows.reduce((sum, row) => sum + Number(row.bonusAmount || 0), 0),
-      records: allRows.map((row) => ({
+      totalRecordCount: rangeRows.length,
+      allRecordsTotal: rangeRows.reduce((sum, row) => sum + Number(row.bonusAmount || 0), 0),
+      dataRange: getDataRangeBounds(dataRange)?.label || "All Data",
+      records: rangeRows.map((row) => ({
         date: row.date,
         employeeName: row.employeeId?.name || "Unknown employee",
         role: row.employeeId?.role || "",
@@ -476,6 +519,7 @@ const getSourceSummary = async (source) => {
   }
 
   const allRows = await source.model.find().select(source.select).sort({ createdAt: -1 }).lean()
+  const rangeRows = filterRowsByDataRange(allRows, dataRange)
   const numericFields = {
     expenses: "amount",
     cardSwipe: "amount",
@@ -492,27 +536,28 @@ const getSourceSummary = async (source) => {
   return {
     key: source.key,
     page: source.label,
-    totalRecordCount: allRows.length,
-    allRecordsTotal: totalField ? allRows.reduce((sum, row) => sum + Number(row[totalField] || 0), 0) : undefined,
-    records: allRows,
+    totalRecordCount: rangeRows.length,
+    allRecordsTotal: totalField ? rangeRows.reduce((sum, row) => sum + Number(row[totalField] || 0), 0) : undefined,
+    dataRange: getDataRangeBounds(dataRange)?.label || "All Data",
+    records: rangeRows,
   }
 }
 
-const getScopeContext = async (question = "", scope = "") => {
+const getScopeContext = async (question = "", scope = "", dataRange = "all") => {
   if (scope === "all") {
     const [summaries, relevantQuestionData] = await Promise.all([
-      Promise.all(WEBSITE_DATA_SOURCES.map(getSourceSummary)),
-      getRelevantWebsiteData(question),
+      Promise.all(WEBSITE_DATA_SOURCES.map((source) => getSourceSummary(source, dataRange))),
+      getRelevantWebsiteData(question, "", dataRange),
     ])
     return {
-      selectedScope: "All Operational Pages",
+      selectedScope: "All Operational Registers",
       note: "Complete privacy-safe operational data. Employee phone numbers, passwords, secure notes, settings, and API keys are excluded.",
       pages: summaries,
       relevantQuestionData,
     }
   }
 
-  return getRelevantWebsiteData(question, scope)
+  return getRelevantWebsiteData(question, scope, dataRange)
 }
 
 const getRecordTotal = (sourceKey, row) => {
@@ -661,8 +706,11 @@ const buildDateRangeAnswer = (websiteData) => {
   return `${websiteData.matchedPage} from ${startDate} to ${endDate}: ${websiteData.records.length} entr${websiteData.records.length === 1 ? "y" : "ies"}, total ${formatCurrency(total)}.${entryLines ? `\n${entryLines}` : ""}`
 }
 
-const getExpenseContext = async () => {
-  const expenses = await Expense.find().select("date category amount").lean()
+const getExpenseContext = async (dataRange = "all") => {
+  const expenses = filterRowsByDataRange(
+    await Expense.find().select("date category amount").lean(),
+    dataRange,
+  )
   const now = new Date()
   const currentMonthExpenses = expenses.filter((expense) => {
     const date = parseExpenseDate(expense.date)
@@ -716,7 +764,7 @@ const buildTopExpenseCategoryAnswer = (question, scope, expenseContext) => {
 const asksForAllRecords = (question = "") =>
   /\b(all|complete|entire|full|saare|sare|sabhi|sabi)\b.*\b(data|record|records|entry|entries|detail|details)\b|\b(data|record|records|entry|entries|detail|details)\b.*\b(do|dikhao|dikhaiye|chahiye)\b/i.test(question)
 
-const buildAllRecordsAnswer = async (question, scope) => {
+const buildAllRecordsAnswer = async (question, scope, dataRange) => {
   if (!asksForAllRecords(question)) {
     return ""
   }
@@ -726,7 +774,10 @@ const buildAllRecordsAnswer = async (question, scope) => {
     return "Please select a specific page before asking for all records."
   }
 
-  const rows = await source.model.find().select(source.select).sort({ createdAt: -1 }).lean()
+  const rows = filterRowsByDataRange(
+    await source.model.find().select(source.select).sort({ createdAt: -1 }).lean(),
+    dataRange,
+  )
   if (!rows.length) {
     return `No ${source.label} records are available.`
   }
@@ -750,12 +801,12 @@ const buildChatSystemPrompt = (expenseContext, websiteData, responseLanguage) =>
 const buildDirectChatSystemPrompt = (responseLanguage) =>
   `You are a helpful general AI assistant. Answer the user's questions directly and accurately. ${getResponseLanguageInstruction(responseLanguage)} This is Direct AI Chat mode: do not claim access to the Jio-bp website, database, reports, or records.`
 
-const getDirectWebsiteAnswer = async (question, scope) => {
+const getDirectWebsiteAnswer = async (question, scope, dataRange) => {
   const [expenseContext, websiteData, directWebsiteData, allRecordsAnswer] = await Promise.all([
-    getExpenseContext(),
-    getScopeContext(question, scope),
-    scope === "all" ? getRelevantWebsiteData(question) : Promise.resolve(null),
-    buildAllRecordsAnswer(question, scope),
+    getExpenseContext(dataRange),
+    getScopeContext(question, scope, dataRange),
+    scope === "all" ? getRelevantWebsiteData(question, "", dataRange) : Promise.resolve(null),
+    buildAllRecordsAnswer(question, scope, dataRange),
   ])
   const answer = allRecordsAnswer
     || buildTopExpenseCategoryAnswer(question, scope, expenseContext)
@@ -765,7 +816,7 @@ const getDirectWebsiteAnswer = async (question, scope) => {
   return { expenseContext, websiteData, answer }
 }
 
-const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-3.1-8b-instant", scope = "all", responseLanguage = "hinglish" }) => {
+const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-3.1-8b-instant", scope = "all", dataRange = "all", responseLanguage = "hinglish" }) => {
   const apiKey = process.env.GROQ_API_KEY
 
   if (!apiKey) {
@@ -780,7 +831,7 @@ const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-
   const directMode = scope === "direct"
   const { expenseContext, websiteData, answer: directDataAnswer } = directMode
     ? { expenseContext: null, websiteData: null, answer: "" }
-    : await getDirectWebsiteAnswer(finalQuestion, scope)
+    : await getDirectWebsiteAnswer(finalQuestion, scope, dataRange)
 
   if (finalQuestion && chatMessages[chatMessages.length - 1]?.content !== finalQuestion) {
     chatMessages.push({ role: "user", content: finalQuestion.slice(0, 4000) })
@@ -823,7 +874,7 @@ const generateGroqChatAnswer = async ({ question, messages = [], model = "llama-
   }
 }
 
-const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemini-3.5-flash-lite", scope = "all", responseLanguage = "hinglish" }) => {
+const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemini-3.5-flash-lite", scope = "all", dataRange = "all", responseLanguage = "hinglish" }) => {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     const error = new Error("Gemini API key is not configured.")
@@ -837,7 +888,7 @@ const generateGeminiChatAnswer = async ({ question, messages = [], model = "gemi
   const directMode = scope === "direct"
   const { expenseContext, websiteData, answer: directDataAnswer } = directMode
     ? { expenseContext: null, websiteData: null, answer: "" }
-    : await getDirectWebsiteAnswer(finalQuestion, scope)
+    : await getDirectWebsiteAnswer(finalQuestion, scope, dataRange)
 
   if (directDataAnswer) {
     return { provider: "database", model: "direct-record-lookup", answer: directDataAnswer }

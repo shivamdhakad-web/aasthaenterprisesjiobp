@@ -125,6 +125,17 @@ const RESPONSE_LANGUAGES = [
   { key: "english", label: "English" },
 ]
 
+const DATA_RANGES = [
+  { key: "all", label: "All Data" },
+  { key: "currentMonth", label: "Current Month" },
+  { key: "lastMonth", label: "Last Month" },
+  { key: "1m", label: "Last 1 Month" },
+  { key: "2m", label: "Last 2 Months" },
+  { key: "3m", label: "Last 3 Months" },
+  { key: "6m", label: "Last 6 Months" },
+  { key: "1y", label: "Last 1 Year" },
+]
+
 const renderInlineText = (value) =>
   String(value).split(/(\*\*.*?\*\*)/g).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -179,6 +190,7 @@ export default function AiChatPage() {
   const [model, setModel] = useState(DEFAULT_MODEL)
   const [scopes, setScopes] = useState(FALLBACK_SCOPES)
   const [scope, setScope] = useState("all")
+  const [dataRange, setDataRange] = useState("all")
   const [messages, setMessages] = useState([WELCOME_MESSAGE])
   const [question, setQuestion] = useState("")
   const [loading, setLoading] = useState(false)
@@ -298,6 +310,7 @@ export default function AiChatPage() {
         provider,
         model,
         scope,
+        dataRange,
         responseLanguage,
         messages: nextMessages.slice(1),
       })
@@ -381,23 +394,6 @@ export default function AiChatPage() {
 
         {/* CONTROLS & ACTIONS */}
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-          {/* SCOPE SELECTOR */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-xs">
-            <Globe size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <select
-              value={scope}
-              onChange={(event) => setScope(event.target.value)}
-              disabled={loading}
-              className="bg-transparent font-bold text-[color:var(--text-strong)] outline-none cursor-pointer text-xs"
-            >
-              {scopes.map((item) => (
-                <option key={item.key} value={item.key} className="bg-[var(--bg-panel)] text-[color:var(--text-strong)]">
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* PROVIDER SELECTOR */}
           <div className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-xs">
             <Zap size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -437,15 +433,6 @@ export default function AiChatPage() {
           </div>
 
           {/* NEW CHAT BUTTON */}
-          <button
-            type="button"
-            onClick={() => setPhotoImportOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20"
-            title="Import multiple entries from a photo"
-          >
-            <ImageUp size={14} />
-            <span className="hidden sm:inline">Photo Import</span>
-          </button>
           <button
             onClick={handleClearChat}
             className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-xs font-bold text-[color:var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
@@ -610,6 +597,43 @@ export default function AiChatPage() {
         <form onSubmit={handleSubmit} className="shrink-0 border-t border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:p-4">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
             <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2.5 py-1.5 text-xs font-bold text-[color:var(--text-secondary)]">
+                <Globe size={13} className="text-emerald-600" />
+                Scope
+                <select
+                  value={scope}
+                  onChange={(event) => setScope(event.target.value)}
+                  disabled={loading}
+                  className="max-w-40 bg-transparent font-bold text-[color:var(--text-strong)] outline-none"
+                >
+                  {scopes.map((item) => (
+                    <option key={item.key} value={item.key}>{item.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2.5 py-1.5 text-xs font-bold text-[color:var(--text-secondary)]">
+                <Layers size={13} className="text-emerald-600" />
+                Data
+                <select
+                  value={dataRange}
+                  onChange={(event) => setDataRange(event.target.value)}
+                  disabled={loading}
+                  className="bg-transparent font-bold text-[color:var(--text-strong)] outline-none"
+                >
+                  {DATA_RANGES.map((range) => (
+                    <option key={range.key} value={range.key}>{range.label}</option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => setPhotoImportOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20"
+                title="Import multiple entries from a photo"
+              >
+                <ImageUp size={14} />
+                Photo Import
+              </button>
               {VOICE_MODES.map((item) => {
                 const Icon = item.icon
                 const isActive = voiceMode === item.key

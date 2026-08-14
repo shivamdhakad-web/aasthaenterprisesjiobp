@@ -57,15 +57,15 @@ exports.chat = async (req, res) => {
       return res.status(403).json({ message: "Only admin can use AI chat." })
     }
 
-    const { question = "", messages = [], model, provider = "gemini", scope = "all", responseLanguage = "hinglish" } = req.body || {}
+    const { question = "", messages = [], model, provider = "gemini", scope = "all", dataRange = "all", responseLanguage = "hinglish" } = req.body || {}
 
     if (!String(question).trim()) {
       return res.status(400).json({ message: "Question is required." })
     }
 
     const result = provider === "gemini"
-      ? await generateGeminiChatAnswer({ question, messages, model, scope, responseLanguage })
-      : await generateGroqChatAnswer({ question, messages, model, scope, responseLanguage })
+      ? await generateGeminiChatAnswer({ question, messages, model, scope, dataRange, responseLanguage })
+      : await generateGroqChatAnswer({ question, messages, model, scope, dataRange, responseLanguage })
     res.json(result)
   } catch (error) {
     res.status(error.statusCode || 500).json({
