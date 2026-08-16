@@ -1,5 +1,6 @@
-import { Download, FileSpreadsheet, FileText, Plus, Sparkles, X } from "lucide-react"
+import { ChartNoAxesCombined, Download, FileSpreadsheet, FileText, Plus, Sparkles, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -69,6 +70,7 @@ const defaultBulkExpenseRow = (user) => ({
 
 export default function Expenses() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const isManager = user?.role === "Manager"
   const { canUse, canShowCard } = useManagerDashboardSettings("expenses", isManager)
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
@@ -646,6 +648,15 @@ export default function Expenses() {
       />
 
       <div className="flex gap-3 lg:ml-auto">
+        {!isManager ? <button
+          type="button"
+          onClick={() => navigate("/admin/expense-dashboard")}
+          className="hidden items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-100 lg:inline-flex"
+        >
+          <ChartNoAxesCombined size={18} />
+          Expense Dashboard
+        </button> : null}
+
         {canManagerUse("addExpense") ? (
           <button
             onClick={openEntryModePrompt}
@@ -672,14 +683,14 @@ export default function Expenses() {
           </button>
         ) : null}
 
-        <button
+        {/* <button
           onClick={generateAiSummary}
           disabled={aiSummaryLoading}
           className="hidden items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-gray-50 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 lg:inline-flex"
         >
           <Sparkles size={18} />
           {aiSummaryLoading ? "Generating..." : "AI Summary"}
-        </button>
+        </button> */}
       </div>
     </div>
 
@@ -724,16 +735,26 @@ export default function Expenses() {
       ) : null}
 
       <div className="mb-3 lg:hidden">
-        <button
-          onClick={() => setShowFilter((current) => !current)}
-          className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
-        >
-          {showFilter ? "Hide Filters" : "Filters"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {!isManager ? <button
+            type="button"
+            onClick={() => navigate("/admin/expense-dashboard")}
+            className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700"
+          >
+            <ChartNoAxesCombined size={17} />
+            Expense Dashboard
+          </button> : null}
+          <button
+            onClick={() => setShowFilter((current) => !current)}
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
+          >
+            {showFilter ? "Hide Filters" : "Filters"}
+          </button>
+        </div>
       </div>
 
       <div
-        className={`mb-5 rounded-3xl border border-[var(--border-color)] bg-white p-3 shadow-sm ${
+        className={`mb-5 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm ${
           showFilter ? "block" : "hidden lg:block"
         }`}
       >

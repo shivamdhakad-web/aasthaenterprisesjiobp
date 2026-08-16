@@ -475,7 +475,7 @@ export default function TankerDeliveries() {
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-5">
   
-  <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-4 py-3 shadow-sm">
+  <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-3 shadow-sm">
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-3">
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-50">
@@ -566,7 +566,7 @@ export default function TankerDeliveries() {
         </button>
       </div>
 
-      <div className={`mb-4 gap-3 rounded-2xl border border-[var(--border-color)] bg-white p-3 sm:grid sm:grid-cols-4 ${showFilter ? "grid" : "hidden sm:grid"}`}>
+      <div className={`mb-4 gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:grid sm:grid-cols-4 ${showFilter ? "grid" : "hidden sm:grid"}`}>
   {filterContent}
 </div>
 

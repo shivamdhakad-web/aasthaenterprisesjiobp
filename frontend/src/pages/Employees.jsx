@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
+import { ChartNoAxesCombined } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -294,6 +296,7 @@ const buildEmployeesDirectoryPdf = (employees, getAllFinalBalance = () => 0) => 
 }
 
 export default function Employees() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
   const { canUse, canShowCard } = useManagerDashboardSettings("employees", isManager)
@@ -1144,7 +1147,7 @@ export default function Employees() {
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <div className={selectedEmployee ? "hidden" : "flex flex-col gap-4"}>
 
-      <div className="mb-0 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+      <div className="mb-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* SVG Icon */}
@@ -1210,6 +1213,16 @@ export default function Employees() {
           />
 
           <div className="hidden flex-wrap gap-3 sm:flex xl:ml-auto">
+            {!isManager ? (
+              <button
+                type="button"
+                onClick={() => navigate("/admin/employee-attendance-dashboard")}
+                className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 font-medium text-violet-700 shadow-sm"
+              >
+                <ChartNoAxesCombined size={18} />
+                Workforce Dashboard
+              </button>
+            ) : null}
             {canManagerUse("addEmployee") ? (
               <button
                 className="rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm"
@@ -1463,7 +1476,7 @@ export default function Employees() {
                 setAttendance([])
                 setExpandedAttendanceId(null)
               }}
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--text-primary)] shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-gray-50 px-4 py-2 text-sm font-semibold text-[color:var(--text-primary)] shadow-sm transition hover:border-blue-300 hover:text-blue-600"
             >
               Back to Employees
             </button>
@@ -2138,7 +2151,5 @@ function ConfirmDialog({
     </div>
   )
 }
-
-
 
 

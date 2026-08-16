@@ -52,6 +52,9 @@ import MduPage from "./pages/shared/MduPage"
 import InvoiceDetailsPage from "./pages/shared/InvoiceDetailsPage"
 import DailySalesPage from "./pages/shared/DailySalesPage"
 import FinanceDashboardPage from "./pages/shared/FinanceDashboardPage"
+import ExpenseDashboardPage from "./pages/finance/ExpenseDashboardPage"
+import CardSwipeDashboardPage from "./pages/finance/CardSwipeDashboardPage"
+import EmployeeAttendanceDashboardPage from "./pages/finance/EmployeeAttendanceDashboardPage"
 
 export default function App() {
   const AppRouter =
@@ -78,6 +81,7 @@ export default function App() {
             <Route path="meter-readings" element={<MeterReadings />} />
             <Route path="tanker-deliveries" element={<TankerDeliveries />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="employee-attendance-dashboard" element={<EmployeeAttendanceDashboardPage />} />
             <Route path="admin-dashboard-editor" element={<AdminDashboardEditor />} />
             <Route path="employee-dashboard-editor" element={<EmployeeDashboardEditor />} />
             <Route path="manager-dashboard-editor" element={<ManagerDashboardEditor />} />
@@ -86,6 +90,7 @@ export default function App() {
             <Route path="tasks" element={<TasksPage />} />
             <Route path="credit-customers" element={<CreditCustomers />} />
             <Route path="expenses" element={<Expenses />} />
+            <Route path="expense-dashboard" element={<ExpenseDashboardPage />} />
             <Route path="reminder" element={<ReminderBox />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="storage" element={<StorageOverview />} />
@@ -94,6 +99,7 @@ export default function App() {
             <Route path="lubricants" element={<Lubricants />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
+            <Route path="card-swipe-dashboard" element={<CardSwipeDashboardPage />} />
             <Route path="dcd" element={<DcdPage />} />
             <Route path="mdu" element={<MduPage />} />
             <Route path="invoice-details" element={<InvoiceDetailsPage />} />

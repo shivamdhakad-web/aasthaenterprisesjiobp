@@ -448,7 +448,7 @@ export default function SimpleAuditRegisterPage({ config }) {
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-5">
     
-      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${config.iconBg || "bg-emerald-50"}`}>
@@ -508,7 +508,7 @@ export default function SimpleAuditRegisterPage({ config }) {
       </button>
     ) : null}
 
-    {config.aiSummary ? (
+    {/* {config.aiSummary ? (
       <button
         type="button"
         onClick={generateAiSummary}
@@ -518,7 +518,7 @@ export default function SimpleAuditRegisterPage({ config }) {
         <Sparkles size={18} />
         {aiSummaryLoading ? "Generating..." : "AI Summary"}
       </button>
-    ) : null}
+    ) : null} */}
 
 
     {canManagerUse("deleteEntry") && (
@@ -578,7 +578,7 @@ export default function SimpleAuditRegisterPage({ config }) {
         </section>
       ) : null}
 
-<div className="mb-5 rounded-3xl border border-[var(--border-color)] bg-white p-3 shadow-sm">
+<div className="mb-5 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
   <div className={`grid gap-3 ${categoryFilterConfig ? "lg:grid-cols-[220px_190px_190px_190px_auto]" : "lg:grid-cols-[250px_210px_210px_auto]"}`}>
     {categoryFilterConfig ? (
       <select

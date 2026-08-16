@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
-import { Sparkles, X } from "lucide-react"
+import { ChartNoAxesCombined, Sparkles, X } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import MobileActionFab from "../components/MobileActionFab"
 import AddCardSwipeModal from "../components/AddCardSwipeModal"
@@ -66,6 +67,7 @@ const defaultBulkRow = (defaults = defaultBulkDefaults()) => ({
 
 export default function CardSwipe() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const isManager = user?.role === "Manager"
   const { canUse, canShowCard } = useManagerDashboardSettings("cardSwipe", isManager)
   const canManagerUse = (buttonKey) => !isManager || canUse(buttonKey)
@@ -677,7 +679,7 @@ export default function CardSwipe() {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-3">
       {/* Card Swipe SVG */}
@@ -729,7 +731,16 @@ export default function CardSwipe() {
   />
 
   <div className="hidden gap-3 sm:ml-auto sm:flex">
-    
+    {!isManager ? (
+      <button
+        type="button"
+        onClick={() => navigate("/admin/card-swipe-dashboard")}
+        className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 font-medium text-blue-700 shadow-sm"
+      >
+        <ChartNoAxesCombined size={18} />
+        Swipe Dashboard
+      </button>
+    ) : null}
 
     {canManagerUse("addEntry") ? (
       <button
@@ -749,7 +760,7 @@ export default function CardSwipe() {
       </button>
     ) : null}
 
-    <button
+    {/* <button
       type="button"
       onClick={generateAiSummary}
       disabled={aiSummaryLoading}
@@ -757,7 +768,7 @@ export default function CardSwipe() {
     >
       <Sparkles size={18} />
       {aiSummaryLoading ? "Generating..." : "AI Summary"}
-    </button>
+    </button> */}
 
     {canManagerUse("deleteMonth") ? (
       <button type="button" className="btn btn-red" onClick={askDeleteMonth}>

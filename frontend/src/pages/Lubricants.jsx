@@ -841,7 +841,7 @@ export default function Lubricants() {
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
 
-    <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-white px-5 py-3 shadow-sm">
+    <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-3">
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
@@ -919,14 +919,14 @@ export default function Lubricants() {
       </button>
     ) : null}
 
-    <button
+    {/* <button
       onClick={generateAiSummary}
       disabled={aiSummaryLoading}
       className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-gray-50 shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
     >
       <Sparkles size={18} />
       {aiSummaryLoading ? "Generating..." : "AI Summary"}
-    </button>
+    </button> */}
 
     {canManagerUse("deleteMonth") ? (
       <button
