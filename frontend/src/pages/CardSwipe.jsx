@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
+import { Sparkles, X } from "lucide-react"
 
 import MobileActionFab from "../components/MobileActionFab"
 import AddCardSwipeModal from "../components/AddCardSwipeModal"
 import { useAuth } from "../contexts/AuthContext"
 import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
+import { getAiReportSummary } from "../services/aiApi"
 import { addEntry, deleteEntry, deleteMonth, getEntries } from "../services/cardSwipeApi"
 
 const getToday = () => new Date().toISOString().slice(0, 10)
@@ -86,6 +88,8 @@ export default function CardSwipe() {
   const [reportPayment, setReportPayment] = useState("")
   const [format, setFormat] = useState("pdf")
   const [notice, setNotice] = useState({ type: "", text: "" })
+  const [aiSummary, setAiSummary] = useState("")
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
   const [confirmState, setConfirmState] = useState(null)
   const [entryModePrompt, setEntryModePrompt] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
@@ -259,6 +263,63 @@ export default function CardSwipe() {
     { key: "dsmCharges", label: "DSM Charges", value: formatCurrency(summary.dsmCharges), tone: "rose" },
   ]
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
+
+  const buildCardSwipeAiPayload = () => {
+    const machineTotals = filteredEntries.reduce((totals, entry) => {
+      const machineName = entry.machine || "Unspecified Machine"
+      totals[machineName] = (totals[machineName] || 0) + Number(entry.amount || 0)
+      return totals
+    }, {})
+
+    return {
+      reportType: "Card Swipe Register",
+      filters: {
+        fromDate: startDate || "All",
+        toDate: endDate || "All",
+        month: month || "All",
+        machine: machine || "All Machines",
+        paymentMethod: paymentMethod || "All Payment Methods",
+      },
+      totals: {
+        records: filteredEntries.length,
+        totalAmount: Number(summary.totalAmount || 0),
+        totalCharges: Number(summary.totalCharges || 0),
+        netAmount: Number(summary.net || 0),
+        categoryTotals: machineTotals,
+      },
+      rows: filteredEntries.map((entry) => ({
+        date: entry.date,
+        category: entry.machine || "Unspecified Machine",
+        description: `Time: ${entry.time || "-"} | Payment: ${entry.paymentMethod || "-"} | Remark: ${entry.remark || "-"}`,
+        amount: Number(entry.amount || 0),
+        charges: Number(entry.charges || 0),
+        paymentMethod: entry.paymentMethod || "",
+        machine: entry.machine || "",
+        remark: entry.remark || "",
+      })),
+    }
+  }
+
+  const generateAiSummary = async () => {
+    if (!filteredEntries.length) {
+      setNotice({ type: "error", text: "No card swipe data found for AI summary." })
+      return
+    }
+
+    setAiSummaryLoading(true)
+    try {
+      const result = await getAiReportSummary(buildCardSwipeAiPayload())
+      setAiSummary(result.summary || "")
+      setNotice({ type: "success", text: "AI summary generated successfully." })
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to generate AI summary right now.",
+      })
+    } finally {
+      setAiSummaryLoading(false)
+    }
+  }
 
   const getReportData = () =>
     entries.filter((entry) => {
@@ -688,6 +749,16 @@ export default function CardSwipe() {
       </button>
     ) : null}
 
+    <button
+      type="button"
+      onClick={generateAiSummary}
+      disabled={aiSummaryLoading}
+      className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <Sparkles size={18} />
+      {aiSummaryLoading ? "Generating..." : "AI Summary"}
+    </button>
+
     {canManagerUse("deleteMonth") ? (
       <button type="button" className="btn btn-red" onClick={askDeleteMonth}>
         Delete Month
@@ -695,6 +766,48 @@ export default function CardSwipe() {
     ) : null}
   </div>
       </div>
+
+      {aiSummary ? (
+        <section className="mb-5 overflow-hidden rounded-2xl border border-emerald-200 bg-[var(--bg-panel)] shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                <Sparkles size={18} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-emerald-950">AI Summary</h2>
+                <p className="text-xs text-emerald-700">Card swipe insights for the selected filters</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiSummary("")}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-700 transition-colors hover:bg-emerald-100"
+              title="Close AI summary"
+              aria-label="Close AI summary"
+            >
+              <X size={17} />
+            </button>
+          </div>
+          <div className="grid gap-2 p-4">
+            {aiSummary
+              .split("\n")
+              .map((line) => line.replace(/^[-*]\s*/, "").trim())
+              .filter(Boolean)
+              .map((line, index) => (
+                <div
+                  key={`${line}-${index}`}
+                  className="flex items-start gap-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2.5"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm leading-6 text-[color:var(--text-primary)]">{line}</p>
+                </div>
+              ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:block">
         <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-6">{filterContent}</div>
@@ -1063,6 +1176,11 @@ export default function CardSwipe() {
                 onClick: openReportModal,
               }
             : null,
+          {
+            label: aiSummaryLoading ? "Generating AI..." : "AI Summary",
+            className: "bg-emerald-600",
+            onClick: generateAiSummary,
+          },
           canManagerUse("deleteMonth")
             ? {
                 label: "Delete Month",

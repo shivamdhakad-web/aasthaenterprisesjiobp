@@ -675,7 +675,7 @@ export default function Expenses() {
         <button
           onClick={generateAiSummary}
           disabled={aiSummaryLoading}
-          className="hidden items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60 lg:inline-flex"
+          className="hidden items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-gray-50 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 lg:inline-flex"
         >
           <Sparkles size={18} />
           {aiSummaryLoading ? "Generating..." : "AI Summary"}

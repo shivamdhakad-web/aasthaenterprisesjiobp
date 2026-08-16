@@ -359,7 +359,7 @@ export default function AiChatPage() {
       speak: voiceMode !== "voice-input",
     })
   }
-
+  
   const activeVoiceMode = VOICE_MODES.find((item) => item.key === voiceMode) || VOICE_MODES[0]
 
   return (

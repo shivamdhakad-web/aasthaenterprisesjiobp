@@ -24,6 +24,7 @@ export default function MduPage() {
         kicker: "MDU DSR Register",
         description: "Track opening stock, decant, sales, physical stock, loss/gain, rate, remarks, and audit history.",
         pageKey: "mdu",
+        aiSummary: { valueKey: "sale" },
         iconBg: "bg-emerald-50",
         badgeStyle: "bg-emerald-100 text-emerald-700",
         lineStyle: "bg-emerald-200",
@@ -127,5 +128,4 @@ export default function MduPage() {
     />
   )
 }
-
 

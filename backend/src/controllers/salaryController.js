@@ -56,11 +56,15 @@ exports.getSalarySummary = async (req, res) => {
 
     const isDateMode = Boolean(req.query.date)
     const isAllMode = req.query.scope === "all"
+    const isThroughMonthMode = req.query.scope === "throughMonth"
+    const isThroughDateMode = req.query.scope === "throughDate"
     const range = isDateMode ? buildDayRange(req.query.date) : buildMonthRange(req.query.month)
 
     const attendanceQuery = { employeeId }
 
-    if (!isAllMode) {
+    if (isThroughMonthMode || isThroughDateMode) {
+      attendanceQuery.date = { $lt: range.end }
+    } else if (!isAllMode) {
       attendanceQuery.date = {
         $gte: range.start,
         $lt: range.end,
@@ -110,7 +114,15 @@ exports.getSalarySummary = async (req, res) => {
       },
       month: isAllMode ? null : isDateMode ? req.query.date?.slice?.(0, 7) : range.monthKey,
       selectedDate: isDateMode ? range.dayKey : null,
-      scope: isAllMode ? "all" : isDateMode ? "date" : "month",
+      scope: isAllMode
+        ? "all"
+        : isThroughDateMode
+          ? "throughDate"
+          : isThroughMonthMode
+            ? "throughMonth"
+            : isDateMode
+              ? "date"
+              : "month",
       breakdown: {
         present,
         absent,

@@ -22,6 +22,7 @@ export default function DailySalesPage() {
         kicker: "Daily Sales Register",
         description: "Track product sales, rate, loss/gain, profit, remarks, and audit history.",
         pageKey: "dailySales",
+        aiSummary: { valueKey: "profit", categoryKey: "product" },
         iconBg: "bg-blue-50",
         badgeStyle: "bg-blue-100 text-blue-700",
         lineStyle: "bg-blue-200",

@@ -33,6 +33,7 @@ export default function DcdPage() {
         kicker: "Diesel Credit/Daily Register",
         description: "Track date, volume, purchase price, sale price, profit, shift, remarks, and audit history.",
         pageKey: "dcd",
+        aiSummary: { valueKey: "profit", categoryKey: "product" },
         iconBg: "bg-orange-50",
         badgeStyle: "bg-orange-100 text-orange-700",
         lineStyle: "bg-orange-200",

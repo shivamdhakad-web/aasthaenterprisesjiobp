@@ -1,4 +1,4 @@
-import { Plus, X } from "lucide-react"
+import { Plus, Sparkles, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -7,6 +7,7 @@ import * as XLSX from "xlsx"
 import MobileActionFab from "../components/MobileActionFab"
 import { useAuth } from "../contexts/AuthContext"
 import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
+import { getAiReportSummary } from "../services/aiApi"
 import {
   addLubricant,
   addProduct,
@@ -94,6 +95,8 @@ export default function Lubricants() {
   const [savingSale, setSavingSale] = useState(false)
   const [savingProduct, setSavingProduct] = useState(false)
   const [notice, setNotice] = useState({ type: "", text: "" })
+  const [aiSummary, setAiSummary] = useState("")
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
   const [confirmState, setConfirmState] = useState(null)
   const [showFilter, setShowFilter] = useState(false)
   const [profitOverviewOpen, setProfitOverviewOpen] = useState(false)
@@ -263,6 +266,61 @@ export default function Lubricants() {
         (!reportForm.reportProduct || entry.product === reportForm.reportProduct)
       )
     })
+
+  const buildLubricantAiPayload = () => {
+    const productTotals = filtered.reduce((totals, entry) => {
+      const product = entry.product || "Unspecified Product"
+      totals[product] = (totals[product] || 0) + Number(entry.total || 0)
+      return totals
+    }, {})
+
+    return {
+      reportType: "Lubricant Sales",
+      filters: {
+        fromDate: fromDateFilter || "All",
+        toDate: toDateFilter || "All",
+        category: productFilter || "All Products",
+        month: monthFilter || "All",
+      },
+      totals: {
+        records: filtered.length,
+        totalAmount: filtered.reduce((sum, entry) => sum + Number(entry.total || 0), 0),
+        totalProfit: filtered.reduce((sum, entry) => sum + Number(entry.totalProfit || 0), 0),
+        categoryTotals: productTotals,
+      },
+      rows: filtered.map((entry) => ({
+        date: entry.date,
+        category: entry.product || "Unspecified Product",
+        description: `Quantity: ${Number(entry.quantity || 0)} | Sold By: ${entry.soldBy || "-"}`,
+        amount: Number(entry.total || 0),
+        profit: Number(entry.totalProfit || 0),
+        price: Number(entry.price || 0),
+        quantity: Number(entry.quantity || 0),
+        soldBy: entry.soldBy || "",
+      })),
+    }
+  }
+
+  const generateAiSummary = async () => {
+    if (!filtered.length) {
+      setNotice({ type: "error", text: "No lubricant sales data found for AI summary." })
+      return
+    }
+
+    setAiSummaryLoading(true)
+    try {
+      const result = await getAiReportSummary(buildLubricantAiPayload())
+      setAiSummary(result.summary || "")
+      setNotice({ type: "success", text: "AI summary generated successfully." })
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to generate AI summary right now.",
+      })
+    } finally {
+      setAiSummaryLoading(false)
+    }
+  }
 
   const changeProduct = (name) => {
     const product = products.find((item) => item.name === name)
@@ -861,6 +919,15 @@ export default function Lubricants() {
       </button>
     ) : null}
 
+    <button
+      onClick={generateAiSummary}
+      disabled={aiSummaryLoading}
+      className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-medium text-gray-50 shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <Sparkles size={18} />
+      {aiSummaryLoading ? "Generating..." : "AI Summary"}
+    </button>
+
     {canManagerUse("deleteMonth") ? (
       <button
         onClick={() => setMonthDeleteOpen(true)}
@@ -873,6 +940,46 @@ export default function Lubricants() {
 
   </div>
 </div>
+
+      {aiSummary ? (
+        <div className="mb-5 overflow-hidden rounded-2xl border border-emerald-200 bg-[var(--bg-panel)] shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                <Sparkles size={18} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-emerald-950">AI Summary</h2>
+                <p className="text-xs text-emerald-700">Lubricant sales insights for the selected filters</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiSummary("")}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-700 transition-colors hover:bg-emerald-100"
+              title="Close AI summary"
+              aria-label="Close AI summary"
+            >
+              <X size={17} />
+            </button>
+          </div>
+
+          <div className="grid gap-2 p-4">
+            {aiSummary
+              .split("\n")
+              .map((line) => line.replace(/^[-*]\s*/, "").trim())
+              .filter(Boolean)
+              .map((line, index) => (
+                <div key={`${line}-${index}`} className="flex items-start gap-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm leading-6 text-[color:var(--text-primary)]">{line}</p>
+                </div>
+              ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mb-4 xl:hidden">
         <button
@@ -1715,6 +1822,11 @@ export default function Lubricants() {
                 onClick: openReportModal,
               }
             : null,
+          {
+            label: aiSummaryLoading ? "Generating AI..." : "AI Summary",
+            className: "bg-emerald-600",
+            onClick: generateAiSummary,
+          },
           canManagerUse("deleteMonth")
             ? {
                 label: "Delete Month",

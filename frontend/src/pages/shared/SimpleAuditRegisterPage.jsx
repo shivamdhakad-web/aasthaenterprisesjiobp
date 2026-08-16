@@ -1,4 +1,4 @@
-import { X } from "lucide-react"
+import { Sparkles, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -7,6 +7,7 @@ import * as XLSX from "xlsx"
 import MobileActionFab from "../../components/MobileActionFab"
 import { useAuth } from "../../contexts/AuthContext"
 import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
+import { getAiReportSummary } from "../../services/aiApi"
 
 const today = () => new Date().toISOString().slice(0, 10)
 const currentMonth = () => new Date().toISOString().slice(0, 7)
@@ -65,6 +66,8 @@ export default function SimpleAuditRegisterPage({ config }) {
   const [form, setForm] = useState(config.empty())
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState({ type: "", text: "" })
+  const [aiSummary, setAiSummary] = useState("")
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
   const [confirmState, setConfirmState] = useState(null)
   const [openCard, setOpenCard] = useState(null)
 
@@ -142,6 +145,63 @@ export default function SimpleAuditRegisterPage({ config }) {
 
   const summary = config.summary(filteredEntries)
   const visibleSummary = summary.filter((item) => canManagerShowCard(item.key || normalizeCardKey(item.label)))
+
+  const buildAiSummaryPayload = () => {
+    const aiConfig = config.aiSummary || {}
+    const valueKey = aiConfig.valueKey || "amount"
+    const categoryKey = aiConfig.categoryKey || "category"
+    const categoryTotals = filteredEntries.reduce((totals, entry) => {
+      const category = entry[categoryKey] || "Unspecified"
+      totals[category] = (totals[category] || 0) + numberValue(entry[valueKey])
+      return totals
+    }, {})
+
+    return {
+      reportType: config.title,
+      filters: {
+        fromDate: fromDate || "All",
+        toDate: toDate || "All",
+        month: monthFilter || "All",
+        category: categoryFilter || categoryFilterConfig?.allLabel || "All Categories",
+      },
+      totals: {
+        records: filteredEntries.length,
+        totalAmount: filteredEntries.reduce((sum, entry) => sum + numberValue(entry[valueKey]), 0),
+        categoryTotals,
+      },
+      rows: filteredEntries.map((entry) => ({
+        date: entry.date,
+        category: entry[categoryKey] || "Unspecified",
+        description: config.fields
+          .filter((field) => !["date", categoryKey, valueKey].includes(field.key))
+          .map((field) => `${field.label}: ${entry[field.key] ?? "-"}`)
+          .join(" | "),
+        amount: numberValue(entry[valueKey]),
+        ...Object.fromEntries(config.fields.map((field) => [field.key, entry[field.key] ?? ""])),
+      })),
+    }
+  }
+
+  const generateAiSummary = async () => {
+    if (!filteredEntries.length) {
+      setNotice({ type: "error", text: `No ${config.title} data found for AI summary.` })
+      return
+    }
+
+    setAiSummaryLoading(true)
+    try {
+      const result = await getAiReportSummary(buildAiSummaryPayload())
+      setAiSummary(result.summary || "")
+      setNotice({ type: "success", text: "AI summary generated successfully." })
+    } catch (error) {
+      setNotice({
+        type: "error",
+        text: error?.response?.data?.message || "Unable to generate AI summary right now.",
+      })
+    } finally {
+      setAiSummaryLoading(false)
+    }
+  }
 
   const openCreate = () => {
     if (!canManagerUse("addEntry")) {
@@ -448,6 +508,18 @@ export default function SimpleAuditRegisterPage({ config }) {
       </button>
     ) : null}
 
+    {config.aiSummary ? (
+      <button
+        type="button"
+        onClick={generateAiSummary}
+        disabled={aiSummaryLoading}
+        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-gray-50 shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <Sparkles size={18} />
+        {aiSummaryLoading ? "Generating..." : "AI Summary"}
+      </button>
+    ) : null}
+
 
     {canManagerUse("deleteEntry") && (
       <button
@@ -463,6 +535,48 @@ export default function SimpleAuditRegisterPage({ config }) {
     )}
   </div>
 </div>
+
+      {aiSummary ? (
+        <section className="mb-5 overflow-hidden rounded-2xl border border-emerald-200 bg-[var(--bg-panel)] shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-50 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                <Sparkles size={18} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-emerald-950">AI Summary</h2>
+                <p className="text-xs text-emerald-700">{config.title} insights for the selected filters</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiSummary("")}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-emerald-700 transition-colors hover:bg-emerald-100"
+              title="Close AI summary"
+              aria-label="Close AI summary"
+            >
+              <X size={17} />
+            </button>
+          </div>
+          <div className="grid gap-2 p-4">
+            {aiSummary
+              .split("\n")
+              .map((line) => line.replace(/^[-*]\s*/, "").trim())
+              .filter(Boolean)
+              .map((line, index) => (
+                <div
+                  key={`${line}-${index}`}
+                  className="flex items-start gap-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2.5"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm leading-6 text-[color:var(--text-primary)]">{line}</p>
+                </div>
+              ))}
+          </div>
+        </section>
+      ) : null}
 
 <div className="mb-5 rounded-3xl border border-[var(--border-color)] bg-white p-3 shadow-sm">
   <div className={`grid gap-3 ${categoryFilterConfig ? "lg:grid-cols-[220px_190px_190px_190px_auto]" : "lg:grid-cols-[250px_210px_210px_auto]"}`}>
@@ -710,6 +824,13 @@ export default function SimpleAuditRegisterPage({ config }) {
                 label: "Generate Report",
                 className: "bg-purple-600",
                 onClick: openReportModal,
+              }
+            : null,
+          config.aiSummary
+            ? {
+                label: aiSummaryLoading ? "Generating AI..." : "AI Summary",
+                className: "bg-emerald-600",
+                onClick: generateAiSummary,
               }
             : null,
           canManagerUse("deleteEntry")

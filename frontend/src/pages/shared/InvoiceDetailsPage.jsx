@@ -40,6 +40,7 @@ export default function InvoiceDetailsPage() {
         kicker: "Fuel Invoice Register",
         description: "Track product invoice quantity, invoice amount, transport cost, LFR, purchase amount, remarks, and audit history.",
         pageKey: "invoiceDetails",
+        aiSummary: { valueKey: "invoiceAmount", categoryKey: "product" },
         iconBg: "bg-violet-50",
         badgeStyle: "bg-violet-100 text-violet-700",
         lineStyle: "bg-violet-200",

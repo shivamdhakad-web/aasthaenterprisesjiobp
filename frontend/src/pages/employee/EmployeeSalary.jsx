@@ -234,15 +234,15 @@ function SalaryEntryCard({ entry }) {
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--border-color)] pt-4 text-sm">
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Cash:</span>
-                    <span className="font-semibold">?{formatCurrency(entry.advanceCash)}</span>
+                    <span className="font-semibold">₹{formatCurrency(entry.advanceCash)}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Petrol:</span>
-                    <span className="font-semibold">?{formatCurrency(entry.advancePetrol)}</span>
+                    <span className="font-semibold">₹{formatCurrency(entry.advancePetrol)}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Bonus:</span>
-                    <span className="font-semibold">?{formatCurrency(getEntryBonus(entry))}</span>
+                    <span className="font-semibold">₹{formatCurrency(getEntryBonus(entry))}</span>
                 </span>
                 {entry.remark && (
                     <span className="flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-xs text-[color:var(--text-muted)]">
@@ -259,6 +259,7 @@ export default function EmployeeSalary() {
     const [summary, setSummary] = useState(null);
     const [allSummary, setAllSummary] = useState(null);
     const [lastMonthSummary, setLastMonthSummary] = useState(null);
+    const [searchFinalSummary, setSearchFinalSummary] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
     const [dateFilter, setDateFilter] = useState("");
     const [monthFilter, setMonthFilter] = useState(getCurrentMonth());
@@ -272,8 +273,17 @@ export default function EmployeeSalary() {
                 : targetMonth
                     ? { month: targetMonth }
                     : { scope: "all" };
-            const data = await getSalarySummary(null, params);
+            const throughParams = targetDate
+                ? { scope: "throughDate", date: targetDate }
+                : targetMonth
+                    ? { scope: "throughMonth", month: targetMonth }
+                    : { scope: "all" };
+            const [data, finalData] = await Promise.all([
+                getSalarySummary(null, params),
+                getSalarySummary(null, throughParams),
+            ]);
             setSummary(data);
+            setSearchFinalSummary(finalData);
         } finally {
             setLoading(false);
         }
@@ -306,6 +316,8 @@ export default function EmployeeSalary() {
     const lastMonthBreakdown = lastMonthSummary?.breakdown || {};
     const finalBalance = Number(allBreakdown.final ?? breakdown.final ?? 0);
     const lastMonthAdvance = Number(lastMonthBreakdown.advance ?? 0);
+    const searchFinalBalance = Number(searchFinalSummary?.breakdown?.final ?? breakdown.final ?? 0);
+    const searchMonthBalance = Number(breakdown.final ?? 0);
 
     const handleDateSearch = () => {
         setMonthFilter("");
@@ -482,7 +494,7 @@ export default function EmployeeSalary() {
     <div className=" mt-3">
                 <SalaryMetric
                     label="Final Balance"
-                    value={`?${formatCurrency(finalBalance)}`}
+                    value={`₹${formatCurrency(finalBalance)}`}
                     tone="blue"
                     icon={metricConfigs.finalBalance.icon}
                 />
@@ -523,33 +535,45 @@ export default function EmployeeSalary() {
                 />
                 <SalaryMetric
                     label="Earned"
-                    value={`?${formatCurrency(breakdown.earned)}`}
+                    value={`₹${formatCurrency(breakdown.earned)}`}
                     tone="green"
                     icon={metricConfigs.earned.icon}
                 />
                 <SalaryMetric
                     label="Shortage"
-                    value={`?${formatCurrency(breakdown.shortage)}`}
+                    value={`₹${formatCurrency(breakdown.shortage)}`}
                     tone="rose"
                     icon={metricConfigs.shortage.icon}
                 />
                 <SalaryMetric
                     label="Advance"
-                    value={`?${formatCurrency(breakdown.advance)}`}
+                    value={`₹${formatCurrency(breakdown.advance)}`}
                     tone="amber"
                     icon={metricConfigs.advance.icon}
                 />
                 <SalaryMetric
                     label="Last Month Advance"
-                    value={`?${formatCurrency(lastMonthAdvance)}`}
+                    value={`₹${formatCurrency(lastMonthAdvance)}`}
                     tone="amber"
                     icon={metricConfigs.advance.icon}
                 />
                 <SalaryMetric
+                    label="Search Final Balance"
+                    value={`₹${formatCurrency(searchFinalBalance)}`}
+                    tone={searchFinalBalance >= 0 ? "blue" : "rose"}
+                    icon={metricConfigs.finalBalance.icon}
+                />
+                <SalaryMetric
                     label="Bonus"
-                    value={`?${formatCurrency(breakdown.bonus)}`}
+                    value={`₹${formatCurrency(breakdown.bonus)}`}
                     tone="violet"
                     icon={metricConfigs.bonus.icon}
+                />
+                <SalaryMetric
+                    label="Search Month Balance"
+                    value={`₹${formatCurrency(searchMonthBalance)}`}
+                    tone={searchMonthBalance >= 0 ? "cyan" : "rose"}
+                    icon={metricConfigs.finalBalance.icon}
                 />
 
             </section>
@@ -645,16 +669,16 @@ export default function EmployeeSalary() {
                                                 shortage < 0 ? "text-rose-500" : "text-emerald-500"
                                             }`}
                                         >
-                                            ?{formatCurrency(shortage)}
+                                            ₹{formatCurrency(shortage)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ?{formatCurrency(entry.advanceCash)}
+                                            ₹{formatCurrency(entry.advanceCash)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ?{formatCurrency(entry.advancePetrol)}
+                                            ₹{formatCurrency(entry.advancePetrol)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
-                                            ?{formatCurrency(getEntryBonus(entry))}
+                                            ₹{formatCurrency(getEntryBonus(entry))}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-[color:var(--text-muted)]">
                                             {entry.remark || "-"}

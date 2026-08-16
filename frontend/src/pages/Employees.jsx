@@ -27,10 +27,13 @@ const formatCurrency = (value) =>
 
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
 
-const getPreviousMonth = () => {
-  const date = new Date()
-  date.setMonth(date.getMonth() - 1)
-  return date.toISOString().slice(0, 7)
+const getPreviousMonth = (month = getCurrentMonth()) => {
+  const [year, monthNumber] = String(month).split("-").map(Number)
+  const date = year && monthNumber
+    ? new Date(year, monthNumber - 2, 1)
+    : new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1)
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 }
 
 const getDaysInMonth = (value) => {
@@ -415,7 +418,7 @@ export default function Employees() {
   }, [attendance, selectedEmployee, selectedMonth])
 
   const lastMonthAdvance = useMemo(() => {
-    const previousMonth = getPreviousMonth()
+    const previousMonth = getPreviousMonth(selectedMonth)
     return attendance.reduce((total, entry) => {
       const entryMonth = entry.date ? new Date(entry.date).toISOString().slice(0, 7) : ""
       if (entryMonth !== previousMonth) {
@@ -423,7 +426,7 @@ export default function Employees() {
       }
       return total + Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
     }, 0)
-  }, [attendance])
+  }, [attendance, selectedMonth])
 
   const allEmployeeSalarySummary = useMemo(() => {
     return employees.reduce(
