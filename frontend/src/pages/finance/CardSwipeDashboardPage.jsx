@@ -260,12 +260,12 @@ export default function CardSwipeDashboardPage() {
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm"><CreditCard size={22} /></span>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-blue-700">Card Swipe Analytics</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-[color:var(--text-strong)]">Swipe Control Room</h1>
+              <h1 className="mt-1 text-2xl font-black tracking-tight text-black">Swipe Control Room</h1>
               <p className="mt-1 text-sm text-[color:var(--text-secondary)]">Track settlement performance, machine activity, and payment behaviour.</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={loadEntries} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-white px-4 py-2.5 text-sm font-semibold"><RefreshCw size={16} /> Refresh</button>
+            <button type="button" onClick={loadEntries} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 text-sm font-semibold"><RefreshCw size={16} /> Refresh</button>
             <button type="button" onClick={() => navigate("/admin/card-swipe")} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"><ArrowLeft size={16} /> Card Swipe Register</button>
           </div>
         </div>

@@ -486,6 +486,16 @@ export default function SimpleAuditRegisterPage({ config }) {
   />
 
   <div className="hidden gap-3 lg:ml-auto lg:flex">
+    {!isManager && config.dashboardAction ? (
+      <button
+        type="button"
+        onClick={config.dashboardAction.onClick}
+        className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 font-semibold text-blue-700 shadow-sm"
+      >
+        {config.dashboardAction.icon}
+        {config.dashboardAction.label}
+      </button>
+    ) : null}
     {canManagerUse("addEntry") && (
       <button
         type="button"

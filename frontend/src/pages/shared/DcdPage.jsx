@@ -1,6 +1,8 @@
 import { useState } from "react"
 import SimpleAuditRegisterPage, { helpers } from "./SimpleAuditRegisterPage"
 import { addDcdEntry, deleteDcdEntry, getDcdEntries, updateDcdEntry } from "../../services/dcdApi"
+import { ChartNoAxesCombined } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const { formatDate, formatNumber, numberValue, today } = helpers
 
@@ -21,6 +23,7 @@ const getMargin = (entry) => numberValue(entry.salePrice) - numberValue(entry.pu
 
 export default function DcdPage() {
   const [productOptions, setProductOptions] = useState(["HSD", "HSD PC"])
+  const navigate = useNavigate()
 
   const addProductOption = (value) => {
     setProductOptions((current) => (current.includes(value) ? current : [...current, value]))
@@ -34,6 +37,11 @@ export default function DcdPage() {
         description: "Track date, volume, purchase price, sale price, profit, shift, remarks, and audit history.",
         pageKey: "dcd",
         aiSummary: { valueKey: "profit", categoryKey: "product" },
+        dashboardAction: {
+          label: "DCD Dashboard",
+          icon: <ChartNoAxesCombined size={18} />,
+          onClick: () => navigate("/admin/dcd-dashboard"),
+        },
         iconBg: "bg-orange-50",
         badgeStyle: "bg-orange-100 text-orange-700",
         lineStyle: "bg-orange-200",

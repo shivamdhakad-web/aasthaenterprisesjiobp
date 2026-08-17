@@ -55,6 +55,11 @@ import FinanceDashboardPage from "./pages/shared/FinanceDashboardPage"
 import ExpenseDashboardPage from "./pages/finance/ExpenseDashboardPage"
 import CardSwipeDashboardPage from "./pages/finance/CardSwipeDashboardPage"
 import EmployeeAttendanceDashboardPage from "./pages/finance/EmployeeAttendanceDashboardPage"
+import LubricantDashboardPage from "./pages/finance/LubricantDashboardPage"
+import DailySalesDashboardPage from "./pages/finance/DailySalesDashboardPage"
+import MduDashboardPage from "./pages/finance/MduDashboardPage"
+import InvoiceDetailsDashboardPage from "./pages/finance/InvoiceDetailsDashboardPage"
+import DcdDashboardPage from "./pages/finance/DcdDashboardPage"
 
 export default function App() {
   const AppRouter =
@@ -97,13 +102,18 @@ export default function App() {
             <Route path="bill-generator" element={<BillGeneratorPage />} />
             <Route path="ai-chat" element={<AiChatPage />} />
             <Route path="lubricants" element={<Lubricants />} />
+            <Route path="lubricant-dashboard" element={<LubricantDashboardPage />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
             <Route path="card-swipe-dashboard" element={<CardSwipeDashboardPage />} />
             <Route path="dcd" element={<DcdPage />} />
+            <Route path="dcd-dashboard" element={<DcdDashboardPage />} />
             <Route path="mdu" element={<MduPage />} />
+            <Route path="mdu-dashboard" element={<MduDashboardPage />} />
             <Route path="invoice-details" element={<InvoiceDetailsPage />} />
+            <Route path="invoice-details-dashboard" element={<InvoiceDetailsDashboardPage />} />
             <Route path="daily-sales" element={<DailySalesPage />} />
+            <Route path="daily-sales-dashboard" element={<DailySalesDashboardPage />} />
             <Route path="finance-dashboard" element={<FinanceDashboardPage />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
             <Route path="density-calculator" element={<DensityCalculatorPage />} />

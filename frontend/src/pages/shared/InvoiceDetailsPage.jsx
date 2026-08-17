@@ -5,6 +5,8 @@ import {
   getInvoiceDetails,
   updateInvoiceDetail,
 } from "../../services/invoiceDetailApi"
+import { ChartNoAxesCombined } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const { formatDate, formatNumber, numberValue, today } = helpers
 
@@ -33,6 +35,8 @@ const getLfrAmount = (entry) => numberValue(entry.qty) * numberValue(entry.lfr)
 const getMargin = (entry) => numberValue(entry.rsp) - getPurchaseAmount(entry)
 
 export default function InvoiceDetailsPage() {
+  const navigate = useNavigate()
+
   return (
     <SimpleAuditRegisterPage
       config={{
@@ -41,6 +45,11 @@ export default function InvoiceDetailsPage() {
         description: "Track product invoice quantity, invoice amount, transport cost, LFR, purchase amount, remarks, and audit history.",
         pageKey: "invoiceDetails",
         aiSummary: { valueKey: "invoiceAmount", categoryKey: "product" },
+        dashboardAction: {
+          label: "Invoice Dashboard",
+          icon: <ChartNoAxesCombined size={18} />,
+          onClick: () => navigate("/admin/invoice-details-dashboard"),
+        },
         iconBg: "bg-violet-50",
         badgeStyle: "bg-violet-100 text-violet-700",
         lineStyle: "bg-violet-200",

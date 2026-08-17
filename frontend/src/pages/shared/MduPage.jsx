@@ -1,5 +1,7 @@
 import SimpleAuditRegisterPage, { helpers } from "./SimpleAuditRegisterPage"
 import { addMduEntry, deleteMduEntry, getMduEntries, updateMduEntry } from "../../services/mduApi"
+import { ChartNoAxesCombined } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const { formatDate, formatNumber, numberValue, today } = helpers
 
@@ -17,6 +19,8 @@ const getLossGain = (entry) =>
   Number(entry.lossGain ?? numberValue(entry.physicalStock) - (numberValue(entry.openingStock) + numberValue(entry.decant) - numberValue(entry.sale)))
 
 export default function MduPage() {
+  const navigate = useNavigate()
+
   return (
     <SimpleAuditRegisterPage
       config={{
@@ -25,6 +29,11 @@ export default function MduPage() {
         description: "Track opening stock, decant, sales, physical stock, loss/gain, rate, remarks, and audit history.",
         pageKey: "mdu",
         aiSummary: { valueKey: "sale" },
+        dashboardAction: {
+          label: "MDU Dashboard",
+          icon: <ChartNoAxesCombined size={18} />,
+          onClick: () => navigate("/admin/mdu-dashboard"),
+        },
         iconBg: "bg-emerald-50",
         badgeStyle: "bg-emerald-100 text-emerald-700",
         lineStyle: "bg-emerald-200",
@@ -128,4 +137,3 @@ export default function MduPage() {
     />
   )
 }
-

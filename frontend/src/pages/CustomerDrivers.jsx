@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react"
+import { Truck } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -183,63 +184,70 @@ export default function CustomerDrivers() {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <h1 className="mb-4 text-xl font-bold text-[color:var(--text-strong)]">
-        Customer Driver Details
-      </h1>
-
-      <div className="mb-5 rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)]">
-        <p className="text-sm text-[color:var(--text-secondary)]">Total Customer Drivers</p>
-        <p className="mt-3 text-2xl font-semibold text-[color:var(--text-strong)]">
-          {totalDrivers}
-        </p>
+      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+              <Truck size={22} />
+            </div>
+            <h1 className="truncate text-xl font-extrabold tracking-tight text-[var(--text-strong)]">Customer Driver Details</h1>
+            <span className="hidden rounded-full bg-orange-100 px-3 py-0.5 text-xs font-semibold text-orange-700 sm:inline-flex">
+              {totalDrivers} {totalDrivers === 1 ? "driver" : "drivers"}
+            </span>
+          </div>
+          <div className="h-1 w-16 shrink-0 rounded-full bg-orange-200"></div>
+        </div>
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <input
-          placeholder="Search..."
+          placeholder="Search name, number, vehicle, route, carrier"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="input w-full sm:w-72"
+          className="input w-full lg:max-w-[420px]"
         />
 
-        <input
-          type="date"
-          value={dateFilter}
-          onChange={(event) => setDateFilter(event.target.value)}
-          className="input w-full sm:w-56"
-        />
+        <div className="hidden gap-3 lg:ml-auto lg:flex">
+          <button
+            className="rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm"
+            onClick={() => {
+              setEditData(null)
+              setModalOpen(true)
+            }}
+          >
+            + Add Driver
+          </button>
+          <button onClick={() => setReportOpen(true)} className="rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm">
+            Generate Report
+          </button>
+          <button
+            onClick={() => {
+              setDeleteMonthValue(getCurrentMonth())
+              setDeleteMonthOpen(true)
+            }}
+            className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-semibold text-red-500 shadow-sm"
+          >
+            Delete Month
+          </button>
+        </div>
+      </div>
 
-        <input
-          type="month"
-          value={monthFilter}
-          onChange={(event) => setMonthFilter(event.target.value)}
-          className="input w-full sm:w-52"
-        />
-
-        <button
-          className="hidden rounded-2xl bg-blue-500 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-          onClick={() => {
-            setEditData(null)
-            setModalOpen(true)
-          }}
-        >
-          Add Driver
+      <div className="mb-5 grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+        <input type="date" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} className="input w-full" />
+        <input type="month" value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} className="input w-full" />
+        <button type="button" onClick={() => { setDateFilter(""); setMonthFilter(""); setSearch("") }} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 font-medium text-[color:var(--text-primary)]">
+          Clear Filters
         </button>
+      </div>
 
-        <button
-          onClick={() => setReportOpen(true)}
-          className="hidden rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm sm:inline-flex"
-        >
+      <div className="mb-5 grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:grid-cols-2 lg:hidden">
+        <button className="rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm" onClick={() => { setEditData(null); setModalOpen(true) }}>
+          + Add Driver
+        </button>
+        <button onClick={() => setReportOpen(true)} className="rounded-2xl bg-purple-600 px-5 py-3 font-semibold text-white shadow-sm">
           Generate Report
         </button>
-
-        <button
-          onClick={() => {
-            setDeleteMonthValue(getCurrentMonth())
-            setDeleteMonthOpen(true)
-          }}
-          className="hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-medium text-red-500 shadow-sm sm:inline-flex"
-        >
+        <button onClick={() => { setDeleteMonthValue(getCurrentMonth()); setDeleteMonthOpen(true) }} className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-3 font-semibold text-red-500 shadow-sm sm:col-span-2">
           Delete Month
         </button>
       </div>

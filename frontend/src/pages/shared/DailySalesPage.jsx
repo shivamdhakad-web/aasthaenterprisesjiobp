@@ -1,4 +1,6 @@
 import SimpleAuditRegisterPage, { helpers } from "./SimpleAuditRegisterPage"
+import { ChartNoAxesCombined } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import { addDailySale, deleteDailySale, getDailySales, updateDailySale } from "../../services/dailySaleApi"
 
 const { formatDate, formatNumber, numberValue, today } = helpers
@@ -15,6 +17,7 @@ const empty = () => ({
 const getProfit = (entry) => Number(entry.profit ?? numberValue(entry.sale) * numberValue(entry.rate))
 
 export default function DailySalesPage() {
+  const navigate = useNavigate()
   return (
     <SimpleAuditRegisterPage
       config={{
@@ -23,6 +26,11 @@ export default function DailySalesPage() {
         description: "Track product sales, rate, loss/gain, profit, remarks, and audit history.",
         pageKey: "dailySales",
         aiSummary: { valueKey: "profit", categoryKey: "product" },
+        dashboardAction: {
+          label: "Daily Sales Dashboard",
+          icon: <ChartNoAxesCombined size={18} />,
+          onClick: () => navigate("/admin/daily-sales-dashboard"),
+        },
         iconBg: "bg-blue-50",
         badgeStyle: "bg-blue-100 text-blue-700",
         lineStyle: "bg-blue-200",

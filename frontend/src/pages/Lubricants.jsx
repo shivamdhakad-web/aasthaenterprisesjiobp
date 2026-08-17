@@ -1,5 +1,7 @@
 import { Plus, Sparkles, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { ChartNoAxesCombined } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
@@ -77,6 +79,7 @@ const defaultProductForm = () => ({
 })
 
 export default function Lubricants() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const isManager = user?.role === "Manager"
   const { canUse, canShowCard } = useManagerDashboardSettings("lubricants", isManager)
@@ -892,6 +895,16 @@ export default function Lubricants() {
   />
 
   <div className="hidden gap-3 xl:ml-auto xl:flex">
+    {!isManager ? (
+      <button
+        type="button"
+        onClick={() => navigate("/admin/lubricant-dashboard")}
+        className="inline-flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 font-medium text-amber-700 shadow-sm"
+      >
+        <ChartNoAxesCombined size={18} />
+        Lubricant Dashboard
+      </button>
+    ) : null}
     {canManagerUse("addProduct") ? (
       <button
         onClick={openCreateProductModal}
