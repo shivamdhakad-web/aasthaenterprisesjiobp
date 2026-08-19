@@ -24,6 +24,11 @@ const GEMINI_CHAT_MODELS = [
   "gemini-3.5-flash-lite",
   "gemini-3.1-flash-lite",
 ]
+const GEMINI_VISION_MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-flash-latest",
+]
 
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
@@ -234,7 +239,7 @@ const extractJsonObject = (text = "") => {
   return JSON.parse(start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned)
 }
 
-const extractPhotoEntries = async ({ imageDataUrl, pageKey }) => {
+const extractPhotoEntries = async ({ imageDataUrl, pageKey, model }) => {
   const schema = PHOTO_IMPORT_SCHEMAS[pageKey]
   if (!schema) {
     const error = new Error("Select a supported page for photo import.")
@@ -264,10 +269,12 @@ const extractPhotoEntries = async ({ imageDataUrl, pageKey }) => {
   }
 
   const prompt = `Read this handwritten or printed business register photo for the ${schema.label} page. Extract EVERY visible table row as a separate entry. Return JSON only in this exact shape: {"entries":[{...}]}. Use only these keys: ${schema.fields.join(", ")}. Use YYYY-MM-DD dates (Indian dates are day/month/year). Leave unclear values as an empty string. Do not invent values. Keep numeric fields as plain numbers without commas or currency symbols. Do not add any extra keys or explanation.`
-  const model = process.env.GEMINI_VISION_MODEL || "gemini-flash-latest"
+  const selectedModel = GEMINI_VISION_MODELS.includes(model)
+    ? model
+    : (process.env.GEMINI_VISION_MODEL || "gemini-3.5-flash-lite")
 
   const response = await axios.post(
-    `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${apiKey}`,
+    `${GEMINI_API_BASE_URL}/models/${selectedModel}:generateContent?key=${apiKey}`,
     {
       contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: imageData } }] }],
       generationConfig: { temperature: 0, maxOutputTokens: 8192, responseMimeType: "application/json" },
@@ -303,7 +310,7 @@ const extractPhotoEntries = async ({ imageDataUrl, pageKey }) => {
     throw error
   }
 
-  return { pageKey, pageLabel: schema.label, entries, provider: "gemini", model }
+  return { pageKey, pageLabel: schema.label, entries, provider: "gemini", model: selectedModel }
 }
 
 const getQuestionDates = (question = "") =>

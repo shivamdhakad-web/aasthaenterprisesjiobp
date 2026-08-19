@@ -745,6 +745,12 @@ const PHOTO_IMPORT_PAGES = [
   { key: "invoiceDetails", label: "Invoice Details" },
 ]
 
+const PHOTO_IMPORT_MODELS = [
+  { value: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash Lite" },
+  { value: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite" },
+  { value: "gemini-flash-latest", label: "Gemini Flash Latest" },
+]
+
 const PHOTO_IMPORT_ROUTES = {
   expenses: "/admin/expenses",
   cardSwipe: "/admin/card-swipe",
@@ -757,6 +763,7 @@ const PHOTO_IMPORT_ROUTES = {
 function PhotoImportModal({ onClose, onImported }) {
   const [imageDataUrl, setImageDataUrl] = useState("")
   const [pageKey, setPageKey] = useState("")
+  const [model, setModel] = useState("gemini-3.5-flash-lite")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -786,7 +793,7 @@ function PhotoImportModal({ onClose, onImported }) {
     setLoading(true)
     setError("")
     try {
-      const result = await extractEntriesFromPhoto({ imageDataUrl, pageKey })
+      const result = await extractEntriesFromPhoto({ imageDataUrl, pageKey, model })
       onImported(result)
     } catch (requestError) {
       setError(requestError?.response?.data?.message || "Unable to read the photo right now.")
@@ -823,6 +830,12 @@ function PhotoImportModal({ onClose, onImported }) {
               <select value={pageKey} onChange={(event) => setPageKey(event.target.value)} className="input w-full">
                 <option value="">Select page</option>
                 {PHOTO_IMPORT_PAGES.map((page) => <option key={page.key} value={page.key}>{page.label}</option>)}
+              </select>
+            </label>
+            <label className="mt-4 block">
+              <span className="mb-2 block text-sm font-semibold text-[color:var(--text-strong)]">Photo reading model</span>
+              <select value={model} onChange={(event) => setModel(event.target.value)} className="input w-full">
+                {PHOTO_IMPORT_MODELS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
               </select>
             </label>
           </>

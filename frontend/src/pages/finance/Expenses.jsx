@@ -989,8 +989,6 @@ return (
                       {formatMobileDate(expense.date)}
                     </p>
 
-
-
                   </div>
                 </div>
               </div>

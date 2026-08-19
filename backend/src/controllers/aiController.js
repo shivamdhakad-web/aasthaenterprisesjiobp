@@ -80,8 +80,8 @@ exports.importPhotoEntries = async (req, res) => {
       return res.status(403).json({ message: "Only admin can import entries from a photo." })
     }
 
-    const { imageDataUrl, pageKey } = req.body || {}
-    const result = await extractPhotoEntries({ imageDataUrl, pageKey })
+    const { imageDataUrl, pageKey, model } = req.body || {}
+    const result = await extractPhotoEntries({ imageDataUrl, pageKey, model })
     res.json(result)
   } catch (error) {
     res.status(error.statusCode || 500).json({
