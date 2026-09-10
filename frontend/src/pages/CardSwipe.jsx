@@ -2,7 +2,22 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"
-import { ChartNoAxesCombined, Sparkles, X } from "lucide-react"
+import {
+  Calendar,
+  ChartNoAxesCombined,
+  ChevronDown,
+  CreditCard,
+  Edit2,
+  Eye,
+  Filter,
+  Home,
+  LayoutGrid,
+  MoreVertical,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 import MobileActionFab from "../components/MobileActionFab"
@@ -20,6 +35,13 @@ const getTodayDateTimeEnd = () => `${getToday()}T23:59`
 const formatCurrency = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN")}`
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("en-IN") : "-")
+
+const formatMobileDate = (value) => {
+  if (!value) return "-"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return `${date.getDate()} ${date.toLocaleString("en-US", { month: "short" })} ${date.getFullYear()}`
+}
 
 const formatDateTime = (value) => {
   if (!value) {
@@ -81,7 +103,6 @@ export default function CardSwipe() {
   const [paymentMethod, setPaymentMethod] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState(null)
-  const [openCard, setOpenCard] = useState(null)
   const [showFilter, setShowFilter] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [fromDateTime, setFromDateTime] = useState("")
@@ -98,6 +119,12 @@ export default function CardSwipe() {
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkDefaults, setBulkDefaults] = useState(defaultBulkDefaults())
   const [bulkRows, setBulkRows] = useState([defaultBulkRow()])
+  const [mobileTimeframe, setMobileTimeframe] = useState("month")
+  const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
+  const [mobileActionItem, setMobileActionItem] = useState(null)
+  const [mobileDetailItem, setMobileDetailItem] = useState(null)
+  const [mobileActiveTab, setMobileActiveTab] = useState("dashboard")
   const importedDraftHandled = useRef(false)
 
   useEffect(() => {
@@ -265,6 +292,25 @@ export default function CardSwipe() {
     { key: "dsmCharges", label: "DSM Charges", value: formatCurrency(summary.dsmCharges), tone: "rose" },
   ]
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
+
+  const mobileHeroAmount = useMemo(() => {
+    const today = getToday()
+    const weekStart = new Date()
+    weekStart.setDate(weekStart.getDate() - 7)
+
+    const timeframeEntries = entries.filter((entry) => {
+      const entryDate = entry.date ? new Date(entry.date) : null
+      if (!entryDate || Number.isNaN(entryDate.getTime())) return false
+      if (mobileTimeframe === "today") return String(entry.date).slice(0, 10) === today
+      if (mobileTimeframe === "week") return entryDate >= weekStart && entryDate <= new Date()
+      if (mobileTimeframe === "all") return true
+      return String(entry.date).slice(0, 7) === getCurrentMonth()
+    })
+
+    const total = getSummary(timeframeEntries).totalAmount
+    const labels = { today: "Today", week: "This Week", month: "This Month", all: "All Time" }
+    return { label: labels[mobileTimeframe], value: formatCurrency(total) }
+  }, [entries, mobileTimeframe])
 
   const buildCardSwipeAiPayload = () => {
     const machineTotals = filteredEntries.reduce((totals, entry) => {
@@ -679,7 +725,7 @@ export default function CardSwipe() {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
+      <div className="mb-5 hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm sm:block">
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-3">
       {/* Card Swipe SVG */}
@@ -715,14 +761,14 @@ export default function CardSwipe() {
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
       {visibleSummaryCards.length ? (
-        <div className="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-5">
+        <div className="mb-4 hidden grid-cols-2 gap-4 sm:grid xl:grid-cols-5">
           {visibleSummaryCards.map((card) => (
             <SummaryCard key={card.key} label={card.label} value={card.value} tone={card.tone} />
           ))}
         </div>
       ) : null}
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mb-4 hidden flex-col gap-3 sm:flex sm:flex-row sm:items-center">
   <input
     placeholder="Search swipe, machine, remark"
     value={search}
@@ -779,7 +825,7 @@ export default function CardSwipe() {
       </div>
 
       {aiSummary ? (
-        <section className="mb-5 overflow-hidden rounded-2xl border border-emerald-200 bg-[var(--bg-panel)] shadow-sm">
+        <section className="mb-5 hidden overflow-hidden rounded-2xl border border-emerald-200 bg-[var(--bg-panel)] shadow-sm sm:block">
           <div className="flex items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-50 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
@@ -824,7 +870,7 @@ export default function CardSwipe() {
         <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-6">{filterContent}</div>
       </div>
 
-      <div className="mb-4 sm:hidden">
+      <div className="hidden">
         <button
           onClick={() => setShowFilter((current) => !current)}
           className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]"
@@ -898,74 +944,235 @@ export default function CardSwipe() {
         </table>
       </div>
 
-      <div className="max-h-[640px] space-y-4 overflow-auto sm:hidden">
-        {filteredEntries.map((entry) => {
-          const isOpen = openCard === entry._id
+      <section className="mb-24 space-y-3 sm:hidden">
+        <div className="lg:hidden mb-2">
+  <div className="flex items-center gap-4 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm">
 
-          return (
-            <div
-              key={entry._id}
-              onClick={() => setOpenCard(isOpen ? null : entry._id)}
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)] transition active:scale-[0.98]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-[color:var(--text-strong)]">{formatCurrency(entry.amount)}</p>
-                  <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-                    {formatDate(entry.date)} {entry.time || ""}
-                  </p>
-                </div>
-                <div
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    entry.paymentMethod === "Cash"
-                      ? "border border-green-500/20 bg-green-500/10 text-green-500"
-                      : "border border-blue-500/20 bg-blue-500/10 text-blue-500"
-                  }`}
-                >
-                  {entry.paymentMethod}
-                </div>
-              </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                <InfoBox label="Machine" value={entry.machine} />
-                <InfoBox label="Charges" value={formatCurrency(entry.charges)} />
-              </div>
+    <div className="min-w-0">
+      <h1 className="text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
+        Card Swipe
+      </h1>
+    </div>
 
-              {isOpen ? (
-                <div className="mt-4 space-y-3 border-t border-[var(--border-color)] pt-3">
-                  <InfoLine label="Remark" value={entry.remark || "-"} />
-                  <InfoLine label="Last Edited" value={entry.lastEditedAt ? formatDateTime(entry.lastEditedAt) : "Not edited yet"} />
-                  <InfoLine label="Edited By" value={entry.lastEditedBy ? `${entry.lastEditedBy} (${entry.lastEditedByRole || "-"})` : "-"} />
-                  <div className="flex gap-2">
-                    {canManagerUse("editEntry") ? (
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          openEditModal(entry)
-                        }}
-                        className="flex-1 rounded-xl border border-blue-500/20 bg-blue-500/10 py-2 text-sm text-blue-500"
-                      >
-                        Edit
-                      </button>
-                    ) : null}
-                    {canManagerUse("deleteEntry") ? (
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          askDeleteEntry(entry)
-                        }}
-                        className="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-sm text-red-500"
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                  </div>
+    <div className="ml-auto h-1.5 w-20 rounded-full bg-blue-400" />
+  </div>
+</div>
+        <div className="relative overflow-visible rounded-[28px] bg-blue-600 px-5 pb-5 pt-4 text-white shadow-lg shadow-blue-600/20">
+          <div className="relative z-20 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-blue-100">{mobileHeroAmount.label}</p>
+              <p className="mt-1 text-[34px] font-black leading-none">{mobileHeroAmount.value}</p>
+              <p className="mt-2 text-xs font-semibold text-blue-100">{filteredEntries.length} filtered entries</p>
+            </div>
+            <div className="relative z-30">
+              <button
+                type="button"
+                onClick={() => setShowMobileTimeDropdown((current) => !current)}
+                className="inline-flex items-center gap-1 rounded-xl bg-white/15 px-3 py-2 text-xs font-bold"
+              >
+                {mobileHeroAmount.label}
+                <ChevronDown size={15} />
+              </button>
+              {showMobileTimeDropdown ? (
+                <div className="absolute right-0 top-11 z-[70] w-32 overflow-hidden rounded-xl border border-white/25 bg-blue-950 py-1 text-white shadow-2xl shadow-blue-950/40">
+                  {[["today", "Today"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setMobileTimeframe(value)
+                        setShowMobileTimeDropdown(false)
+                      }}
+                      className="w-full px-3 py-2 text-left text-xs font-bold transition-colors hover:bg-blue-800"
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               ) : null}
             </div>
-          )
-        })}
-      </div>
+          </div>
+          <CreditCard className="pointer-events-none absolute -bottom-7 -right-5 z-0 h-32 w-32 text-white/10" strokeWidth={1.2} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
+            <p className="text-[11px] font-bold text-[color:var(--text-secondary)]">Total Charges</p>
+            <p className="mt-1 text-base font-extrabold text-emerald-600">{formatCurrency(summary.totalCharges)}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
+            <p className="text-[11px] font-bold text-[color:var(--text-secondary)]">Net Amount</p>
+            <p className="mt-1 text-base font-extrabold text-blue-600">{formatCurrency(summary.net)}</p>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <label className="flex h-[45px] min-w-0 flex-1 items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 shadow-sm">
+            <Search size={18} className="shrink-0 text-[color:var(--text-secondary)]" />
+            <input
+              placeholder="Search swipe"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-[color:var(--text-secondary)]"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowMobileFilterModal(true)}
+            className="inline-flex h-[45px] items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 text-sm font-bold text-blue-600 shadow-sm"
+          >
+            <Filter size={18} />
+            Filter
+          </button>
+        </div>
+
+        {filteredEntries.length === 0 ? (
+          <div className="rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-center text-sm font-bold text-[color:var(--text-secondary)] shadow-sm">
+            No card swipe entries found.
+          </div>
+        ) : filteredEntries.map((entry) => (
+          <div
+            key={entry._id}
+            role="button"
+            tabIndex={0}
+            onClick={() => setMobileDetailItem(entry)}
+            onKeyDown={(event) => event.key === "Enter" && setMobileDetailItem(entry)}
+            className="flex h-[62px] cursor-pointer items-center justify-between gap-2 rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 shadow-sm active:scale-[0.985]"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+                <CreditCard size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-extrabold text-[color:var(--text-strong)]">{entry.machine || "Card Swipe"}</p>
+                <p className="mt-0.5 truncate text-[11px] font-semibold text-[color:var(--text-secondary)]">
+                  {formatMobileDate(entry.date)} {entry.time ? `• ${entry.time}` : ""} • {entry.paymentMethod || "-"}
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <p className="text-sm font-extrabold text-blue-600">{formatCurrency(entry.amount)}</p>
+              <button
+                type="button"
+                aria-label="Entry actions"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setMobileActionItem(entry)
+                }}
+                className="flex h-9 w-8 items-center justify-center rounded-xl text-[color:var(--text-secondary)]"
+              >
+                <MoreVertical size={18} />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 mx-3 mb-2 flex h-[72px] items-center justify-around rounded-[25px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-2 shadow-lg transition-colors duration-300">
+          <button type="button" onClick={() => setMobileActiveTab("dashboard")} className={`flex min-w-[58px] flex-col items-center gap-1 ${mobileActiveTab === "dashboard" ? "text-blue-600" : "text-[color:var(--text-secondary)]"}`}>
+            <Home size={20} />
+            <span className="text-[10px] font-bold">Dashboard</span>
+          </button>
+          <button type="button" onClick={() => { setMobileActiveTab("filters"); setShowMobileFilterModal(true) }} className={`flex min-w-[58px] flex-col items-center gap-1 ${mobileActiveTab === "filters" ? "text-blue-600" : "text-[color:var(--text-secondary)]"}`}>
+            <Filter size={20} />
+            <span className="text-[10px] font-bold">Filters</span>
+          </button>
+          <button type="button" onClick={() => { setMobileActiveTab("reports"); canManagerUse("generateReport") && openReportModal() }} className={`flex min-w-[58px] flex-col items-center gap-1 ${mobileActiveTab === "reports" ? "text-blue-600" : "text-[color:var(--text-secondary)]"}`}>
+            <Calendar size={20} />
+            <span className="text-[10px] font-bold">Reports</span>
+          </button>
+          {!isManager ? (
+            <button type="button" onClick={() => navigate("/admin/card-swipe-dashboard")} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]">
+              <LayoutGrid size={20} />
+              <span className="text-[10px] font-bold">Overview</span>
+            </button>
+          ) : null}
+        </nav>
+      </section>
+
+      {showMobileFilterModal ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm sm:hidden">
+          <div className="w-full rounded-t-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+              <div className="flex items-center gap-2">
+                <Filter size={19} className="text-blue-600" />
+                <h3 className="text-base font-extrabold text-[color:var(--text-strong)]">Filter Card Swipes</h3>
+              </div>
+              <button type="button" onClick={() => setShowMobileFilterModal(false)} className="rounded-xl p-2 text-[color:var(--text-secondary)]" aria-label="Close filters">
+                <X size={19} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-bold text-[color:var(--text-secondary)]">From Date
+                  <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} className="input mt-2 w-full" />
+                </label>
+                <label className="text-xs font-bold text-[color:var(--text-secondary)]">To Date
+                  <input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} className="input mt-2 w-full" />
+                </label>
+              </div>
+              <label className="block text-xs font-bold text-[color:var(--text-secondary)]">Machine
+                <select value={machine} onChange={(event) => setMachine(event.target.value)} className="input mt-2 w-full">
+                  <option value="">All Machines</option>
+                  {machineOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+              <label className="block text-xs font-bold text-[color:var(--text-secondary)]">Payment Method
+                <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="input mt-2 w-full">
+                  <option value="">All Payments</option>
+                  {paymentMethodOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+              <label className="block text-xs font-bold text-[color:var(--text-secondary)]">Month
+                <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} className="input mt-2 w-full" />
+              </label>
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button type="button" onClick={() => { clearFilters(); setShowMobileFilterModal(false) }} className="flex-1 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] py-3 text-sm font-bold text-[color:var(--text-primary)]">Reset</button>
+              <button type="button" onClick={() => setShowMobileFilterModal(false)} className="flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/20">Apply Filters</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {mobileActionItem ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm sm:hidden">
+          <div className="w-full rounded-t-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+              <div>
+                <h3 className="text-base font-extrabold text-[color:var(--text-strong)]">{mobileActionItem.machine || "Card Swipe"}</h3>
+                <p className="mt-1 text-xs font-extrabold text-blue-600">{formatCurrency(mobileActionItem.amount)} • {formatMobileDate(mobileActionItem.date)}</p>
+              </div>
+              <button type="button" onClick={() => setMobileActionItem(null)} className="rounded-xl p-2 text-[color:var(--text-secondary)]" aria-label="Close entry actions"><X size={19} /></button>
+            </div>
+            <div className="space-y-2">
+              <button type="button" onClick={() => { setMobileDetailItem(mobileActionItem); setMobileActionItem(null) }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left font-bold text-[color:var(--text-primary)] hover:bg-[var(--bg-soft)]"><Eye size={19} className="text-blue-600" />View Full Details</button>
+              {canManagerUse("editEntry") ? <button type="button" onClick={() => { openEditModal(mobileActionItem); setMobileActionItem(null) }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left font-bold text-blue-600 hover:bg-blue-500/10"><Edit2 size={19} />Edit Entry</button> : null}
+              {canManagerUse("deleteEntry") ? <button type="button" onClick={() => { askDeleteEntry(mobileActionItem); setMobileActionItem(null) }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left font-bold text-red-500 hover:bg-red-500/10"><Trash2 size={19} />Delete Entry</button> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {mobileDetailItem ? (
+        <ModalShell title="Card Swipe Details" onClose={() => setMobileDetailItem(null)}>
+          <div className="space-y-3 text-sm">
+            <InfoLine label="Amount" value={formatCurrency(mobileDetailItem.amount)} />
+            <InfoLine label="Charges" value={formatCurrency(mobileDetailItem.charges)} />
+            <InfoLine label="Date" value={formatDate(mobileDetailItem.date)} />
+            <InfoLine label="Time" value={mobileDetailItem.time || "-"} />
+            <InfoLine label="Machine" value={mobileDetailItem.machine || "-"} />
+            <InfoLine label="Payment Method" value={mobileDetailItem.paymentMethod || "-"} />
+            <InfoLine label="Transaction Details" value={mobileDetailItem.txnDetails || "-"} />
+            <InfoLine label="Remark" value={mobileDetailItem.remark || "-"} />
+            <InfoLine label="Last Edited" value={mobileDetailItem.lastEditedAt ? formatDateTime(mobileDetailItem.lastEditedAt) : "Not edited yet"} />
+            <div className="flex gap-2 pt-2">
+              {canManagerUse("editEntry") ? <button type="button" onClick={() => { const item = mobileDetailItem; setMobileDetailItem(null); openEditModal(item) }} className="flex-1 rounded-2xl bg-blue-600 py-2.5 text-xs font-bold text-white">Edit</button> : null}
+              {canManagerUse("deleteEntry") ? <button type="button" onClick={() => { const item = mobileDetailItem; setMobileDetailItem(null); askDeleteEntry(item) }} className="flex-1 rounded-2xl bg-red-600 py-2.5 text-xs font-bold text-white">Delete</button> : null}
+            </div>
+          </div>
+        </ModalShell>
+      ) : null}
 
       {reportOpen ? (
         <ModalShell title="Generate Report" onClose={() => setReportOpen(false)}>
@@ -1171,36 +1378,7 @@ export default function CardSwipe() {
         />
       ) : null}
 
-      <MobileActionFab
-        actions={[
-          canManagerUse("addEntry")
-            ? {
-                label: "Add Entry",
-                className: "bg-blue-600",
-                onClick: openEntryModePrompt,
-              }
-            : null,
-          canManagerUse("generateReport")
-            ? {
-                label: "Generate Report",
-                className: "bg-purple-600",
-                onClick: openReportModal,
-              }
-            : null,
-          {
-            label: aiSummaryLoading ? "Generating AI..." : "AI Summary",
-            className: "bg-emerald-600",
-            onClick: generateAiSummary,
-          },
-          canManagerUse("deleteMonth")
-            ? {
-                label: "Delete Month",
-                className: "bg-red-600",
-                onClick: askDeleteMonth,
-              }
-            : null,
-        ].filter(Boolean)}
-      />
+      {canManagerUse("addEntry") ? <MobileActionFab onClick={openEntryModePrompt} /> : null}
     </div>
   )
 }

@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useState } from "react"
-import { ChartNoAxesCombined } from "lucide-react"
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  ChartNoAxesCombined,
+  ChevronDown,
+  ChevronRight,
+  Filter,
+  Home,
+  LayoutGrid,
+  MoreVertical,
+  Phone,
+  Pencil,
+  Search,
+  Trash2,
+  Users as UsersIcon,
+} from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -330,6 +345,7 @@ export default function Employees() {
   const [reportFormat, setReportFormat] = useState("pdf")
   const [bonusModalOpen, setBonusModalOpen] = useState(false)
   const [bonusSaving, setBonusSaving] = useState(false)
+  const [showAllMobileSummary, setShowAllMobileSummary] = useState(false)
   const [bonusForm, setBonusForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     employeeTarget: "selected",
@@ -641,33 +657,33 @@ export default function Employees() {
   )
   const visibleAllEmployeeSalaryCards = allEmployeeSalaryCards.filter((card) => canManagerShowCard(card.key))
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
-
-  const salaryTopCards = useMemo(
-    () => [
-      {
-        key: "totalEarned",
-        label: "Total Earned",
-        value: formatCurrency(summary.earned),
-        accent: "text-emerald-600",
-        ring: "border-emerald-200 bg-emerald-50/80",
-      },
-      {
-        key: "totalBonus",
-        label: "Total Bonus",
-        value: formatCurrency(summary.bonus),
-        accent: "text-violet-600",
-        ring: "border-violet-200 bg-violet-50/80",
-      },
-      {
-        key: "earnedBonusTotal",
-        label: "Earned + Bonus",
-        value: formatCurrency(summary.earned + summary.bonus),
-        accent: "text-blue-600",
-        ring: "border-blue-200 bg-blue-50/80",
-      },
-    ],
-    [allTimeSummary, lastMonthAdvance, summary],
+  const mobileOverviewCards = [
+    {
+      key: "present",
+      label: "Present",
+      value: summary.present,
+      accent: "text-emerald-600",
+      barClass: "bg-emerald-500",
+    },
+    {
+      key: "absent",
+      label: "Absent",
+      value: summary.absent,
+      accent: "text-rose-600",
+      barClass: "bg-rose-500",
+    },
+    {
+      key: "earned",
+      label: "Earned",
+      value: formatCurrency(summary.earned + summary.bonus),
+      accent: "text-blue-600",
+      barClass: "bg-blue-500",
+    },
+  ].filter((card) => canManagerShowCard(card.key))
+  const mobileSupplementalSummaryCards = visibleSummaryCards.filter(
+    (card) => !mobileOverviewCards.some((overviewCard) => overviewCard.key === card.key),
   )
+
   const openLedger = async (employee, options = {}) => {
     if (options.toggle && selectedEmployee?._id === employee._id) {
       setSelectedEmployee(null)
@@ -681,8 +697,14 @@ export default function Employees() {
       setSelectedEmployee(employee)
       setOpenCard(employee._id)
       setExpandedAttendanceId(null)
+      setShowAllMobileSummary(false)
       const data = await getAttendance(employee._id)
       setAttendance(Array.isArray(data) ? data : [])
+      window.requestAnimationFrame(() => {
+        const scrollContainer = document.querySelector("main")
+        scrollContainer?.scrollTo({ top: 0, behavior: "smooth" })
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      })
     } catch (error) {
       setNotice({
         type: "error",
@@ -1144,12 +1166,12 @@ export default function Employees() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
-      <div className={selectedEmployee ? "hidden" : "flex flex-col gap-4"}>
+    <div className="w-full max-w-[100vw] overflow-x-hidden p-3 pb-24 text-[color:var(--text-primary)] sm:p-6 sm:pb-6">
+      <div className={selectedEmployee ? "hidden" : "hidden flex-col gap-3 sm:flex sm:gap-4"}>
 
-      <div className="mb-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
+      <div className="mb-0 rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-3 shadow-[0_12px_28px_rgba(16,24,20,0.06)] sm:rounded-2xl sm:px-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
             {/* SVG Icon */}
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
               <svg
@@ -1167,11 +1189,11 @@ export default function Employees() {
               </svg>
             </div>
 
-            <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
+            <h1 className="truncate text-lg font-extrabold tracking-tight text-[var(--text-strong)] sm:text-xl">
               Employees & Attendance
             </h1>
 
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 sm:px-3 sm:text-xs">
               {employees.length} Employees
             </span>
           </div>
@@ -1192,7 +1214,7 @@ export default function Employees() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="hidden grid-cols-2 gap-3 sm:grid sm:grid-cols-3 sm:gap-4">
           {visibleAllEmployeeSalaryCards.map((card) => (
             <SummaryCard
               key={card.key}
@@ -1204,13 +1226,16 @@ export default function Employees() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <input
-            placeholder="Search employee"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="input w-full xl:max-w-[420px]"
-          />
+        <div className="hidden flex-col gap-3 xl:flex xl:flex-row xl:items-center">
+          <label className="relative block w-full xl:max-w-[420px]">
+            <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--text-secondary)]" />
+            <input
+              placeholder="Search employees"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="input w-full pl-11"
+            />
+          </label>
 
           <div className="hidden flex-wrap gap-3 sm:flex xl:ml-auto">
             {!isManager ? (
@@ -1271,6 +1296,114 @@ export default function Employees() {
           </div>
         </div>
       </div>
+
+      <section className={selectedEmployee ? "hidden" : "space-y-3 sm:hidden"}>
+        <div className="flex items-center gap-4 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[15px] bg-emerald-500/10 text-emerald-600">
+            <Home size={21} />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">Employees</h1>
+            <p className="text-[11px] font-semibold text-[color:var(--text-secondary)]">Attendance & workforce</p>
+          </div>
+          <div className="ml-auto h-1.5 w-14 rounded-full bg-emerald-400/70" />
+        </div>
+
+        <div className="relative min-h-[142px] overflow-hidden rounded-[26px] bg-gradient-to-br from-[#087b5a] via-[#079968] to-[#08c38b] px-5 pt-5 text-white shadow-xl shadow-emerald-900/10">
+          <div className="relative z-10 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[15px] font-semibold text-white/90">Total Employees</p>
+              <p className="mt-1 text-[38px] font-black leading-none tracking-tight">{employees.length}</p>
+              <p className="mt-2 text-xs font-semibold text-white/85">{filteredEmployees.length} showing in directory</p>
+            </div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-black/15 text-white shadow-inner">
+              <BriefcaseBusiness size={27} />
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -bottom-8 -right-4 h-28 w-52 rounded-full border-[3px] border-white/20" />
+          <div className="pointer-events-none absolute -bottom-12 right-16 h-28 w-52 rounded-full border-[3px] border-white/10" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="min-h-[104px] rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600"><UsersIcon /></div>
+            <p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Earned</p>
+            <p className="mt-1 truncate text-[12px] font-extrabold text-emerald-600">{formatCurrency(allEmployeeSalarySummary.earned)}</p>
+          </div>
+          <div className="min-h-[104px] rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/10 text-violet-600"><CalendarDays size={18} /></div>
+            <p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Bonus</p>
+            <p className="mt-1 truncate text-[12px] font-extrabold text-violet-600">{formatCurrency(allEmployeeSalarySummary.bonus)}</p>
+          </div>
+          <div className="min-h-[104px] rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 text-blue-600"><BriefcaseBusiness size={18} /></div>
+            <p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Balance</p>
+            <p className={`mt-1 truncate text-[12px] font-extrabold ${allEmployeeSalarySummary.final >= 0 ? "text-blue-600" : "text-rose-600"}`}>{formatCurrency(allEmployeeSalarySummary.final)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <label className="relative min-w-0 flex-1">
+            <Search size={19} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--text-secondary)]" />
+            <input
+              placeholder="Search employees..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-[45px] w-full rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-11 pr-3 text-[14px] font-medium text-[color:var(--text-primary)] shadow-sm outline-none placeholder:text-[color:var(--text-secondary)] focus:border-emerald-500"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="inline-flex h-[45px] items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 text-[13px] font-bold text-emerald-600 shadow-sm"
+          >
+            <Filter size={18} />
+            <span>Clear</span>
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between px-1 pt-1">
+          <p className="text-sm font-extrabold text-[color:var(--text-strong)]">Team Directory</p>
+          <p className="text-xs font-semibold text-[color:var(--text-secondary)]">{filteredEmployees.length} members</p>
+        </div>
+
+        <div className="mb-24 space-y-3">
+          {filteredEmployees.length === 0 ? (
+            <div className="rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-center text-sm font-bold text-[color:var(--text-secondary)] shadow-sm">No employees found.</div>
+          ) : filteredEmployees.map((employee) => (
+            <div
+              key={employee._id}
+              role="button"
+              tabIndex={0}
+              onClick={() => openLedger(employee, { toggle: true })}
+              onKeyDown={(event) => event.key === "Enter" && openLedger(employee, { toggle: true })}
+              className="flex min-h-[70px] cursor-pointer items-center justify-between gap-2 rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 shadow-sm active:scale-[0.985]"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-sm font-black text-emerald-600">{(employee.name || "E").slice(0, 1).toUpperCase()}</div>
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-extrabold text-[color:var(--text-strong)]">{employee.name}</p>
+                  <p className="mt-1 truncate text-[11px] font-semibold text-[color:var(--text-secondary)]">{employee.role || "Employee"} · Shift {employee.shift || "-"}</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <div className="text-right">
+                  <p className="text-[13px] font-extrabold text-blue-600">{formatCurrency(getEmployeeAllFinalBalance(employee))}</p>
+                  <span className="mt-1 inline-block rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-extrabold text-emerald-600">{employee.phone || "No phone"}</span>
+                </div>
+                <MoreVertical size={18} className="text-[color:var(--text-secondary)]" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <nav className="fixed bottom-0 left-0 right-0 z-40 mx-3 mb-2 flex h-[72px] items-center justify-around rounded-[25px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-2 shadow-lg">
+          <button type="button" className="flex min-w-[58px] flex-col items-center gap-1 font-extrabold text-emerald-600"><Home size={21} /><span className="text-[10px]">Directory</span><span className="mt-0.5 h-[3px] w-8 rounded-full bg-emerald-600" /></button>
+          <button type="button" onClick={() => document.querySelector('input[placeholder="Search employees..."]')?.focus()} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"><UsersIcon /><span className="text-[10px]">Employees</span></button>
+          <button type="button" onClick={() => openReportModal()} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"><CalendarDays size={21} /><span className="text-[10px]">Reports</span></button>
+          <button type="button" onClick={() => navigate("/admin/employee-attendance-dashboard")} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"><LayoutGrid size={21} /><span className="text-[10px]">Overview</span></button>
+        </nav>
+      </section>
 
       <div className={selectedEmployee ? "hidden" : "mt-5 hidden overflow-x-auto sm:block"}>
         <table className="table min-w-[980px]">
@@ -1350,7 +1483,7 @@ export default function Employees() {
         </table>
       </div>
 
-      <div className={selectedEmployee ? "hidden" : "mt-5 grid gap-4 sm:hidden"}>
+      <div className="hidden">
         {filteredEmployees.map((employee) => {
           const isOpen = openCard === employee._id
           const isSelected = selectedEmployee?._id === employee._id
@@ -1358,7 +1491,7 @@ export default function Employees() {
           return (
             <div
               key={employee._id}
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_28px_rgba(16,24,20,0.08)]"
+              className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_14px_28px_rgba(16,24,20,0.07)]"
             >
               <div
                 className="cursor-pointer"
@@ -1372,25 +1505,37 @@ export default function Employees() {
                   }
                 }}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-semibold text-[color:var(--text-strong)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-base font-extrabold text-emerald-600">
+                    {(employee.name || "E").slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-bold text-[color:var(--text-strong)]">
                       {employee.name}
                     </p>
-                    <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-                      {employee.role} | Shift {employee.shift}
+                    <p className="mt-1 flex items-center gap-1 truncate text-xs text-[color:var(--text-secondary)]">
+                      <BriefcaseBusiness size={13} /> {employee.role || "Employee"} · Shift {employee.shift || "-"}
                     </p>
                   </div>
-                  <p className="text-base font-semibold text-emerald-500">
-                    {formatCurrency(employee.salary)}
-                  </p>
+                  <ChevronRight size={19} className="shrink-0 text-[color:var(--text-secondary)]" />
                 </div>
 
-                <div className="mt-3 text-sm text-[color:var(--text-secondary)]">
-                  <p>Phone: {employee.phone}</p>
-                  <p>
-                    Tshirt {employee.tshirt} | Pant {employee.pant} | Shoes {employee.shoes}
-                  </p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl bg-[var(--bg-soft)] px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--text-secondary)]">Salary</p>
+                    <p className="mt-1 text-sm font-bold text-emerald-600">{formatCurrency(employee.salary)}</p>
+                  </div>
+                  <div className="rounded-2xl bg-[var(--bg-soft)] px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--text-secondary)]">Balance</p>
+                    <p className={`mt-1 text-sm font-bold ${getEmployeeAllFinalBalance(employee) >= 0 ? "text-blue-600" : "text-rose-600"}`}>
+                      {formatCurrency(getEmployeeAllFinalBalance(employee))}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[color:var(--text-secondary)]">
+                  <span className="flex min-w-0 items-center gap-1 truncate"><Phone size={13} /> {employee.phone || "No phone"}</span>
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">View details</span>
                 </div>
               </div>
 
@@ -1466,7 +1611,87 @@ export default function Employees() {
       </div>
 
       {selectedEmployee ? (
-        <div className="rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_16px_32px_rgba(16,24,20,0.05)]">
+        <>
+        <section className="pb-24 sm:hidden">
+          <div className="mb-2 flex items-center gap-3 rounded-[15px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedEmployee(null)
+                setOpenCard(null)
+                setAttendance([])
+                setExpandedAttendanceId(null)
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--text-secondary)]"
+              title="Back to employees"
+            >
+              <ChevronRight size={19} className="rotate-180" />
+            </button>
+            <div className="min-w-0"><h1 className="truncate text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">Employee Attendance</h1></div>
+            <div className="ml-auto h-1.5 w-20 rounded-full bg-emerald-400/60" />
+          </div>
+
+          <div className="relative mb-2 min-h-[132px] overflow-hidden rounded-[24px] bg-gradient-to-br from-[#087b5a] via-[#069f70] to-[#08c38b] px-4 py-4 text-white shadow-xl shadow-emerald-900/10">
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="min-w-0"><p className="truncate text-[17px] font-extrabold text-white">{selectedEmployee.name}</p><p className="mt-1 truncate text-[11px] font-semibold text-white/80">{selectedEmployee.role || "Employee"} · {selectedEmployee.phone || "No phone"}</p><div className="mt-5"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">Final balance</p><p className="mt-1 text-[28px] font-black leading-none tracking-tight">{formatCurrency(allTimeSummary.final)}</p></div></div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-lg font-black text-white">{(selectedEmployee.name || "E").slice(0, 1).toUpperCase()}</div>
+            </div>
+            <div className="pointer-events-none absolute -bottom-10 -right-9 h-32 w-32 rounded-full border-[18px] border-white/10" />
+          </div>
+
+          <div className="mb-2 grid grid-cols-3 gap-2">
+            {mobileOverviewCards.map((card) => (
+              <div key={card.key} className="relative flex min-h-[76px] flex-col justify-between overflow-hidden rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
+                <div><p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">{card.label}</p><p className={`mt-2 truncate text-[13px] font-extrabold ${card.accent}`}>{card.value}</p></div>
+                <span className={`h-1 w-full rounded-full ${card.barClass}`} />
+              </div>
+            ))}
+          </div>
+
+          {mobileSupplementalSummaryCards.length > 0 ? <button type="button" onClick={() => setShowAllMobileSummary((current) => !current)} className="mb-2 flex h-10 w-full items-center justify-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] text-xs font-extrabold text-emerald-600 shadow-sm"><LayoutGrid size={15} />{showAllMobileSummary ? "Hide month totals" : "View full month totals"}<ChevronDown size={15} className={showAllMobileSummary ? "rotate-180" : ""} /></button> : null}
+
+          {showAllMobileSummary ? <div className="mb-2 grid grid-cols-3 gap-2">{mobileSupplementalSummaryCards.map((card) => <SummaryCard key={card.key} label={card.label} value={card.value} accent={card.accent} ring={card.ring} compact />)}</div> : null}
+
+          <div className="mb-2 flex items-center gap-2.5"><input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="h-[45px] min-w-0 flex-1 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 text-[13px] font-semibold text-[color:var(--text-primary)] shadow-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10" /><span className="inline-flex h-[45px] items-center rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 text-[11px] font-extrabold text-emerald-600 shadow-sm">{sortedAttendance.length} records</span></div>
+
+          <div className="mb-2 flex items-center justify-between px-1"><h2 className="text-sm font-extrabold text-[color:var(--text-strong)]">Attendance history</h2><span className="text-[11px] font-semibold text-[color:var(--text-secondary)]">Newest first</span></div>
+
+          <div className="mb-24 space-y-3">
+            {sortedAttendance.length === 0 ? <div className="rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-center text-sm font-bold text-[color:var(--text-secondary)]">No attendance records for this month.</div> : sortedAttendance.map((entry) => {
+              const isExpanded = expandedAttendanceId === entry._id
+              const entryStatus = statusMeta[entry.status] || {}
+              const statusTone = {
+                present: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+                present_half: "bg-teal-50 text-teal-700 ring-teal-200",
+                half: "bg-amber-50 text-amber-700 ring-amber-200",
+                absent: "bg-rose-50 text-rose-700 ring-rose-200",
+                double: "bg-sky-50 text-sky-700 ring-sky-200",
+                bonus: "bg-violet-50 text-violet-700 ring-violet-200",
+              }[entry.status] || "bg-slate-50 text-slate-700 ring-slate-200"
+              return (
+                <div key={entry._id} className="overflow-hidden rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] shadow-sm">
+                  <button type="button" onClick={() => setExpandedAttendanceId(isExpanded ? null : entry._id)} className="flex h-[58px] w-full items-center justify-between gap-2 px-3 text-left active:scale-[0.985]">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[17px] border ${statusTone}`}><CalendarDays size={19} /></span>
+                      <div className="min-w-0"><p className="truncate text-[13px] font-extrabold leading-tight text-[color:var(--text-strong)]">{entryStatus.label || entry.status || "Attendance"}</p><div className="mt-1 flex items-center gap-2"><span className="h-1 w-1 rounded-full bg-emerald-500" /><p className="truncate text-[11px] font-semibold text-[color:var(--text-secondary)]">{entry.date ? String(entry.date).slice(0, 10) : "-"}</p></div></div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1"><div className="text-right"><p className={`text-[13px] font-extrabold tracking-tight ${entryStatus.numberClass || "text-[color:var(--text-strong)]"}`}>{formatCurrency(entry.shortage)}</p><span className="mt-1 inline-block rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-extrabold text-emerald-600">Cash {formatCurrency(entry.advanceCash)}</span></div><ChevronDown size={17} className={`text-[color:var(--text-secondary)] transition-transform ${isExpanded ? "rotate-180" : ""}`} /></div>
+                  </button>
+                  {isExpanded ? <div className="mx-3 mb-3 space-y-2 rounded-[14px] bg-[var(--bg-soft)] p-2.5 text-[11px] text-[color:var(--text-secondary)]"><p className="leading-5">Remark: <span className="font-semibold text-[color:var(--text-primary)]">{entry.remark || "No remark added"}</span></p><p>Edited by: <span className="font-semibold text-[color:var(--text-primary)]">{entry.lastEditedBy || "Not edited yet"}</span></p><div className="flex gap-2 pt-0.5">{canManagerUse("editEntry") ? <button type="button" title="Edit attendance" onClick={() => { setAttendanceEntryMode("single"); setEditAttendance(entry); setAttendanceContext({ employeeId: selectedEmployee._id, allowEmployeeSelect: false }); setAttendanceModalOpen(true) }} className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[11px] bg-blue-600 text-[11px] font-extrabold text-white"><Pencil size={14} /> Edit</button> : null}{canManagerUse("deleteEntry") ? <button type="button" title="Delete attendance" onClick={() => requestDeleteAttendance(entry)} className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[11px] bg-rose-50 text-[11px] font-extrabold text-rose-600"><Trash2 size={14} /> Delete</button> : null}</div></div> : null}
+                </div>
+              )
+            })}
+          </div>
+
+          <nav className="fixed bottom-0 left-0 right-0 z-40 mx-3 mb-2 flex h-[68px] items-center justify-around rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-2 shadow-lg sm:hidden">
+            <button type="button" onClick={() => { setSelectedEmployee(null); setAttendance([]); setOpenCard(null) }} className="flex min-w-[58px] flex-col items-center gap-1 font-extrabold text-emerald-600"><Home size={20} /><span className="text-[10px]">Employees</span><span className="h-[3px] w-7 rounded-full bg-emerald-600" /></button>
+            <button type="button" onClick={() => setExpandedAttendanceId(null)} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"><CalendarDays size={20} /><span className="text-[10px]">Attendance</span></button>
+            <button type="button" onClick={() => openReportModal(selectedEmployee._id)} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"><LayoutGrid size={20} /><span className="text-[10px]">Reports</span></button>
+            <button type="button" onClick={() => document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" })} className="flex min-w-[58px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"><BriefcaseBusiness size={20} /><span className="text-[10px]">Profile</span></button>
+          </nav>
+        </section>
+
+        <div className="hidden rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_16px_32px_rgba(16,24,20,0.05)] sm:block">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
@@ -1773,6 +1998,7 @@ export default function Employees() {
             </div>
           </div>
         </div>
+        </>
       ) : null}
 
       {reportModalOpen ? (
@@ -1915,42 +2141,25 @@ export default function Employees() {
 
       <MobileActionFab
         actions={[
-          canManagerUse("addEmployee")
-            ? {
-                label: "Add Employee",
-                className: "bg-blue-600",
-                onClick: () => {
-                  setEditEmployee(null)
-                  setModalOpen(true)
-                },
-              }
-            : null,
-          canManagerUse("exportPdf")
-            ? {
-                label: "Employees PDF",
-                className: "bg-blue-700",
-                onClick: () => buildEmployeesDirectoryPdf(filteredEmployees, getEmployeeAllFinalBalance),
-              }
-            : null,
-          canManagerUse("exportPdf")
+          selectedEmployee && canManagerUse("exportPdf")
             ? {
                 label: "Generate Report",
                 className: "bg-blue-700",
-                onClick: () => openReportModal(),
+                onClick: () => openReportModal(selectedEmployee._id),
               }
             : null,
-          canManagerUse("addEntry")
+          selectedEmployee && canManagerUse("addEntry")
             ? {
                 label: "Add Attendance",
                 className: "bg-green-600",
-                onClick: () => openAttendanceModePrompt({ allowEmployeeSelect: true }),
+                onClick: () => openAttendanceModePrompt({ employeeId: selectedEmployee._id, allowEmployeeSelect: false }),
               }
             : null,
-          canManagerUse("addBonus")
+          selectedEmployee && canManagerUse("addBonus")
             ? {
                 label: "Add Bonus",
                 className: "bg-violet-600",
-                onClick: () => openBonusModal(),
+                onClick: () => openBonusModal(selectedEmployee._id),
               }
             : null,
           selectedEmployee && canManagerUse("deleteEntry")
@@ -1960,6 +2169,44 @@ export default function Employees() {
                 onClick: requestDeleteMonth,
               }
             : null,
+          !selectedEmployee && canManagerUse("addEmployee")
+            ? {
+                label: "Add Employee",
+                className: "bg-blue-600",
+                onClick: () => {
+                  setEditEmployee(null)
+                  setModalOpen(true)
+                },
+              }
+            : null,
+          !selectedEmployee && canManagerUse("exportPdf")
+            ? {
+                label: "Employees PDF",
+                className: "bg-blue-700",
+                onClick: () => buildEmployeesDirectoryPdf(filteredEmployees, getEmployeeAllFinalBalance),
+              }
+            : null,
+          !selectedEmployee && canManagerUse("exportPdf")
+            ? {
+                label: "Generate Report",
+                className: "bg-blue-700",
+                onClick: () => openReportModal(),
+              }
+            : null,
+          !selectedEmployee && canManagerUse("addEntry")
+            ? {
+                label: "Add Attendance",
+                className: "bg-green-600",
+                onClick: () => openAttendanceModePrompt({ allowEmployeeSelect: true }),
+              }
+            : null,
+          !selectedEmployee && canManagerUse("addBonus")
+            ? {
+                label: "Add Bonus",
+                className: "bg-violet-600",
+                onClick: () => openBonusModal(),
+              }
+            : null,
         ].filter(Boolean)}
       />
     </div>
@@ -1967,21 +2214,33 @@ export default function Employees() {
 }
 
 function SummaryCard({ label, value, accent, ring, compact = false }) {
+  if (compact) {
+    return (
+      <div className={`flex min-h-[76px] flex-col justify-between rounded-[20px] border p-3 shadow-sm ${ring}`}>
+        <div className="min-w-0">
+          <p className="line-clamp-2 text-[9px] font-semibold leading-3 text-[color:var(--text-secondary)]">
+            {label}
+          </p>
+          <p className={`mt-2 truncate text-[12px] font-extrabold leading-none ${accent}`}>
+            {value}
+          </p>
+        </div>
+        <span className={`h-1 w-full rounded-full ${accent.replace("text-", "bg-")}`} />
+      </div>
+    )
+  }
+
   return (
     <div
       className={`rounded-2xl border px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] ${ring}`}
     >
       <p
-        className={`font-semibold tracking-[0.18em] text-[color:var(--text-secondary)] ${
-          compact ? "text-[10px]" : "text-[11px]"
-        } uppercase`}
+        className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-secondary)]"
       >
         {label}
       </p>
       <p
-        className={`mt-3 font-bold ${accent} ${
-          compact ? "text-lg" : "text-2xl"
-        }`}
+        className={`mt-3 text-2xl font-bold ${accent}`}
       >
         {value}
       </p>
@@ -2151,5 +2410,3 @@ function ConfirmDialog({
     </div>
   )
 }
-
-

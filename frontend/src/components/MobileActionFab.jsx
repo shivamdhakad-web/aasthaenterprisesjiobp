@@ -1,15 +1,15 @@
 import { Plus, X } from "lucide-react"
 import { useState } from "react"
 
-export default function MobileActionFab({ actions = [] }) {
+export default function MobileActionFab({ actions = [], onClick }) {
   const [open, setOpen] = useState(false)
 
-  if (!actions.length) {
+  if (!actions.length && !onClick) {
     return null
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 sm:hidden">
+    <div className="fixed bottom-21 right-5 z-40 sm:hidden">
       {open ? (
         <div className="mb-3 flex flex-col items-end gap-2">
           {actions.map((action) => (
@@ -32,10 +32,10 @@ export default function MobileActionFab({ actions = [] }) {
 
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={onClick || (() => setOpen((current) => !current))}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_16px_32px_rgba(37,99,235,0.32)]"
       >
-        {open ? <X size={20} /> : <Plus size={22} />}
+        {open && !onClick ? <X size={20} /> : <Plus size={22} />}
       </button>
     </div>
   )
