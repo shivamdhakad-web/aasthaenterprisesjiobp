@@ -1166,7 +1166,7 @@ export default function Employees() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-3 pb-24 text-[color:var(--text-primary)] sm:p-6 sm:pb-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 pb-24 text-[color:var(--text-primary)] sm:p-6 sm:pb-6">
       <div className={selectedEmployee ? "hidden" : "hidden flex-col gap-3 sm:flex sm:gap-4"}>
 
       <div className="mb-0 rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-3 shadow-[0_12px_28px_rgba(16,24,20,0.06)] sm:rounded-2xl sm:px-5">

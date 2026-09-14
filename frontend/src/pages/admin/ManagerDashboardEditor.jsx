@@ -160,7 +160,7 @@ export default function ManagerDashboardEditor() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <section className="mb-5 rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>

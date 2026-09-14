@@ -27,7 +27,6 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  Sparkles,
   Trash2,
   TrendingDown,
   TrendingUp,
@@ -42,7 +41,6 @@ import * as XLSX from "xlsx"
 
 import { useAuth } from "../../contexts/AuthContext"
 import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
-import { getAiReportSummary } from "../../services/aiApi"
 import {
   addMduEntry,
   deleteMduEntry,
@@ -104,7 +102,6 @@ export default function MduPage() {
   const canManagerShowCard = (key) => !isManager || canShowCard(key)
 
   const [entries, setEntries] = useState([])
-  const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState("")
   const [monthFilter, setMonthFilter] = useState(currentMonth())
   const [fromDate, setFromDate] = useState("")
@@ -124,14 +121,11 @@ export default function MduPage() {
   const [reportFormat, setReportFormat] = useState("pdf")
   const [monthDeleteOpen, setMonthDeleteOpen] = useState(false)
   const [deleteMonthValue, setDeleteMonthValue] = useState(currentMonth())
-  const [aiSummary, setAiSummary] = useState("")
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
 
   // Mobile-specific state
   const [mobileTimeframe, setMobileTimeframe] = useState("month")
   const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
-  const [mobileDetailItem, setMobileDetailItem] = useState(null)
   const [expandedCardId, setExpandedCardId] = useState(null)
 
   useEffect(() => {
@@ -145,14 +139,11 @@ export default function MduPage() {
   }, [notice])
 
   const load = async () => {
-    setLoading(true)
     try {
       const data = await getMduEntries()
       setEntries(Array.isArray(data) ? data : [])
-    } catch (_error) {
+    } catch {
       setNotice({ type: "error", text: "Unable to load M.D.U entries." })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -562,7 +553,7 @@ export default function MduPage() {
   }, [form.openingStock, form.decant, form.sale, form.physicalStock])
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-6 pb-28 lg:pb-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-6 pb-28 lg:pb-6">
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
       {/* =========================================================================
@@ -1001,7 +992,6 @@ export default function MduPage() {
                 <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
                   M.D.U
                 </h1>
-                <p className="text-xs font-semibold text-[color:var(--text-secondary)]">MDU DSR Register</p>
               </div>
               <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-semibold text-emerald-700">
                 {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
@@ -1629,11 +1619,16 @@ export default function MduPage() {
 
 function SummaryCard({ label, value, tone }) {
   const tones = {
-    sky: { panel: "border-sky-200/70 bg-sky-50/80 dark:bg-sky-950/40 dark:border-sky-800/40", value: "text-sky-600 dark:text-sky-400" },
-    emerald: { panel: "border-emerald-200/70 bg-emerald-50/80 dark:bg-emerald-950/40 dark:border-emerald-800/40", value: "text-emerald-600 dark:text-emerald-400" },
-    violet: { panel: "border-violet-200/70 bg-violet-50/80 dark:bg-violet-950/40 dark:border-violet-800/40", value: "text-violet-600 dark:text-violet-400" },
-    amber: { panel: "border-amber-200/70 bg-amber-50/80 dark:bg-amber-950/40 dark:border-amber-800/40", value: "text-amber-600 dark:text-amber-400" },
-    rose: { panel: "border-rose-200/70 bg-rose-50/80 dark:bg-rose-950/40 dark:border-rose-800/40", value: "text-rose-600 dark:text-rose-400" },
+    blue: { panel: "border-blue-200/70 bg-blue-50/80", value: "text-blue-600" },
+    amber: { panel: "border-amber-200/70 bg-amber-50/80", value: "text-amber-600" },
+    emerald: { panel: "border-emerald-200/70 bg-emerald-50/80", value: "text-emerald-600" },
+    green: { panel: "border-green-200/70 bg-green-50/80", value: "text-green-600" },
+    indigo: { panel: "border-indigo-200/70 bg-indigo-50/80", value: "text-indigo-600" },
+    violet: { panel: "border-violet-200/70 bg-violet-50/80", value: "text-violet-600" },
+    sky: { panel: "border-sky-200/70 bg-sky-50/80", value: "text-sky-600" },
+    cyan: { panel: "border-cyan-200/70 bg-cyan-50/80", value: "text-cyan-600" },
+    orange: { panel: "border-orange-200/70 bg-orange-50/80", value: "text-orange-600" },
+    rose: { panel: "border-rose-200/70 bg-rose-50/80", value: "text-rose-600" },
   }
   const current = tones[tone] || tones.emerald
 

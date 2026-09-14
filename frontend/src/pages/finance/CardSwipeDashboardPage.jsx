@@ -34,7 +34,6 @@ const numberValue = (value) => Number(value || 0)
 const dateKey = (value) => String(value || "").slice(0, 10)
 const monthKey = (value) => dateKey(value).slice(0, 7)
 const yearKey = (value) => dateKey(value).slice(0, 4)
-const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 const pieColors = ["#2563eb", "#14b8a6", "#f59e0b", "#8b5cf6", "#ec4899"]
 const chartTooltip = {
   backgroundColor: "var(--bg-panel)",
@@ -52,7 +51,8 @@ const formatDate = (value) => {
   return `${day}/${month}/${year}`
 }
 
-function MetricCard({ label, value, helper, tone, icon: Icon }) {
+function MetricCard({ label, value, helper, tone, icon }) {
+  const Icon = icon
   const tones = {
     blue: "border-blue-200 bg-blue-50/70 text-blue-600",
     teal: "border-teal-200 bg-teal-50/70 text-teal-600",
@@ -143,9 +143,13 @@ export default function CardSwipeDashboardPage() {
       const entryDate = dateKey(entry.date)
       const matchesDates = period?.from && period?.to
         ? entryDate >= period.from && entryDate <= period.to
+        : period?.mode === "all"
+          ? true
         : fromDate && toDate
           ? entryDate >= fromDate && entryDate <= toDate
-          : mode === "yearly"
+          : (period?.mode || mode) === "all"
+            ? true
+          : (period?.mode || mode) === "yearly"
             ? yearKey(entry.date) === (period?.year || year)
             : monthKey(entry.date) === (period?.month || month)
       return matchesDates
@@ -166,13 +170,14 @@ export default function CardSwipeDashboardPage() {
       prevFrom.setDate(prevFrom.getDate() - span + 1)
       return { from: dateKey(prevFrom), to: dateKey(prevTo) }
     }
+    if (mode === "all") return null
     if (mode === "yearly") return { year: String(Number(year) - 1) }
     const base = new Date(`${month}-01T00:00:00`)
     base.setMonth(base.getMonth() - 1)
     return { month: dateKey(base).slice(0, 7) }
   }, [mode, month, year, fromDate, toDate])
 
-  const previousEntries = useMemo(() => applyFilters(entries, previousPeriod), [entries, previousPeriod, mode, month, year, fromDate, toDate, machine, payment])
+  const previousEntries = useMemo(() => previousPeriod ? applyFilters(entries, previousPeriod) : [], [entries, previousPeriod, mode, month, year, fromDate, toDate, machine, payment])
   const summarize = (source) => source.reduce(
     (summary, entry) => ({
       amount: summary.amount + numberValue(entry.amount),
@@ -251,6 +256,13 @@ export default function CardSwipeDashboardPage() {
     setPayment("all")
   }
   const peakTime = [...timeData].sort((a, b) => b.amount - a.amount)[0]
+  const periodLabel = fromDate && toDate
+    ? `${fromDate} to ${toDate}`
+    : mode === "all"
+      ? "All Time"
+      : mode === "yearly"
+        ? `Year ${year}`
+        : new Date(`${month}-01T00:00:00`).toLocaleString("en-IN", { month: "long", year: "numeric" })
 
   return (
     <div className="w-full p-4 text-[color:var(--text-primary)] sm:p-6">
@@ -276,14 +288,34 @@ export default function CardSwipeDashboardPage() {
       <section className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
           <div className="flex rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1">
-            {["monthly", "yearly"].map((item) => <button key={item} onClick={() => setMode(item)} className={`rounded-lg px-4 py-2 text-sm font-bold capitalize ${mode === item ? "bg-blue-600 text-white shadow-sm" : "text-[color:var(--text-secondary)]"}`}>{item}</button>)}
+            {[
+              ["monthly", "Monthly"],
+              ["yearly", "Yearly"],
+              ["all", "All Time"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setMode(value)
+                  setFromDate("")
+                  setToDate("")
+                }}
+                className={`rounded-lg px-4 py-2 text-sm font-bold ${mode === value ? "bg-blue-600 text-white shadow-sm" : "text-[color:var(--text-secondary)]"}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-          {mode === "monthly" ? <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Period<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} className="input min-w-[150px]" /></label> : <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Year<select value={year} onChange={(event) => setYear(event.target.value)} className="input min-w-[130px]">{years.map((item) => <option key={item}>{item}</option>)}</select></label>}
+          {mode === "monthly" ? <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Period<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} className="input min-w-[150px]" /></label> : null}
+          {mode === "yearly" ? <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Year<select value={year} onChange={(event) => setYear(event.target.value)} className="input min-w-[130px]">{years.map((item) => <option key={item}>{item}</option>)}</select></label> : null}
+          {mode === "all" ? <div className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Period<div className="input flex min-w-[150px] items-center text-[color:var(--text-primary)]">All records</div></div> : null}
           <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">From Date<input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="input min-w-[150px]" /></label>
           <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">To Date<input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="input min-w-[150px]" /></label>
           <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Machine<select value={machine} onChange={(event) => setMachine(event.target.value)} className="input min-w-[150px]"><option value="all">All Machines</option>{machineOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Payment<select value={payment} onChange={(event) => setPayment(event.target.value)} className="input min-w-[150px]"><option value="all">All Payments</option>{paymentOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
           <button onClick={clearFilters} className="rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm font-semibold">Clear</button>
+          <p className="text-sm font-semibold text-[color:var(--text-secondary)] xl:ml-auto xl:self-center">Showing: {periodLabel}</p>
         </div>
       </section>
 

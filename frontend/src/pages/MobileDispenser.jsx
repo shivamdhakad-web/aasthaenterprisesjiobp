@@ -145,7 +145,7 @@ export default function MobileDispenser() {
   const currentStock = totalStock - totalSale
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
       <h1 className="mb-4 text-3xl font-bold text-[color:var(--text-strong)]">Mobile Dispenser</h1>
 
       <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">

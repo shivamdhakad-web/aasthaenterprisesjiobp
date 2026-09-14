@@ -46,7 +46,6 @@ import * as XLSX from "xlsx"
 
 import { useAuth } from "../contexts/AuthContext"
 import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
-import { getAiReportSummary } from "../services/aiApi"
 import {
   addLubricant,
   addProduct,
@@ -203,15 +202,11 @@ export default function Lubricants() {
   const [savingProduct, setSavingProduct] = useState(false)
   const [notice, setNotice] = useState({ type: "", text: "" })
   const [aiSummary, setAiSummary] = useState("")
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false)
   const [confirmState, setConfirmState] = useState(null)
-  const [showFilter, setShowFilter] = useState(false)
   const [profitOverviewOpen, setProfitOverviewOpen] = useState(false)
   const [productStockOpen, setProductStockOpen] = useState(false)
   const [productMode, setProductMode] = useState("create")
   const [activeProduct, setActiveProduct] = useState(null)
-  const [openCard, setOpenCard] = useState(null)
-  const [openProductCard, setOpenProductCard] = useState(null)
   const [optionBuilder, setOptionBuilder] = useState({ field: "", value: "" })
   const [entryModePrompt, setEntryModePrompt] = useState(false)
   const [bulkOpen, setBulkOpen] = useState(false)
@@ -399,10 +394,10 @@ export default function Lubricants() {
   const summaryCards = [
     { key: "todaySales", label: "Today Sales", value: formatCurrency(summary.todaySales), tone: "blue" },
     { key: "weekSales", label: "Week Sales", value: formatCurrency(summary.weekSales), tone: "amber" },
-    { key: "monthSales", label: "Month Sales", value: formatCurrency(summary.monthSales), tone: "violet" },
-    { key: "totalSales", label: "Total Sales", value: formatCurrency(summary.totalSales), tone: "indigo" },
+    { key: "monthSales", label: "Month Sales", value: formatCurrency(summary.monthSales), tone: "emerald" },
+    { key: "totalSales", label: "Total Sales", value: formatCurrency(summary.totalSales), tone: "green" },
     { key: "monthProfit", label: "Month Profit", value: formatCurrency(summary.monthProfit), tone: "emerald" },
-    { key: "totalProfit", label: "Total Profit", value: formatCurrency(summary.totalProfit), tone: "green" },
+    { key: "totalProfit", label: "Total Profit", value: formatCurrency(summary.totalProfit), tone: "violet" },
   ]
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
 
@@ -438,61 +433,6 @@ export default function Lubricants() {
         (!reportForm.reportProduct || entry.product === reportForm.reportProduct)
       )
     })
-
-  const buildLubricantAiPayload = () => {
-    const productTotals = filtered.reduce((totals, entry) => {
-      const product = entry.product || "Unspecified Product"
-      totals[product] = (totals[product] || 0) + Number(entry.total || 0)
-      return totals
-    }, {})
-
-    return {
-      reportType: "Lubricant Sales",
-      filters: {
-        fromDate: fromDateFilter || "All",
-        toDate: toDateFilter || "All",
-        category: productFilter || "All Products",
-        month: monthFilter || "All",
-      },
-      totals: {
-        records: filtered.length,
-        totalAmount: filtered.reduce((sum, entry) => sum + Number(entry.total || 0), 0),
-        totalProfit: filtered.reduce((sum, entry) => sum + Number(entry.totalProfit || 0), 0),
-        categoryTotals: productTotals,
-      },
-      rows: filtered.map((entry) => ({
-        date: entry.date,
-        category: entry.product || "Unspecified Product",
-        description: `Quantity: ${Number(entry.quantity || 0)} | Sold By: ${entry.soldBy || "-"}`,
-        amount: Number(entry.total || 0),
-        profit: Number(entry.totalProfit || 0),
-        price: Number(entry.price || 0),
-        quantity: Number(entry.quantity || 0),
-        soldBy: entry.soldBy || "",
-      })),
-    }
-  }
-
-  const generateAiSummary = async () => {
-    if (!filtered.length) {
-      setNotice({ type: "error", text: "No lubricant sales data found for AI summary." })
-      return
-    }
-
-    setAiSummaryLoading(true)
-    try {
-      const result = await getAiReportSummary(buildLubricantAiPayload())
-      setAiSummary(result.summary || "")
-      setNotice({ type: "success", text: "AI summary generated successfully." })
-    } catch (error) {
-      setNotice({
-        type: "error",
-        text: error?.response?.data?.message || "Unable to generate AI summary right now.",
-      })
-    } finally {
-      setAiSummaryLoading(false)
-    }
-  }
 
   const changeProduct = (name) => {
     const product = products.find((item) => item.name === name)
@@ -1011,7 +951,7 @@ export default function Lubricants() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-6 pb-28 lg:pb-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-6 pb-28 lg:pb-6">
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
       {/* =========================================================================
@@ -2571,12 +2511,16 @@ export default function Lubricants() {
 
 function SummaryCard({ label, value, tone }) {
   const tones = {
-    blue: { panel: "border-blue-200/70 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-800/40", value: "text-blue-600 dark:text-blue-400" },
-    amber: { panel: "border-amber-200/70 bg-amber-50/80 dark:bg-amber-950/40 dark:border-amber-800/40", value: "text-amber-600 dark:text-amber-400" },
-    violet: { panel: "border-violet-200/70 bg-violet-50/80 dark:bg-violet-950/40 dark:border-violet-800/40", value: "text-violet-600 dark:text-violet-400" },
-    indigo: { panel: "border-indigo-200/70 bg-indigo-50/80 dark:bg-indigo-950/40 dark:border-indigo-800/40", value: "text-indigo-600 dark:text-indigo-400" },
-    emerald: { panel: "border-emerald-200/70 bg-emerald-50/80 dark:bg-emerald-950/40 dark:border-emerald-800/40", value: "text-emerald-600 dark:text-emerald-400" },
-    green: { panel: "border-green-200/70 bg-green-50/80 dark:bg-green-950/40 dark:border-green-800/40", value: "text-green-600 dark:text-green-400" },
+    blue: { panel: "border-blue-200/70 bg-blue-50/80", value: "text-blue-600" },
+    amber: { panel: "border-amber-200/70 bg-amber-50/80", value: "text-amber-600" },
+    emerald: { panel: "border-emerald-200/70 bg-emerald-50/80", value: "text-emerald-600" },
+    green: { panel: "border-green-200/70 bg-green-50/80", value: "text-green-600" },
+    indigo: { panel: "border-indigo-200/70 bg-indigo-50/80", value: "text-indigo-600" },
+    violet: { panel: "border-violet-200/70 bg-violet-50/80", value: "text-violet-600" },
+    sky: { panel: "border-sky-200/70 bg-sky-50/80", value: "text-sky-600" },
+    cyan: { panel: "border-cyan-200/70 bg-cyan-50/80", value: "text-cyan-600" },
+    orange: { panel: "border-orange-200/70 bg-orange-50/80", value: "text-orange-600" },
+    rose: { panel: "border-rose-200/70 bg-rose-50/80", value: "text-rose-600" },
   }
   const current = tones[tone] || tones.blue
 

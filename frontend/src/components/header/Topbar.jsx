@@ -68,7 +68,7 @@ export default function Topbar({ toggleSidebar }) {
       ...entry,
       order: index,
     }))
-  }, [location.pathname, user?.role])
+  }, [user?.role])
 
   useEffect(() => {
     const load = async () => {
@@ -150,17 +150,17 @@ export default function Topbar({ toggleSidebar }) {
   const displayZoom = zoomLevel || 90
 
   return (
-    <div className="theme-topbar relative z-10 flex items-center justify-between border-b px-4 py-4 transition-colors duration-300 lg:px-5">
-      <div className="flex w-full items-center gap-3">
+    <div className="theme-topbar relative z-10 flex items-center justify-between border-b px-4 py-3 transition-colors duration-300 lg:px-5">
+      <div className="flex w-full items-center gap-2.5">
         <button
           onClick={toggleSidebar}
-          className="theme-text-strong rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-panel)] p-3 lg:hidden"
+          className="theme-text-strong rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-panel)] p-2.5 lg:hidden"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
 
-        <div className="flex h-12 w-full max-w-[430px] items-center gap-3 rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-soft)] px-4 shadow-[0_10px_24px_rgba(16,24,20,0.04)]">
-          <Search size={18} className="text-[color:var(--text-muted)]" />
+        <div className="flex h-10 w-full max-w-[430px] items-center gap-2.5 rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-soft)] px-3.5 shadow-[0_10px_24px_rgba(16,24,20,0.04)]">
+          <Search size={17} className="text-[color:var(--text-muted)]" />
           <input
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
@@ -170,13 +170,13 @@ export default function Topbar({ toggleSidebar }) {
         </div>
       </div>
 
-      <div className="ml-4 flex items-center gap-3">
+      <div className="ml-4 flex items-center gap-2.5">
         {/* UI ZOOM CONTROLLER - Hidden on mobile (<768px), visible on desktop */}
         <div className="relative zoom-menu hidden md:block">
           <button
             onClick={() => setShowZoomMenu(!showZoomMenu)}
             title={`UI Display Zoom: ${displayZoom}%`}
-            className="inline-flex h-12 items-center gap-1.5 rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-panel)] px-3 text-xs font-semibold text-[color:var(--text-strong)] shadow-sm transition hover:bg-[var(--bg-soft)]"
+            className="inline-flex h-10 items-center gap-1.5 rounded-2xl border border-[color:var(--border-color)] bg-[var(--bg-panel)] px-3 text-xs font-semibold text-[color:var(--text-strong)] shadow-sm transition hover:bg-[var(--bg-soft)]"
           >
             <ZoomIn size={16} className="text-emerald-500" />
             <span>{displayZoom}%</span>
@@ -227,33 +227,33 @@ export default function Topbar({ toggleSidebar }) {
         <button
           onClick={toggleTheme}
           title={theme === "day" ? "Switch to night theme" : "Switch to day theme"}
-          className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[var(--theme-toggle-bg)] text-[color:var(--theme-toggle-text)] transition duration-300 hover:-translate-y-0.5 ${
+          className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[color:var(--border-color)] bg-[var(--theme-toggle-bg)] text-[color:var(--theme-toggle-text)] transition duration-300 hover:-translate-y-0.5 ${
             isDayTheme
               ? "shadow-[0_14px_28px_rgba(155,229,100,0.18)]"
               : "shadow-sm"
           }`}
         >
-          <ThemeIcon size={18} />
+          <ThemeIcon size={17} />
         </button>
 
         {user?.role === "Admin" ? (
           <Link
             to="/admin/ai-chat"
             title="Open AI Chat"
-            className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100"
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100"
           >
             <span className="absolute -top-2 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
               New
             </span>
-            <Bot size={19} />
+            <Bot size={18} />
           </Link>
         ) : null}
 
         <Link
           to={notificationPathByRole[user?.role] || "/login"}
-          className="relative rounded-2xl border border-transparent p-2.5 text-[color:var(--text-secondary)] transition hover:border-[color:var(--border-color)] hover:bg-[var(--bg-soft)] hover:text-[color:var(--text-strong)]"
+          className="relative rounded-2xl border border-transparent p-2 text-[color:var(--text-secondary)] transition hover:border-[color:var(--border-color)] hover:bg-[var(--bg-soft)] hover:text-[color:var(--text-strong)]"
         >
-          <Bell size={18} />
+          <Bell size={17} />
           {notifyCount > 0 ? (
             <span className="absolute -right-2 -top-2 rounded-full bg-red-500 px-1.5 py-[1px] text-[10px] font-bold text-white">
               {notifyCount > 99 ? "99+" : notifyCount}
@@ -264,7 +264,7 @@ export default function Topbar({ toggleSidebar }) {
         <div className="relative z-20 profile-menu">
           <div
             onClick={() => setOpenMenu(!openMenu)}
-            className="flex cursor-pointer items-center gap-3 rounded-2xl px-1 py-1 select-none"
+            className="flex cursor-pointer items-center gap-2.5 rounded-2xl px-1 py-1 select-none"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
               {(user?.name || "bp").slice(0, 2).toUpperCase()}

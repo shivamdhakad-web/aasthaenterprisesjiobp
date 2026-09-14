@@ -330,7 +330,7 @@ export default function SmartCalculatorPage() {
     const historyEmpty = !loading && !filteredEntries.length
 
     return (
-        <div className="w-full max-w-[100vw] overflow-x-hidden bg-[var(--bg-body)]">
+        <div className="min-w-0 w-full max-w-full overflow-x-hidden bg-[var(--bg-body)]">
             {/* HEADER + TABS — compact */}
             <div className="px-1 pt-1 pb-0 sm:px-2 sm:pt-1.5">
                 <div className="rounded-xl bg-[#179951] p-0.5">

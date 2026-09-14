@@ -40,16 +40,16 @@ export default function Sidebar({ open, setOpen }) {
 
       <aside
         className={`
-theme-sidebar fixed top-0 left-0 z-50 flex w-[240px] shrink-0 flex-col justify-between overflow-hidden border-r transition-transform bg-[var(--bg-sidebar)]
+theme-sidebar fixed top-0 left-0 z-50 flex w-[220px] shrink-0 flex-col justify-between overflow-hidden transition-transform bg-[var(--bg-sidebar)]
 ${open ? "translate-x-0" : "-translate-x-full"}
 lg:static lg:translate-x-0 lg:z-30
 `}
         style={{ height: "var(--app-screen-height, 100vh)" }}
       >
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="shrink-0 px-5 pt-5">
-            <div className="flex items-center gap-3 border-b border-[color:var(--border-color)] pb-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-500 shadow-[0_14px_24px_rgba(155,229,100,0.28)]">
+          <div className="flex h-[68px] shrink-0 items-center border-b border-[color:var(--border-color)] px-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-500 shadow-[0_14px_24px_rgba(155,229,100,0.28)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -69,15 +69,15 @@ lg:static lg:translate-x-0 lg:z-30
                 </svg>
               </div>
 
-              <div>
-                <h1 className="theme-text-strong text-[1.05rem] font-semibold">Aastha Enterprises</h1>
+              <div className="min-w-0">
+                <h1 className="truncate theme-text-strong text-[0.98rem] font-semibold">Aastha Enterprises</h1>
                 <p className="mt-0.5 text-xs text-[color:var(--text-secondary)]">Jio-bp Station</p>
               </div>
             </div>
           </div>
 
-          <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-5 font-sans">
-            <p className="px-3 text-xs uppercase tracking-[0.26em] text-[color:var(--text-muted)]">
+          <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-5 font-sans">
+            <p className="px-3 text-[11px] uppercase tracking-[0.22em] text-[color:var(--text-muted)]">
               {user?.role === "Employee" ? "SELF SERVICE" : "CONTROL PANEL"}
             </p>
 
@@ -102,12 +102,12 @@ lg:static lg:translate-x-0 lg:z-30
           </nav>
         </div>
 
-        <div className="shrink-0 p-4 bg-[var(--bg-sidebar)]">
-          <div className={`rounded-[28px] border bg-gradient-to-br p-4 shadow-lg ${badgeTone}`}>
-            <div className="flex items-center gap-3">
+        <div className="shrink-0 p-3 bg-[var(--bg-sidebar)]">
+          <div className={`rounded-[24px] border bg-gradient-to-br p-3.5 shadow-lg ${badgeTone}`}>
+            <div className="flex items-center gap-2.5">
               {BadgeIcon ? (
                 <div
-                  className={`rounded-2xl p-2.5 ${
+                  className={`rounded-2xl p-2 ${
                     isDayTheme
                       ? "border border-white/90 bg-white shadow-sm"
                       : "border border-white/10 bg-white/10"
@@ -117,16 +117,16 @@ lg:static lg:translate-x-0 lg:z-30
                 </div>
               ) : null}
 
-              <div>
+              <div className="min-w-0">
                 <p
-                  className={`text-xs uppercase tracking-[0.22em] ${
+                  className={`text-[11px] uppercase tracking-[0.18em] ${
                     isDayTheme ? "text-[color:var(--text-muted)]" : "text-white/75"
                   }`}
                 >
                   Active Role
                 </p>
                 <p
-                  className={`text-sm font-semibold ${
+                  className={`truncate text-sm font-semibold ${
                     isDayTheme ? "text-[color:var(--text-strong)]" : "text-white"
                   }`}
                 >
@@ -170,7 +170,7 @@ function mergeNavigation(baseItems, pages = []) {
 function SidebarItem({ icon, text, active, isDayTheme }) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
+      className={`flex items-center gap-2.5 rounded-2xl border px-3 py-2.5 transition ${
         active
           ? isDayTheme
             ? "border-[var(--border-strong)] bg-white text-[color:var(--text-strong)] shadow-[0_14px_26px_rgba(16,24,20,0.06)]"
@@ -179,7 +179,7 @@ function SidebarItem({ icon, text, active, isDayTheme }) {
       }`}
     >
       {icon}
-      <span className="text-[0.98rem]">{text}</span>
+      <span className="truncate text-[0.92rem]">{text}</span>
     </div>
   )
 }

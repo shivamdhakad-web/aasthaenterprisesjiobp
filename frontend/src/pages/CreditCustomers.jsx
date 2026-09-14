@@ -332,7 +332,7 @@ export default function CreditCustomers() {
   const pendingBalance = ledger.length ? ledger[ledger.length - 1].balance : selectedCustomer?.baki || 0
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
       <h1 className="mb-4 text-3xl font-bold text-[color:var(--text-strong)]">Credit Customers</h1>
 
       <div className="mb-5 flex flex-col gap-3 sm:flex-row">

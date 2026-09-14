@@ -52,7 +52,8 @@ const chartTooltip = {
   fontSize: "12px",
 }
 
-function MetricCard({ label, value, helper, tone, icon: Icon }) {
+function MetricCard({ label, value, helper, tone, icon }) {
+  const MetricIcon = icon
   const tones = {
     emerald: "border-emerald-200 bg-emerald-50/60 text-emerald-600",
     rose: "border-rose-200 bg-rose-50/60 text-rose-600",
@@ -69,7 +70,7 @@ function MetricCard({ label, value, helper, tone, icon: Icon }) {
           <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">{helper}</p>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/70 shadow-sm">
-          <Icon size={20} />
+          <MetricIcon size={20} />
         </div>
       </div>
     </section>
@@ -147,6 +148,7 @@ export default function ExpenseDashboardPage() {
       if (useRange) {
         return (!filters.fromDate || key >= filters.fromDate) && (!filters.toDate || key <= filters.toDate)
       }
+      if (viewMode === "all") return true
       return viewMode === "yearly" ? yearKey(entry.date) === filters.year : monthKey(entry.date) === filters.month
     })
   }, [expenses, filters, viewMode])
@@ -198,6 +200,8 @@ export default function ExpenseDashboardPage() {
 
   const previousExpenses = useMemo(() => {
     const useRange = Boolean(filters.fromDate || filters.toDate)
+    if (viewMode === "all" && !useRange) return []
+
     if (useRange && filters.fromDate && filters.toDate) {
       const start = new Date(`${filters.fromDate}T00:00:00`)
       const end = new Date(`${filters.toDate}T00:00:00`)
@@ -233,8 +237,26 @@ export default function ExpenseDashboardPage() {
     })
   }, [expenses, filters.month, filters.year])
 
+  const allTimeSpendData = useMemo(() => {
+    const monthTotals = expenses.reduce((totals, entry) => {
+      const key = monthKey(entry.date)
+      if (!key) return totals
+      totals[key] = (totals[key] || 0) + numberValue(entry.amount)
+      return totals
+    }, {})
+
+    return Object.entries(monthTotals)
+      .sort(([first], [second]) => first.localeCompare(second))
+      .map(([month, value]) => ({
+        label: new Date(`${month}-01T00:00:00`).toLocaleDateString("en-IN", { month: "short", year: "2-digit" }),
+        value,
+        active: month === filters.month,
+      }))
+  }, [expenses, filters.month])
+
   const cashFlowData = useMemo(() => {
     if (cashFlowView === "yearly") return yearlySpendData
+    if (viewMode === "all") return allTimeSpendData
 
     const weeklyTotals = [0, 0, 0, 0]
     filteredExpenses.forEach((entry) => {
@@ -243,7 +265,7 @@ export default function ExpenseDashboardPage() {
       weeklyTotals[index] += numberValue(entry.amount)
     })
     return weeklyTotals.map((value, index) => ({ label: `Week ${index + 1}`, value, active: value === Math.max(...weeklyTotals) && value > 0 }))
-  }, [cashFlowView, filteredExpenses, yearlySpendData])
+  }, [allTimeSpendData, cashFlowView, filteredExpenses, viewMode, yearlySpendData])
 
   const health = useMemo(() => {
     const expenseGrowth = previousAnalytics.total ? ((analytics.total - previousAnalytics.total) / Math.abs(previousAnalytics.total)) * 100 : 0
@@ -257,12 +279,16 @@ export default function ExpenseDashboardPage() {
     ? `${filters.fromDate || "Start"} to ${filters.toDate || "Today"}`
     : viewMode === "yearly"
       ? `Year ${filters.year}`
-      : new Date(`${filters.month}-01T00:00:00`).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+      : viewMode === "all"
+        ? "All Time"
+        : new Date(`${filters.month}-01T00:00:00`).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+
+  const overviewSpendData = viewMode === "all" ? allTimeSpendData : yearlySpendData
 
   const categoryColors = ["#059669", "#2563eb", "#d97706", "#7c3aed", "#e11d48", "#0891b2"]
 
   return (
-    <main className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
+    <main className="min-w-0 w-full max-w-full overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)] sm:p-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-start gap-4">
@@ -301,18 +327,22 @@ export default function ExpenseDashboardPage() {
 
       <section className="mt-4 grid gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-[var(--shadow-soft)] lg:grid-cols-[auto_minmax(0,210px)_minmax(0,210px)_minmax(0,220px)_minmax(0,220px)_auto]">
         <div className="flex self-end rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1">
-          <button type="button" onClick={() => setViewMode("monthly")} className={`rounded-lg px-3 py-2 text-xs font-bold ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-sm" : "text-[color:var(--text-secondary)]"}`}>Monthly</button>
-          <button type="button" onClick={() => setViewMode("yearly")} className={`rounded-lg px-3 py-2 text-xs font-bold ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-sm" : "text-[color:var(--text-secondary)]"}`}>Yearly</button>
+          <button type="button" onClick={() => { setViewMode("monthly"); setFilters((current) => ({ ...current, fromDate: "", toDate: "" })) }} className={`rounded-lg px-3 py-2 text-xs font-bold ${viewMode === "monthly" ? "bg-emerald-600 text-gray-50 shadow-sm" : "text-[color:var(--text-secondary)]"}`}>Monthly</button>
+          <button type="button" onClick={() => { setViewMode("yearly"); setFilters((current) => ({ ...current, fromDate: "", toDate: "" })) }} className={`rounded-lg px-3 py-2 text-xs font-bold ${viewMode === "yearly" ? "bg-emerald-600 text-gray-50 shadow-sm" : "text-[color:var(--text-secondary)]"}`}>Yearly</button>
+          <button type="button" onClick={() => { setViewMode("all"); setFilters((current) => ({ ...current, fromDate: "", toDate: "" })) }} className={`rounded-lg px-3 py-2 text-xs font-bold ${viewMode === "all" ? "bg-emerald-600 text-gray-50 shadow-sm" : "text-[color:var(--text-secondary)]"}`}>All Time</button>
         </div>
         {viewMode === "monthly" ? <label className="grid gap-1 text-xs font-bold text-[color:var(--text-secondary)]">
           Month
           <input type="month" value={filters.month} onChange={(event) => setFilters((current) => ({ ...current, month: event.target.value, year: event.target.value.slice(0, 4), fromDate: "", toDate: "" }))} className="input" />
-        </label> : <label className="grid gap-1 text-xs font-bold text-[color:var(--text-secondary)]">
+        </label> : viewMode === "yearly" ? <label className="grid gap-1 text-xs font-bold text-[color:var(--text-secondary)]">
           Year
           <select value={filters.year} onChange={(event) => setFilters((current) => ({ ...current, year: event.target.value, fromDate: "", toDate: "" }))} className="input">
             {[...new Set([currentMonth().slice(0, 4), ...expenses.map((entry) => yearKey(entry.date)).filter(Boolean)])].sort().reverse().map((year) => <option key={year} value={year}>{year}</option>)}
           </select>
-        </label>}
+        </label> : <div className="grid gap-1 text-xs font-bold text-[color:var(--text-secondary)]">
+          Period
+          <div className="input flex items-center text-[color:var(--text-primary)]">All expense records</div>
+        </div>}
         <label className="grid gap-1 text-xs font-bold text-[color:var(--text-secondary)]">
           From Date
           <input
@@ -333,7 +363,10 @@ export default function ExpenseDashboardPage() {
         </label>
         <button
           type="button"
-          onClick={() => setFilters({ month: currentMonth(), year: currentMonth().slice(0, 4), fromDate: "", toDate: "" })}
+          onClick={() => {
+            setViewMode("monthly")
+            setFilters({ month: currentMonth(), year: currentMonth().slice(0, 4), fromDate: "", toDate: "" })
+          }}
           className="self-end rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 text-sm font-bold text-[color:var(--text-primary)] transition-colors hover:bg-[var(--bg-hover)]"
         >
           Reset Filters
@@ -353,7 +386,7 @@ export default function ExpenseDashboardPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-black text-[color:var(--text-strong)]">Period Comparison</h2>
-            <p className="mt-1 text-xs text-[color:var(--text-secondary)]">Compare this {viewMode === "yearly" ? "year" : "period"} with the immediately previous equivalent period.</p>
+            <p className="mt-1 text-xs text-[color:var(--text-secondary)]">{viewMode === "all" ? "All time mode includes every expense record, so previous period comparison is not applied." : `Compare this ${viewMode === "yearly" ? "year" : "period"} with the immediately previous equivalent period.`}</p>
           </div>
           <span className="rounded-full bg-[var(--bg-soft)] px-3 py-1.5 text-xs font-bold text-[color:var(--text-secondary)]">Previous period: {previousAnalytics.count} records</span>
         </div>
@@ -413,7 +446,7 @@ export default function ExpenseDashboardPage() {
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--text-muted)]">Expense Cash Flow</p>
               <h2 className="mt-1 text-2xl font-black text-[color:var(--text-strong)]">{formatCurrency(cashFlowData.reduce((sum, item) => sum + item.value, 0))}</h2>
-              <p className="mt-1 text-xs text-[color:var(--text-secondary)]">{cashFlowView === "yearly" ? `Month-wise spend for ${filters.year}` : "Weekly spend for the active period"}</p>
+              <p className="mt-1 text-xs text-[color:var(--text-secondary)]">{viewMode === "all" && cashFlowView === "monthly" ? "Month-wise spend across all records" : cashFlowView === "yearly" ? `Month-wise spend for ${filters.year}` : "Weekly spend for the active period"}</p>
             </div>
             <div className="flex rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1">
               <button type="button" onClick={() => setCashFlowView("monthly")} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${cashFlowView === "monthly" ? "bg-[var(--bg-panel)] text-[color:var(--text-strong)] shadow-sm" : "text-[color:var(--text-secondary)]"}`}>Monthly</button>
@@ -463,18 +496,18 @@ export default function ExpenseDashboardPage() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-black text-[color:var(--text-strong)]">Monthly Spend Overview</h2>
-              <p className="mt-1 text-xs text-[color:var(--text-secondary)]">Actual month-wise expense records for {filters.year}.</p>
+              <p className="mt-1 text-xs text-[color:var(--text-secondary)]">{viewMode === "all" ? "Actual month-wise expense records across all time." : `Actual month-wise expense records for ${filters.year}.`}</p>
             </div>
-            <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-700">Year view</span>
+            <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-700">{viewMode === "all" ? "All time" : "Year view"}</span>
           </div>
           <div className="mt-5 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={yearlySpendData} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
+              <BarChart data={overviewSpendData} margin={{ top: 8, right: 8, left: -14, bottom: 0 }}>
                 <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} stroke="#94a3b8" />
                 <YAxis tickLine={false} axisLine={false} fontSize={10} stroke="#94a3b8" />
                 <Tooltip contentStyle={chartTooltip} formatter={(value) => [formatCurrency(value), "Expense"]} />
-                <Bar dataKey="value" radius={[7, 7, 0, 0]}>{yearlySpendData.map((entry) => <Cell key={entry.label} fill={entry.active ? "#059669" : "#93c5fd"} />)}</Bar>
-              </BarChart>
+                <Bar dataKey="value" radius={[7, 7, 0, 0]}>{overviewSpendData.map((entry) => <Cell key={entry.label} fill={entry.active ? "#059669" : "#93c5fd"} />)}</Bar>
+                </BarChart>
             </ResponsiveContainer>
           </div>
         </article>

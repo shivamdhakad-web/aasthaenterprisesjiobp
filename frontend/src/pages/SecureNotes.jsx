@@ -168,7 +168,7 @@ export default function SecureNotes() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6 font-sans">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6 font-sans">
       <section className={`${vaultCardClass} p-5 sm:p-6`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>

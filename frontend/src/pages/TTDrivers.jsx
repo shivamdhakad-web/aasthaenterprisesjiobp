@@ -120,7 +120,7 @@ export default function TTDrivers() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4 sm:p-6 text-[color:var(--text-primary)]">
       <h1 className="mb-4 text-xl font-bold text-[color:var(--text-strong)]">T.T Driver Details</h1>
 
       <div className="mb-5 grid gap-4 sm:grid-cols-2">

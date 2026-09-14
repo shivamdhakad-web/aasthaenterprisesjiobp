@@ -33,7 +33,7 @@ export default function EmployeeInfo() {
   }, [])
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden space-y-4 p-4 sm:space-y-6 sm:p-6">
       <section className="rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5">
         <p className="text-xs uppercase tracking-[0.28em] text-[color:var(--text-secondary)]">
           Employee Information

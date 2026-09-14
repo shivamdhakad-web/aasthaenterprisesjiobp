@@ -4,7 +4,7 @@ const ThemeContext = createContext(null)
 const STORAGE_KEY = "jio-bp-theme"
 const ZOOM_STORAGE_KEY = "jio-bp-zoom-level"
 const DEFAULT_ZOOM = 90
-const ZOOM_STEPS = [80, 90, 100, 110, 125, 150]
+const ZOOM_STEPS = [80, 85, 90, 100, 110, 125, 150]
 
 const getStoredTheme = () => {
   if (typeof window === "undefined") {

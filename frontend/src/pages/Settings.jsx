@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import {
   changeDashboardPassword,
@@ -222,7 +222,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden space-y-5 p-4 text-[color:var(--text-primary)] sm:p-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden space-y-5 p-4 text-[color:var(--text-primary)] sm:p-6">
       <section className="rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-[0_18px_36px_rgba(16,24,20,0.06)]">
         <h1 className="text-2xl font-semibold text-[color:var(--text-strong)]">Station Settings</h1>
         <p className="mt-2 text-sm text-[color:var(--text-secondary)]">

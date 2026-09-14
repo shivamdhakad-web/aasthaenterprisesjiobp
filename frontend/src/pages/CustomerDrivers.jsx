@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Truck } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -183,7 +183,7 @@ export default function CustomerDrivers() {
   }
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">

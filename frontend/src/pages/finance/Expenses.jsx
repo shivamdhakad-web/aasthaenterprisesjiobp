@@ -744,7 +744,7 @@ export default function Expenses() {
   }
 
 return (
-  <div className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[var(--bg-main)] p-3 pb-28 text-[color:var(--text-primary)] transition-colors duration-300 sm:p-6 lg:pb-6">
+  <div className="min-h-screen min-w-0 w-full max-w-full overflow-x-hidden bg-[var(--bg-main)] p-3 pb-28 text-[color:var(--text-primary)] transition-colors duration-300 sm:p-6 lg:pb-6">
     {notice.text ? <InlineNotice notice={notice} /> : null}
 
     {/* ========================= MOBILE HEADER ========================= */}

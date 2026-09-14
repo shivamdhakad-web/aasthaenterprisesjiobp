@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   Activity,
+  AlertCircle,
   Bot,
   Check,
   ChevronDown,
@@ -189,16 +190,17 @@ export default function AiChatPage() {
   const [provider, setProvider] = useState("gemini")
   const [model, setModel] = useState(DEFAULT_MODEL)
   const [scopes, setScopes] = useState(FALLBACK_SCOPES)
-  const [scope, setScope] = useState("all")
-  const [dataRange, setDataRange] = useState("all")
+  const [scope, setScope] = useState("")
+  const [dataRange, setDataRange] = useState("")
   const [messages, setMessages] = useState([WELCOME_MESSAGE])
   const [question, setQuestion] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [copiedIndex, setCopiedIndex] = useState(null)
   const [photoImportOpen, setPhotoImportOpen] = useState(false)
+  const [validationModal, setValidationModal] = useState(null)
   const [voiceMode, setVoiceMode] = useState("voice-input")
-  const [responseLanguage, setResponseLanguage] = useState("hinglish")
+  const [responseLanguage, setResponseLanguage] = useState("")
   const [listening, setListening] = useState(false)
   const endRef = useRef(null)
   const textareaRef = useRef(null)
@@ -295,6 +297,18 @@ export default function AiChatPage() {
   const submitQuestion = async (textToSend, { speak = false } = {}) => {
     const text = (textToSend || question).trim()
     if (!text || loading) return
+    const missingFields = [
+      !scope ? "Scope" : null,
+      !dataRange ? "Data" : null,
+      !responseLanguage ? "Response option" : null,
+    ].filter(Boolean)
+    if (missingFields.length) {
+      setValidationModal({
+        title: "Please select required options",
+        items: missingFields,
+      })
+      return
+    }
 
     const nowTime = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
     const userMessage = { role: "user", content: text, timestamp: nowTime }
@@ -364,17 +378,17 @@ export default function AiChatPage() {
 
   return (
     <div
-      className="w-full flex flex-col overflow-hidden bg-[var(--bg-main)] text-[color:var(--text-primary)] font-sans p-2 sm:p-4 gap-3 transition-colors duration-300"
+      className="w-full flex flex-col overflow-hidden bg-[var(--bg-main)] text-[color:var(--text-primary)] font-sans p-1 sm:p-2 gap-2 transition-colors duration-300"
       style={{ height: "calc(var(--app-screen-height, 100vh) - 85px)" }}
     >
       {/* TOP SLEEK CONTROL BAR */}
-      <header className="shrink-0 flex flex-col gap-3 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-3 shadow-[var(--shadow-soft)] sm:px-5 sm:py-3.5 lg:flex-row lg:items-center lg:justify-between">
+      <header className="shrink-0 flex flex-col gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-2 shadow-[var(--shadow-soft)] sm:px-3 sm:py-2 lg:flex-row lg:items-center lg:justify-between">
         
         {/* BRAND & ACTIVE STATUS */}
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 shadow-sm">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-600 text-white">
-              <Bot size={19} />
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-600 !text-white">
+              <Bot size={19} className="!text-white" />
             </div>
           </div>
           <div>
@@ -386,9 +400,6 @@ export default function AiChatPage() {
                 <Activity size={9} /> Active
               </span>
             </div>
-            <p className="text-[11px] text-[color:var(--text-secondary)] font-medium hidden sm:block">
-              Neural Assistant for Station Sales, MDU Logistics, Inventory & Audits
-            </p>
           </div>
         </div>
 
@@ -447,7 +458,7 @@ export default function AiChatPage() {
 
       {/* ERROR NOTICE */}
       {error && (
-        <div className="shrink-0 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center justify-between shadow-sm">
+        <div className="shrink-0 rounded-xl border border-rose-500/30 bg-rose-500/10 p-2 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center justify-between shadow-sm">
           <span>⚠️ {error}</span>
           <button onClick={() => setError("")} className="text-xs hover:underline">Dismiss</button>
         </div>
@@ -457,11 +468,11 @@ export default function AiChatPage() {
       <main className="flex-1 min-h-0 flex flex-col rounded-xl border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-[var(--shadow-soft)] overflow-hidden">
         
         {/* MESSAGES SCROLL AREA (FULL FLEX) */}
-        <div className="flex-1 min-h-0 overflow-y-auto bg-[var(--bg-soft)]/50 p-4 sm:p-6 space-y-6 scrollbar-thin">
+        <div className="flex-1 min-h-0 overflow-y-auto bg-[var(--bg-soft)]/50 p-2 sm:p-2.5 space-y-3 scrollbar-thin">
           
           {/* WELCOME HERO & QUICK PROMPTS (WHEN CHAT IS FRESH) */}
           {messages.length <= 1 && (
-            <div className="max-w-4xl mx-auto my-auto space-y-6 py-4 text-center">
+            <div className="max-w-4xl mx-auto my-auto space-y-3 py-2 text-center">
               
               {/* WELCOME ICON & HEADING */}
               <div className="space-y-2">
@@ -474,14 +485,14 @@ export default function AiChatPage() {
               </div>
 
               {/* QUICK PROMPTS GRID */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-left">
                 {QUICK_PROMPTS.map((item, idx) => {
                   const Icon = item.icon
                   return (
                     <button
                       key={idx}
                       onClick={() => handleQuickPromptClick(item.prompt)}
-                      className={`group flex flex-col justify-between rounded-lg border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md bg-[var(--bg-panel)] ${item.color}`}
+                      className={`group flex flex-col justify-between rounded-lg border p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md bg-[var(--bg-panel)] ${item.color}`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-2">
@@ -516,17 +527,17 @@ export default function AiChatPage() {
             return (
               <div
                 key={`${message.role}-${index}`}
-                className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+                className={`flex items-start gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}
               >
                 {/* AVATAR */}
                 <div
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-sm ${
                     isUser
-                      ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white"
-                      : "bg-gradient-to-tr from-emerald-600 to-teal-500 text-white"
+                      ? "bg-gradient-to-tr from-blue-600 to-indigo-600 !text-white"
+                      : "bg-gradient-to-tr from-emerald-600 to-teal-500 !text-white"
                   }`}
                 >
-                  {isUser ? <UserRound size={17} /> : <Bot size={18} />}
+                  {isUser ? <UserRound size={17} className="!text-white" /> : <Bot size={18} className="!text-white" />}
                 </div>
 
                 {/* BUBBLE WRAPPER */}
@@ -540,11 +551,12 @@ export default function AiChatPage() {
 
                   {/* BUBBLE CONTENT */}
                   <div
-                    className={`relative overflow-hidden p-4 sm:p-5 text-sm leading-relaxed ${
+                  className={`relative overflow-hidden p-2.5 sm:p-3 text-sm leading-relaxed ${
                       isUser
-                        ? "rounded-xl rounded-tr-sm bg-emerald-600 text-white shadow-sm font-medium"
+                        ? "rounded-xl rounded-tr-sm bg-emerald-600 !text-white shadow-sm font-medium [&_*]:!text-white"
                         : "rounded-xl rounded-tl-sm border border-[var(--border-strong)] bg-[var(--bg-panel)] text-[color:var(--text-strong)] shadow-sm"
                     }`}
+                    style={isUser ? { color: "#fff" } : undefined}
                   >
                     {isUser ? message.content : renderFormattedText(message.content)}
                   </div>
@@ -580,10 +592,10 @@ export default function AiChatPage() {
           {/* THINKING LOADER */}
           {loading && (
             <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
-                <Bot size={18} />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 !text-white shadow-sm">
+                <Bot size={18} className="!text-white" />
               </div>
-              <div className="rounded-xl rounded-tl-sm border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-3 shadow-sm">
+              <div className="rounded-xl rounded-tl-sm border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2.5 shadow-sm">
                 <Loader2 size={18} className="animate-spin text-emerald-600" />
                 <span>Analyzing station operational data & crafting response...</span>
               </div>
@@ -594,41 +606,57 @@ export default function AiChatPage() {
         </div>
 
         {/* BOTTOM DOCKED INPUT FORM */}
-        <form onSubmit={handleSubmit} className="shrink-0 border-t border-[var(--border-color)] bg-[var(--bg-panel)] p-3 sm:p-4">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2.5 py-1.5 text-xs font-bold text-[color:var(--text-secondary)]">
+        <form onSubmit={handleSubmit} className="shrink-0 border-t border-[var(--border-color)] bg-[var(--bg-panel)] p-2">
+          <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5 px-0.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2 py-1 text-xs font-bold text-[color:var(--text-secondary)]">
                 <Globe size={13} className="text-emerald-600" />
                 Scope
                 <select
                   value={scope}
                   onChange={(event) => setScope(event.target.value)}
                   disabled={loading}
-                  className="max-w-40 bg-transparent font-bold text-[color:var(--text-strong)] outline-none"
+                  className={`max-w-40 bg-transparent font-bold outline-none ${scope ? "text-[color:var(--text-strong)]" : "text-[color:var(--text-muted)]"}`}
                 >
+                  <option value="">Select Scope</option>
                   {scopes.map((item) => (
                     <option key={item.key} value={item.key}>{item.label}</option>
                   ))}
                 </select>
               </label>
-              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2.5 py-1.5 text-xs font-bold text-[color:var(--text-secondary)]">
+              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2 py-1 text-xs font-bold text-[color:var(--text-secondary)]">
                 <Layers size={13} className="text-emerald-600" />
                 Data
                 <select
                   value={dataRange}
                   onChange={(event) => setDataRange(event.target.value)}
                   disabled={loading}
-                  className="bg-transparent font-bold text-[color:var(--text-strong)] outline-none"
+                  className={`bg-transparent font-bold outline-none ${dataRange ? "text-[color:var(--text-strong)]" : "text-[color:var(--text-muted)]"}`}
                 >
+                  <option value="">Select Data</option>
                   {DATA_RANGES.map((range) => (
                     <option key={range.key} value={range.key}>{range.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-emerald-600 px-2 py-1 text-xs font-bold !text-white">
+                Response
+                <select
+                  value={responseLanguage}
+                  onChange={(event) => setResponseLanguage(event.target.value)}
+                  disabled={loading}
+                  className="bg-transparent font-bold !text-white outline-none"
+                >
+                  <option value="" className="bg-[var(--bg-panel)] text-[color:var(--text-strong)]">Select Option</option>
+                  {RESPONSE_LANGUAGES.map((language) => (
+                    <option key={language.key} value={language.key} className="bg-[var(--bg-panel)] text-[color:var(--text-strong)]">{language.label}</option>
                   ))}
                 </select>
               </label>
               <button
                 type="button"
                 onClick={() => setPhotoImportOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/20"
                 title="Import multiple entries from a photo"
               >
                 <ImageUp size={14} />
@@ -646,33 +674,21 @@ export default function AiChatPage() {
                       window.speechSynthesis?.cancel?.()
                       setVoiceMode(item.key)
                     }}
-                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${isActive ? "border-emerald-600 bg-emerald-600 text-white" : "border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)] hover:bg-[var(--bg-hover)]"}`}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors ${isActive ? "border-emerald-600 bg-emerald-600 !text-white [&_*]:!text-white" : "border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)] hover:bg-[var(--bg-hover)]"}`}
                     title={item.detail}
                   >
-                    <Icon size={14} />
+                    <Icon size={14} className={isActive ? "!text-white" : undefined} />
                     {item.label}
                   </button>
                 )
               })}
-              <label className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2.5 py-1.5 text-xs font-bold text-[color:var(--text-secondary)]">
-                Response
-                <select
-                  value={responseLanguage}
-                  onChange={(event) => setResponseLanguage(event.target.value)}
-                  disabled={loading}
-                  className="bg-transparent font-bold text-[color:var(--text-strong)] outline-none"
-                >
-                  {RESPONSE_LANGUAGES.map((language) => (
-                    <option key={language.key} value={language.key}>{language.label}</option>
-                  ))}
-                </select>
-              </label>
+
             </div>
             <span className={`text-xs font-semibold ${listening ? "text-rose-600" : "text-[color:var(--text-secondary)]"}`}>
               {listening ? "Listening..." : activeVoiceMode.detail}
             </span>
           </div>
-          <div className="flex items-end gap-3 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-soft)] p-2.5 shadow-sm transition-all focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20">
+          <div className="flex items-end gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-soft)] p-1.5 shadow-sm transition-all focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20">
             <textarea
               ref={textareaRef}
               value={question}
@@ -687,15 +703,15 @@ export default function AiChatPage() {
               }}
               rows={2}
               placeholder="Ask Jio-bp AI Copilot about daily fuel sales, nozzle readings, MDU decant, lubricants, or staff payroll..."
-              className="min-h-[48px] max-h-36 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm font-medium text-[color:var(--text-strong)] outline-none placeholder:text-[color:var(--text-muted)]"
+              className="min-h-[42px] max-h-32 flex-1 resize-none bg-transparent px-1.5 py-1 text-sm font-medium text-[color:var(--text-strong)] outline-none placeholder:text-[color:var(--text-muted)]"
             />
 
-            <div className="flex items-center gap-2 pb-0.5">
+            <div className="flex items-center gap-1.5 pb-0.5">
               <button
                 type="button"
                 onClick={() => (listening ? stopListening() : startListening())}
                 disabled={loading}
-                className={`inline-flex h-12 w-12 items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${listening ? "border-rose-500 bg-rose-500 text-white" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"}`}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${listening ? "border-rose-500 bg-rose-500 !text-white [&_*]:!text-white" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"}`}
                 title={listening ? "Stop listening and keep the typed text" : `${activeVoiceMode.label}: start microphone`}
               >
                 {voiceMode === "live" ? <Radio size={18} className={listening ? "animate-pulse" : ""} /> : voiceMode === "voice-reply" ? <Volume2 size={18} /> : <Mic size={18} />}
@@ -703,7 +719,7 @@ export default function AiChatPage() {
               <button
                 type="submit"
                 disabled={!question.trim() || loading}
-                className="inline-flex h-12 px-6 items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white font-black text-xs shadow-sm transition-colors hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex h-10 px-4 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 text-white font-black text-xs shadow-sm transition-colors hover:bg-emerald-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                 title="Send Message"
               >
                 <span>Send</span>
@@ -712,15 +728,53 @@ export default function AiChatPage() {
             </div>
           </div>
 
-          <div className="mt-2 flex flex-col sm:flex-row items-center justify-between text-[10px] font-bold text-[color:var(--text-secondary)] px-1 gap-1">
+          <div className="mt-1.5 flex flex-col sm:flex-row items-center justify-between text-[10px] font-bold text-[color:var(--text-secondary)] px-0.5 gap-1">
             <span>Press <kbd className="rounded bg-[var(--bg-panel)] px-1.5 py-0.5 border border-[var(--border-color)]">Enter</kbd> to send, <kbd className="rounded bg-[var(--bg-panel)] px-1.5 py-0.5 border border-[var(--border-color)]">Shift+Enter</kbd> for newline</span>
             <span className="text-emerald-600 font-extrabold flex items-center gap-1">
-              <Sparkles size={11} /> Jio-bp Station Neural Network • Active Scope: {scopes.find((s) => s.key === scope)?.label || scope}
+              <Sparkles size={11} /> Jio-bp Station Neural Network • Active Scope: {scopes.find((s) => s.key === scope)?.label || "Not selected"}
             </span>
           </div>
         </form>
 
       </main>
+
+      {validationModal ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 shadow-2xl">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                <AlertCircle size={21} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-extrabold text-[color:var(--text-strong)]">{validationModal.title}</h3>
+                <p className="mt-1 text-sm text-[color:var(--text-secondary)]">Select these fields before sending your message.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setValidationModal(null)}
+                className="rounded-lg p-1.5 text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)]"
+                aria-label="Close validation popup"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="mt-4 space-y-2">
+              {validationModal.items.map((item) => (
+                <div key={item} className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm font-bold text-amber-700">
+                  Please select {item}.
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setValidationModal(null)}
+              className="mt-4 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-emerald-700"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {photoImportOpen ? (
         <PhotoImportModal

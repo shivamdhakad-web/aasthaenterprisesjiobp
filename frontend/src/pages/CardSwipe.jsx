@@ -724,7 +724,7 @@ export default function CardSwipe() {
   )
 
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4 text-[color:var(--text-primary)] sm:p-6">
       <div className="mb-5 hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm sm:block">
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-3">
