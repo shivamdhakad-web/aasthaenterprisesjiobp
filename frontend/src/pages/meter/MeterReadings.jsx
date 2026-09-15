@@ -1,3 +1,4 @@
+import { Edit2, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import MobileActionFab from "../../components/MobileActionFab"

@@ -1327,22 +1327,28 @@ return (
                 </td>
 
                 <td>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-center gap-2">
                     {canManagerUse("editExpense") ? (
                       <button
+                        type="button"
                         onClick={() => openEditModal(expense)}
-                        className="text-blue-500"
+                        className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                        title="Edit expense"
+                        aria-label="Edit expense"
                       >
-                        Edit
+                        <Edit2 size={15} />
                       </button>
                     ) : null}
 
                     {canManagerUse("deleteExpense") ? (
                       <button
+                        type="button"
                         onClick={() => askDelete(expense)}
-                        className="text-red-500"
+                        className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                        title="Delete expense"
+                        aria-label="Delete expense"
                       >
-                        Delete
+                        <Trash2 size={15} />
                       </button>
                     ) : null}
                   </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Truck } from "lucide-react"
+import { Edit2, Trash2, Truck } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import * as XLSX from "xlsx"

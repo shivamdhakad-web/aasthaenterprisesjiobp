@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   MoreVertical,
   Phone,
+  Edit2,
   Pencil,
   Search,
   Trash2,
@@ -1451,28 +1452,34 @@ export default function Employees() {
                   </div>
                 </td>
                 <td>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-center gap-2">
                     {canManagerUse("editEmployee") ? (
                       <button
-                        className="text-blue-500"
+                        type="button"
+                        className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                        title="Edit employee"
+                        aria-label="Edit employee"
                         onClick={(event) => {
                           event.stopPropagation()
                           setEditEmployee(employee)
                           setModalOpen(true)
                         }}
                       >
-                        Edit
+                        <Edit2 size={15} />
                       </button>
                     ) : null}
                     {canManagerUse("deleteEmployee") ? (
                       <button
-                        className="text-red-500"
+                        type="button"
+                        className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                        title="Delete employee"
+                        aria-label="Delete employee"
                         onClick={(event) => {
                           event.stopPropagation()
                           requestDeleteEmployee(employee)
                         }}
                       >
-                        Delete
+                        <Trash2 size={15} />
                       </button>
                     ) : null}
                   </div>
@@ -1843,10 +1850,13 @@ export default function Employees() {
                       )}
                     </td>
                     <td>
-                      <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center justify-center gap-2">
                         {canManagerUse("editEntry") ? (
                           <button
-                            className="text-blue-500"
+                            type="button"
+                            className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                            title="Edit attendance"
+                            aria-label="Edit attendance"
                             onClick={() => {
                               setAttendanceEntryMode("single")
                               setEditAttendance(entry)
@@ -1857,15 +1867,18 @@ export default function Employees() {
                               setAttendanceModalOpen(true)
                             }}
                           >
-                            Edit
+                            <Edit2 size={15} />
                           </button>
                         ) : null}
                         {canManagerUse("deleteEntry") ? (
                           <button
-                            className="text-red-500"
+                            type="button"
+                            className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                            title="Delete attendance"
+                            aria-label="Delete attendance"
                             onClick={() => requestDeleteAttendance(entry)}
                           >
-                            Delete
+                            <Trash2 size={15} />
                           </button>
                         ) : null}
                       </div>

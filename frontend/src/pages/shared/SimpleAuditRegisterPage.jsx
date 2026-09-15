@@ -1,4 +1,4 @@
-import { Sparkles, X } from "lucide-react"
+import { Edit2, Sparkles, Trash2, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -660,15 +660,27 @@ export default function SimpleAuditRegisterPage({ config }) {
                   {entry.lastEditedByRole ? `(${entry.lastEditedByRole})` : ""}
                 </td>
                 <td>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-center gap-2">
                     {canManagerUse("editEntry") ? (
-                      <button type="button" onClick={() => openEdit(entry)} className="text-blue-500">
-                        Edit
+                      <button
+                        type="button"
+                        onClick={() => openEdit(entry)}
+                        className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                        title="Edit"
+                        aria-label="Edit"
+                      >
+                        <Edit2 size={15} />
                       </button>
                     ) : null}
                     {canManagerUse("deleteEntry") ? (
-                      <button type="button" onClick={() => askDelete(entry)} className="text-red-500">
-                        Delete
+                      <button
+                        type="button"
+                        onClick={() => askDelete(entry)}
+                        className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                        title="Delete"
+                        aria-label="Delete"
+                      >
+                        <Trash2 size={15} />
                       </button>
                     ) : null}
                   </div>

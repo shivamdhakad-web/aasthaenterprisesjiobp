@@ -1,3 +1,4 @@
+import { Edit2, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import MobileActionFab from "../../components/MobileActionFab";
 import { useAuth } from "../../contexts/AuthContext";
@@ -207,15 +208,27 @@ export default function TasksPage() {
                   </td>
                   <td>{item.instructions || "-"}</td>
                   <td>
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center justify-center gap-2">
                       {canManagerUse("updateTask") && (
-                        <button onClick={() => openForm(item)} className="text-blue-500">
-                          Edit
+                        <button
+                          type="button"
+                          onClick={() => openForm(item)}
+                          className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                          title="Edit task"
+                          aria-label="Edit task"
+                        >
+                          <Edit2 size={15} />
                         </button>
                       )}
                       {canManagerUse("deleteTask") && (
-                        <button onClick={() => handleDelete(item._id)} className="text-red-500">
-                          Delete
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item._id)}
+                          className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                          title="Delete task"
+                          aria-label="Delete task"
+                        >
+                          <Trash2 size={15} />
                         </button>
                       )}
                     </div>

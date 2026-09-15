@@ -922,18 +922,27 @@ export default function CardSwipe() {
                   )}
                 </td>
                 <td>
-                  <div className="flex items-center justify-center gap-3">
+                  <div className="flex items-center justify-center gap-2">
                     {canManagerUse("editEntry") ? (
                       <button
-                        className="text-blue-500"
+                        type="button"
                         onClick={() => openEditModal(entry)}
+                        className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                        title="Edit swipe"
+                        aria-label="Edit swipe"
                       >
-                        Edit
+                        <Edit2 size={15} />
                       </button>
                     ) : null}
                     {canManagerUse("deleteEntry") ? (
-                      <button className="text-red-500" onClick={() => askDeleteEntry(entry)}>
-                        Delete
+                      <button
+                        type="button"
+                        onClick={() => askDeleteEntry(entry)}
+                        className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                        title="Delete swipe"
+                        aria-label="Delete swipe"
+                      >
+                        <Trash2 size={15} />
                       </button>
                     ) : null}
                   </div>

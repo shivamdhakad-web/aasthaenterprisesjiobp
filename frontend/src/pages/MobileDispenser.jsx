@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import AddDispenserModal from "../components/AddDispenserModal"

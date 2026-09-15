@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Trash2 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import {
   changeDashboardPassword,
@@ -309,8 +310,14 @@ export default function Settings() {
                   <td>{contact.name}</td>
                   <td>{contact.phone}</td>
                   <td>
-                    <button onClick={() => deleteContact(index)} className="text-red-500 hover:text-red-400">
-                      Delete
+                    <button
+                      type="button"
+                      onClick={() => deleteContact(index)}
+                      className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                      title="Delete contact"
+                      aria-label="Delete contact"
+                    >
+                      <Trash2 size={15} />
                     </button>
                   </td>
                 </tr>

@@ -1753,20 +1753,32 @@ export default function Lubricants() {
                       <td>{product.lastStockAddedBy || "-"}</td>
                       <td>{product.lastEditedAt ? `${formatDateTime(product.lastEditedAt)} - ${product.lastEditedBy || "-"}` : "-"}</td>
                       <td>
-                        <div className="flex items-center justify-center gap-3">
+                        <div className="flex items-center justify-center gap-2">
                           {canManagerUse("addStock") ? (
-                            <button onClick={() => openAddStockModal(product)} className="text-green-500">
+                            <button onClick={() => openAddStockModal(product)} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 mr-1">
                               Add Stock
                             </button>
                           ) : null}
                           {canManagerUse("editProduct") ? (
-                            <button onClick={() => openEditProductModal(product)} className="text-blue-500">
-                              Edit
+                            <button
+                              type="button"
+                              onClick={() => openEditProductModal(product)}
+                              className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                              title="Edit product"
+                              aria-label="Edit product"
+                            >
+                              <Edit2 size={15} />
                             </button>
                           ) : null}
                           {canManagerUse("deleteProduct") ? (
-                            <button onClick={() => askDeleteProduct(product)} className="text-red-500">
-                              Delete
+                            <button
+                              type="button"
+                              onClick={() => askDeleteProduct(product)}
+                              className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                              title="Delete product"
+                              aria-label="Delete product"
+                            >
+                              <Trash2 size={15} />
                             </button>
                           ) : null}
                         </div>
@@ -1822,15 +1834,27 @@ export default function Lubricants() {
                       )}
                     </td>
                     <td>
-                      <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center justify-center gap-2">
                         {canManagerUse("editSale") ? (
-                          <button onClick={() => openSaleModal(entry)} className="text-blue-500">
-                            Edit
+                          <button
+                            type="button"
+                            onClick={() => openSaleModal(entry)}
+                            className="inline-flex h-5 w-5 items-center justify-center text-blue-600 transition-colors hover:text-blue-700"
+                            title="Edit sale"
+                            aria-label="Edit sale"
+                          >
+                            <Edit2 size={15} />
                           </button>
                         ) : null}
                         {canManagerUse("deleteSale") ? (
-                          <button onClick={() => askDeleteSale(entry)} className="text-red-500">
-                            Delete
+                          <button
+                            type="button"
+                            onClick={() => askDeleteSale(entry)}
+                            className="inline-flex h-5 w-5 items-center justify-center text-red-600 transition-colors hover:text-red-700"
+                            title="Delete sale"
+                            aria-label="Delete sale"
+                          >
+                            <Trash2 size={15} />
                           </button>
                         ) : null}
                       </div>
