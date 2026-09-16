@@ -1,4 +1,5 @@
 const Employee = require("../models/Employee")
+const LoginSession = require("../models/LoginSession")
 const Settings = require("../models/Settings")
 const { SESSION_DURATION_MS, signAuthToken } = require("../middleware/auth")
 
@@ -26,7 +27,7 @@ const defaultSettings = {
 }
 
 const sanitizeTokenUser = (user) => {
-  const { iat, exp, authVersion, ...safeUser } = user || {}
+  const { iat, exp, authVersion, sessionId, ...safeUser } = user || {}
   return safeUser
 }
 
@@ -46,11 +47,68 @@ const getOrCreateSettings = async () => {
   return Settings.create(defaultSettings)
 }
 
-const createAuthResponse = (user, authVersion) => ({
-  token: signAuthToken({ ...user, authVersion }),
-  user,
-  expiresAt: new Date(Date.now() + SESSION_DURATION_MS).toISOString(),
-})
+const getClientIp = (req) => {
+  const forwardedFor = req.headers["x-forwarded-for"]
+  const rawIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor?.split(",")[0]
+  return (rawIp || req.headers["x-real-ip"] || req.socket?.remoteAddress || "-").replace(/^::ffff:/, "")
+}
+
+const parseDevice = (userAgent = "") => {
+  const lowerAgent = userAgent.toLowerCase()
+  const browser =
+    lowerAgent.includes("edg/")
+      ? "Microsoft Edge"
+      : lowerAgent.includes("chrome/")
+        ? "Chrome"
+        : lowerAgent.includes("firefox/")
+          ? "Firefox"
+          : lowerAgent.includes("safari/")
+            ? "Safari"
+            : "Unknown"
+
+  const os =
+    lowerAgent.includes("windows")
+      ? "Windows"
+      : lowerAgent.includes("android")
+        ? "Android"
+        : lowerAgent.includes("iphone") || lowerAgent.includes("ipad")
+          ? "iOS"
+          : lowerAgent.includes("mac os")
+            ? "macOS"
+            : lowerAgent.includes("linux")
+              ? "Linux"
+              : "Unknown"
+
+  const deviceType = lowerAgent.includes("ipad") || lowerAgent.includes("tablet")
+    ? "Tablet"
+    : lowerAgent.includes("mobile") || lowerAgent.includes("android") || lowerAgent.includes("iphone")
+      ? "Mobile"
+      : userAgent
+        ? "Desktop"
+        : "Unknown"
+
+  return { browser, os, deviceType }
+}
+
+const createAuthResponse = async (req, user, authVersion) => {
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS)
+  const userAgent = req.headers["user-agent"] || ""
+  const session = await LoginSession.create({
+    userRole: user.role,
+    userName: user.name,
+    employeeId: user.employeeId || null,
+    expiresAt,
+    ipAddress: getClientIp(req),
+    userAgent,
+    ...parseDevice(userAgent),
+  })
+
+  return {
+    token: signAuthToken({ ...user, authVersion, sessionId: session._id.toString() }),
+    user,
+    expiresAt: expiresAt.toISOString(),
+  }
+}
 
 exports.getEmployeeChoices = async (_req, res) => {
   try {
@@ -75,7 +133,8 @@ exports.login = async (req, res) => {
 
     if (password === adminPassword) {
       return res.json(
-        createAuthResponse(
+        await createAuthResponse(
+          req,
           {
             role: "Admin",
             name: "Admin",
@@ -87,7 +146,8 @@ exports.login = async (req, res) => {
 
     if (password === managerPassword) {
       return res.json(
-        createAuthResponse(
+        await createAuthResponse(
+          req,
           {
             role: "Manager",
             name: "Manager",
@@ -126,10 +186,25 @@ exports.login = async (req, res) => {
         return res.status(401).json({ message: "Employee personal password is incorrect" })
       }
 
-      return res.json(createAuthResponse(formatEmployeeUser(employee), authVersion))
+      return res.json(await createAuthResponse(req, formatEmployeeUser(employee), authVersion))
     }
 
     return res.status(401).json({ message: "Wrong password" })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+exports.logout = async (req, res) => {
+  try {
+    if (req.user?.sessionId) {
+      await LoginSession.updateOne(
+        { _id: req.user.sessionId, status: "Active" },
+        { $set: { status: "Logged Out", logoutAt: new Date(), lastSeenAt: new Date() } },
+      )
+    }
+
+    res.json({ message: "Logged out successfully" })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

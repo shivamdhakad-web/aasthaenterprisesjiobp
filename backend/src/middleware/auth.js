@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken")
+const LoginSession = require("../models/LoginSession")
 const Settings = require("../models/Settings")
 
 const JWT_SECRET = process.env.JWT_SECRET || "jiobp-secret-key"
@@ -27,6 +28,28 @@ const authenticateToken = async (req, res, next) => {
 
     if ((decoded.authVersion ?? 1) !== currentAuthVersion) {
       return res.status(401).json({ message: "Session expired. Please login again." })
+    }
+
+    if (decoded.sessionId) {
+      const session = await LoginSession.findById(decoded.sessionId).select("status expiresAt")
+
+      if (!session) {
+        return res.status(401).json({ message: "Session expired. Please login again." })
+      }
+
+      if (session.status !== "Active") {
+        return res.status(401).json({ message: "Session has been logged out." })
+      }
+
+      if (session.expiresAt < new Date()) {
+        await LoginSession.updateOne({ _id: decoded.sessionId }, { $set: { status: "Expired" } })
+        return res.status(401).json({ message: "Session expired. Please login again." })
+      }
+
+      await LoginSession.updateOne(
+        { _id: decoded.sessionId },
+        { $set: { lastSeenAt: new Date() } },
+      )
     }
 
     req.user = decoded

@@ -31,9 +31,11 @@ const DEFAULT_ADMIN_DASHBOARD_PAGES = [
   { key: "secureNotes", label: "Secure Notes", path: "/admin/secure-notes", order: 28 },
   { key: "reminder", label: "Reminder", path: "/admin/reminder", order: 29 },
   { key: "storage", label: "Storage", path: "/admin/storage", order: 30 },
-  { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 31 },
-  { key: "aiChat", label: "AI Chat", path: "/admin/ai-chat", order: 32 },
-  { key: "settings", label: "Settings", path: "/admin/settings", order: 33 },
+  { key: "loginSessions", label: "Login Sessions", path: "/admin/login-sessions", order: 31 },
+  { key: "backupRestore", label: "Backup & Restore", path: "/admin/backup-restore", order: 32 },
+  { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 33 },
+  { key: "aiChat", label: "AI Chat", path: "/admin/ai-chat", order: 34 },
+  { key: "settings", label: "Settings", path: "/admin/settings", order: 35 },
 ]
 
 const cloneDefaultPages = () => DEFAULT_ADMIN_DASHBOARD_PAGES.map((page) => ({ ...page }))

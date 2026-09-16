@@ -12,6 +12,8 @@ const policyRules = [
   { pattern: /^\/shifts(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin", "Manager"] },
   { pattern: /^\/tasks(?:\/|$)/, methods: ["GET", "POST", "PUT", "DELETE"], roles: ["Admin", "Manager"] },
   { pattern: /^\/storage(?:\/|$)/, methods: ["GET"], roles: ["Admin"] },
+  { pattern: /^\/login-sessions(?:\/|$)/, methods: ["GET", "PATCH"], roles: ["Admin"] },
+  { pattern: /^\/backups(?:\/|$)/, methods: ["GET", "POST", "PATCH", "DELETE"], roles: ["Admin"] },
   { pattern: /^\/employee-dashboard-settings(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager", "Employee"] },
   { pattern: /^\/employee-dashboard-settings(?:\/|$)/, methods: ["PUT"], roles: ["Admin"] },
   { pattern: /^\/manager-dashboard-settings(?:\/|$)/, methods: ["GET"], roles: ["Admin", "Manager"] },

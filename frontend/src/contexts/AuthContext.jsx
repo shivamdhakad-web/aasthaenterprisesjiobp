@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { getCurrentUser, login as loginRequest } from "../services/authApi"
+import { getCurrentUser, login as loginRequest, logout as logoutRequest } from "../services/authApi"
 import { clearStoredSession, getStoredSession, storeSession } from "../lib/session"
 
 const AuthContext = createContext(null)
@@ -101,6 +101,9 @@ export function AuthProvider({ children }) {
         return data
       },
       logout: () => {
+        if (getStoredSession()?.token) {
+          logoutRequest().catch(() => {})
+        }
         resetSession()
       },
     }),

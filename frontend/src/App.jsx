@@ -40,6 +40,8 @@ import LeaveManagementPage from "./pages/shared/LeaveManagementPage"
 import ShiftSchedulePage from "./pages/shared/ShiftSchedulePage"
 import TasksPage from "./pages/shared/TasksPage"
 import StorageOverview from "./pages/admin/StorageOverview"
+import LoginSessionsPage from "./pages/admin/LoginSessionsPage"
+import BackupRestorePage from "./pages/admin/BackupRestorePage"
 import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
 import AdminDashboardEditor from "./pages/admin/AdminDashboardEditor"
@@ -99,6 +101,8 @@ export default function App() {
             <Route path="reminder" element={<ReminderBox />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="storage" element={<StorageOverview />} />
+            <Route path="login-sessions" element={<LoginSessionsPage />} />
+            <Route path="backup-restore" element={<BackupRestorePage />} />
             <Route path="bill-generator" element={<BillGeneratorPage />} />
             <Route path="ai-chat" element={<AiChatPage />} />
             <Route path="lubricants" element={<Lubricants />} />
