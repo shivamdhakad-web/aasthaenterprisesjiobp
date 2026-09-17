@@ -1,0 +1,4465 @@
+{
+  "metadata": {
+    "app": "Jio-bp Station",
+    "version": 1,
+    "scope": "full",
+    "dateRange": {
+      "from": null,
+      "to": null
+    },
+    "createdAt": "2026-09-16T05:38:06.830Z",
+    "totalCollections": 40,
+    "totalRecords": 93,
+    "collections": [
+      {
+        "name": "taskassignments",
+        "records": 4
+      },
+      {
+        "name": "mobiledispensersettings",
+        "records": 1
+      },
+      {
+        "name": "managerdashboardsettings",
+        "records": 1
+      },
+      {
+        "name": "customers",
+        "records": 1
+      },
+      {
+        "name": "lubricantproducts",
+        "records": 1
+      },
+      {
+        "name": "lubricantsales",
+        "records": 3
+      },
+      {
+        "name": "billgenerators",
+        "records": 4
+      },
+      {
+        "name": "dailysales",
+        "records": 0
+      },
+      {
+        "name": "admindashboardsettings",
+        "records": 1
+      },
+      {
+        "name": "smartcalculatorentries",
+        "records": 0
+      },
+      {
+        "name": "approvalrequests",
+        "records": 0
+      },
+      {
+        "name": "employeeleaves",
+        "records": 6
+      },
+      {
+        "name": "reminders",
+        "records": 2
+      },
+      {
+        "name": "dcdentries",
+        "records": 9
+      },
+      {
+        "name": "users",
+        "records": 0
+      },
+      {
+        "name": "securenotes",
+        "records": 1
+      },
+      {
+        "name": "backuprecords",
+        "records": 0
+      },
+      {
+        "name": "customerdrivers",
+        "records": 1
+      },
+      {
+        "name": "expenses",
+        "records": 13
+      },
+      {
+        "name": "loginsessions",
+        "records": 4
+      },
+      {
+        "name": "employees",
+        "records": 1
+      },
+      {
+        "name": "tankerdeliveries",
+        "records": 1
+      },
+      {
+        "name": "petrolsales",
+        "records": 0
+      },
+      {
+        "name": "employeeattendances",
+        "records": 3
+      },
+      {
+        "name": "shiftschedules",
+        "records": 3
+      },
+      {
+        "name": "tanks",
+        "records": 0
+      },
+      {
+        "name": "ttdrivers",
+        "records": 3
+      },
+      {
+        "name": "mduentries",
+        "records": 15
+      },
+      {
+        "name": "employeedailyreports",
+        "records": 2
+      },
+      {
+        "name": "densitycalculatorentries",
+        "records": 0
+      },
+      {
+        "name": "settings",
+        "records": 1
+      },
+      {
+        "name": "backuprestorelogs",
+        "records": 1
+      },
+      {
+        "name": "meterreadings",
+        "records": 1
+      },
+      {
+        "name": "employeedashboardsettings",
+        "records": 1
+      },
+      {
+        "name": "customertransactions",
+        "records": 1
+      },
+      {
+        "name": "mobiledispensers",
+        "records": 1
+      },
+      {
+        "name": "notifications",
+        "records": 3
+      },
+      {
+        "name": "invoicedetails",
+        "records": 0
+      },
+      {
+        "name": "cardswipes",
+        "records": 4
+      },
+      {
+        "name": "dieselsales",
+        "records": 0
+      }
+    ]
+  },
+  "collections": {
+    "taskassignments": [
+      {
+        "_id": {
+          "$oid": "69ef58a676ffe72e5dad5b4f"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "title": "deepak",
+        "description": "ok",
+        "instructions": "kkaro",
+        "assignedDate": {
+          "$date": "2026-04-27T00:00:00Z"
+        },
+        "dueDate": {
+          "$date": "2026-04-28T00:00:00Z"
+        },
+        "priority": "high",
+        "status": "in_progress",
+        "createdByRole": "Manager",
+        "createdByName": "Manager",
+        "__v": 0,
+        "createdAt": {
+          "$date": "2026-04-27T12:37:58.560Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T18:44:53.486Z"
+        },
+        "completedAt": null,
+        "employeeNote": "ho gya"
+      },
+      {
+        "_id": {
+          "$oid": "69f107be96c0a401a7e95078"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "title": "ok",
+        "description": "karooo",
+        "instructions": "",
+        "assignedDate": {
+          "$date": "2026-04-28T00:00:00Z"
+        },
+        "dueDate": {
+          "$date": "2026-04-30T00:00:00Z"
+        },
+        "priority": "low",
+        "status": "pending",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "__v": 0,
+        "createdAt": {
+          "$date": "2026-04-28T19:17:18.062Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:17:18.062Z"
+        }
+      },
+      {
+        "_id": {
+          "$oid": "69f1087496c0a401a7e950a8"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "title": "ok",
+        "description": "jbkij",
+        "instructions": "hug",
+        "assignedDate": {
+          "$date": "2026-04-28T00:00:00Z"
+        },
+        "dueDate": {
+          "$date": "2026-04-30T00:00:00Z"
+        },
+        "priority": "high",
+        "status": "in_progress",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "createdAt": {
+          "$date": "2026-04-28T19:20:20.859Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:20:20.859Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69f1089096c0a401a7e950b1"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "title": "ok",
+        "description": "oohero",
+        "instructions": "flkkfhods",
+        "assignedDate": {
+          "$date": "2026-04-28T00:00:00Z"
+        },
+        "dueDate": {
+          "$date": "2026-05-08T00:00:00Z"
+        },
+        "priority": "high",
+        "status": "pending",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "__v": 0,
+        "createdAt": {
+          "$date": "2026-04-28T19:20:48.171Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:20:48.171Z"
+        }
+      }
+    ],
+    "mobiledispensersettings": [
+      {
+        "_id": {
+          "$oid": "69e8fef1b3a3cdcc37c7eb4a"
+        },
+        "openingStock": 1000,
+        "currentStock": 651,
+        "margin": 2.5,
+        "dieselPerKM": 5,
+        "createdAt": {
+          "$date": "2026-04-22T17:01:37.396Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-25T18:29:44.871Z"
+        },
+        "__v": 0
+      }
+    ],
+    "managerdashboardsettings": [
+      {
+        "_id": {
+          "$oid": "6a3019dd05adfc20cc3e76b1"
+        },
+        "pages": [
+          {
+            "key": "dashboard",
+            "label": "Dashboard",
+            "path": "/manager",
+            "order": 1,
+            "hidden": false,
+            "buttons": [],
+            "cards": []
+          },
+          {
+            "key": "approvals",
+            "label": "Approval Status",
+            "path": "/manager/approvals",
+            "order": 2,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "viewApproval",
+                "label": "View Approval",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "notifications",
+            "label": "Notifications",
+            "path": "/manager/notifications",
+            "order": 3,
+            "hidden": false,
+            "buttons": [],
+            "cards": []
+          },
+          {
+            "key": "dailyReports",
+            "label": "Daily Reports",
+            "path": "/manager/daily-reports",
+            "order": 4,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "exportPdf",
+                "label": "Export PDF",
+                "enabled": false
+              },
+              {
+                "key": "updateReport",
+                "label": "Update Report",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "meterReadings",
+            "label": "Meter Readings",
+            "path": "/manager/meter-readings",
+            "order": 5,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": false
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": false
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "tankerDeliveries",
+            "label": "Tanker Deliveries",
+            "path": "/manager/tanker-deliveries",
+            "order": 6,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addDelivery",
+                "label": "Add Delivery",
+                "enabled": false
+              },
+              {
+                "key": "editDelivery",
+                "label": "Edit Delivery",
+                "enabled": false
+              },
+              {
+                "key": "deleteDelivery",
+                "label": "Delete Delivery",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": [
+              {
+                "key": "deliveries",
+                "label": "Deliveries",
+                "enabled": true
+              },
+              {
+                "key": "totalQuantity",
+                "label": "Total Quantity",
+                "enabled": true
+              },
+              {
+                "key": "unloadedQty",
+                "label": "Unloaded Qty",
+                "enabled": true
+              },
+              {
+                "key": "loss",
+                "label": "Loss",
+                "enabled": true
+              },
+              {
+                "key": "gain",
+                "label": "Gain",
+                "enabled": true
+              }
+            ]
+          },
+          {
+            "key": "employees",
+            "label": "Employees",
+            "path": "/manager/employees",
+            "order": 7,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEmployee",
+                "label": "Add Employee",
+                "enabled": false
+              },
+              {
+                "key": "editEmployee",
+                "label": "Edit Employee",
+                "enabled": false
+              },
+              {
+                "key": "deleteEmployee",
+                "label": "Delete Employee",
+                "enabled": false
+              },
+              {
+                "key": "addEntry",
+                "label": "Add Attendance Entry",
+                "enabled": false
+              },
+              {
+                "key": "addBonus",
+                "label": "Add Bonus",
+                "enabled": false
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Attendance",
+                "enabled": false
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Attendance",
+                "enabled": false
+              },
+              {
+                "key": "exportPdf",
+                "label": "Export PDF",
+                "enabled": false
+              }
+            ],
+            "cards": [
+              {
+                "key": "allTotalEarned",
+                "label": "All Employees Earned",
+                "enabled": false
+              },
+              {
+                "key": "allTotalBonus",
+                "label": "All Employees Bonus",
+                "enabled": false
+              },
+              {
+                "key": "allEarnedBonusTotal",
+                "label": "Earned + Bonus",
+                "enabled": false
+              },
+              {
+                "key": "allPositiveFinalBalance",
+                "label": "Positive Final Balance",
+                "enabled": false
+              },
+              {
+                "key": "allNegativeFinalBalance",
+                "label": "Negative Final Balance",
+                "enabled": false
+              },
+              {
+                "key": "allFinalBalance",
+                "label": "All Final Balance",
+                "enabled": false
+              },
+              {
+                "key": "present",
+                "label": "Present",
+                "enabled": false
+              },
+              {
+                "key": "presentHalf",
+                "label": "Present + Half Shift",
+                "enabled": false
+              },
+              {
+                "key": "half",
+                "label": "Half Shift",
+                "enabled": false
+              },
+              {
+                "key": "absent",
+                "label": "Absent",
+                "enabled": false
+              },
+              {
+                "key": "double",
+                "label": "Double Shift",
+                "enabled": false
+              },
+              {
+                "key": "earned",
+                "label": "Earned",
+                "enabled": false
+              },
+              {
+                "key": "shortage",
+                "label": "Shortage",
+                "enabled": false
+              },
+              {
+                "key": "advance",
+                "label": "Advance",
+                "enabled": false
+              },
+              {
+                "key": "lastMonthAdvance",
+                "label": "Last Month Advance",
+                "enabled": false
+              },
+              {
+                "key": "bonus",
+                "label": "Bonus",
+                "enabled": false
+              },
+              {
+                "key": "searchFinalBalance",
+                "label": "Search Final Balance",
+                "enabled": false
+              },
+              {
+                "key": "searchMonthBalance",
+                "label": "Search Month Balance",
+                "enabled": false
+              },
+              {
+                "key": "final",
+                "label": "Final Balance",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "shifts",
+            "label": "Shift Schedule",
+            "path": "/manager/shifts",
+            "order": 8,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "saveSchedule",
+                "label": "Save Schedule",
+                "enabled": false
+              },
+              {
+                "key": "deleteSchedule",
+                "label": "Delete Schedule",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "tasks",
+            "label": "Task Assignments",
+            "path": "/manager/tasks",
+            "order": 9,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "assignTask",
+                "label": "Assign Task",
+                "enabled": false
+              },
+              {
+                "key": "updateTask",
+                "label": "Update Task",
+                "enabled": false
+              },
+              {
+                "key": "deleteTask",
+                "label": "Delete Task",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "creditCustomers",
+            "label": "Credit Customers",
+            "path": "/manager/credit-customers",
+            "order": 10,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addCustomer",
+                "label": "Add Customer",
+                "enabled": false
+              },
+              {
+                "key": "fuelEntry",
+                "label": "Fuel Entry",
+                "enabled": false
+              },
+              {
+                "key": "payment",
+                "label": "Payment",
+                "enabled": false
+              },
+              {
+                "key": "whatsappShare",
+                "label": "WhatsApp Share",
+                "enabled": false
+              },
+              {
+                "key": "printReport",
+                "label": "Print Report",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "expenses",
+            "label": "Expenses",
+            "path": "/manager/expenses",
+            "order": 11,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addExpense",
+                "label": "Add Expense",
+                "enabled": false
+              },
+              {
+                "key": "editExpense",
+                "label": "Edit Expense",
+                "enabled": false
+              },
+              {
+                "key": "deleteExpense",
+                "label": "Delete Expense",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": [
+              {
+                "key": "todayExpense",
+                "label": "Today Expense",
+                "enabled": false
+              },
+              {
+                "key": "weekExpense",
+                "label": "Week Expense",
+                "enabled": false
+              },
+              {
+                "key": "monthExpense",
+                "label": "Month Expense",
+                "enabled": false
+              },
+              {
+                "key": "totalExpense",
+                "label": "Total Expense",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "lubricants",
+            "label": "Lubricants",
+            "path": "/manager/lubricants",
+            "order": 12,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addSale",
+                "label": "Add Sale",
+                "enabled": false
+              },
+              {
+                "key": "addProduct",
+                "label": "Add Product",
+                "enabled": false
+              },
+              {
+                "key": "addStock",
+                "label": "Add Stock",
+                "enabled": false
+              },
+              {
+                "key": "editProduct",
+                "label": "Edit Product",
+                "enabled": true
+              },
+              {
+                "key": "deleteProduct",
+                "label": "Delete Product",
+                "enabled": true
+              },
+              {
+                "key": "editSale",
+                "label": "Edit Sale",
+                "enabled": false
+              },
+              {
+                "key": "deleteSale",
+                "label": "Delete Sale",
+                "enabled": false
+              },
+              {
+                "key": "deleteMonth",
+                "label": "Delete Month",
+                "enabled": true
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": [
+              {
+                "key": "todaySales",
+                "label": "Today Sales",
+                "enabled": false
+              },
+              {
+                "key": "weekSales",
+                "label": "Week Sales",
+                "enabled": false
+              },
+              {
+                "key": "monthSales",
+                "label": "Month Sales",
+                "enabled": false
+              },
+              {
+                "key": "totalSales",
+                "label": "Total Sales",
+                "enabled": false
+              },
+              {
+                "key": "monthProfit",
+                "label": "Month Profit",
+                "enabled": false
+              },
+              {
+                "key": "totalProfit",
+                "label": "Total Profit",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "mobileDispenser",
+            "label": "Mobile Dispenser",
+            "path": "/manager/mobile-dispenser",
+            "order": 13,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": false
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": false
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "cardSwipe",
+            "label": "Card Swipe",
+            "path": "/manager/card-swipe",
+            "order": 14,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": false
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": false
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": false
+              },
+              {
+                "key": "deleteMonth",
+                "label": "Delete Month",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": [
+              {
+                "key": "totalSwipe",
+                "label": "Total Swipe",
+                "enabled": false
+              },
+              {
+                "key": "totalCharges",
+                "label": "Total Charges",
+                "enabled": false
+              },
+              {
+                "key": "monthProfit",
+                "label": "Month Profit",
+                "enabled": false
+              },
+              {
+                "key": "cashProfit",
+                "label": "Cash Profit",
+                "enabled": false
+              },
+              {
+                "key": "onlineProfit",
+                "label": "Online Profit",
+                "enabled": false
+              },
+              {
+                "key": "selfTotal",
+                "label": "Self Total",
+                "enabled": false
+              },
+              {
+                "key": "selfCharges",
+                "label": "Self Charges",
+                "enabled": false
+              },
+              {
+                "key": "dsmTotal",
+                "label": "DSM Total",
+                "enabled": false
+              },
+              {
+                "key": "dsmCharges",
+                "label": "DSM Charges",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "dcd",
+            "label": "D.C.D",
+            "path": "/manager/dcd",
+            "order": 15,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": true
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": true
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": true
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": true
+              }
+            ],
+            "cards": [
+              {
+                "key": "totalVolume",
+                "label": "Total Volume",
+                "enabled": false
+              },
+              {
+                "key": "totalProfit",
+                "label": "Total Profit",
+                "enabled": false
+              },
+              {
+                "key": "avgSalePrice",
+                "label": "Avg Sale Price",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "smartCalculator",
+            "label": "Smart Calculator",
+            "path": "/manager/smart-calculator",
+            "order": 15,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "saveEntry",
+                "label": "Save Entry",
+                "enabled": false
+              },
+              {
+                "key": "sendToAdmin",
+                "label": "Send To Admin",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "mdu",
+            "label": "M.D.U",
+            "path": "/manager/mdu",
+            "order": 16,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": true
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": true
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": true
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": true
+              }
+            ],
+            "cards": [
+              {
+                "key": "totalDecant",
+                "label": "Total Decant",
+                "enabled": false
+              },
+              {
+                "key": "totalSale",
+                "label": "Total Sale",
+                "enabled": false
+              },
+              {
+                "key": "avgRate",
+                "label": "Avg Rate",
+                "enabled": false
+              },
+              {
+                "key": "profit",
+                "label": "Profit",
+                "enabled": false
+              },
+              {
+                "key": "lossGain",
+                "label": "Loss / Gain",
+                "enabled": false
+              },
+              {
+                "key": "otherProfit",
+                "label": "Other Profit",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "densityCalculator",
+            "label": "Density Calculator",
+            "path": "/manager/density-calculator",
+            "order": 16,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "saveDensity",
+                "label": "Save Density",
+                "enabled": false
+              },
+              {
+                "key": "viewHistory",
+                "label": "View History",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "invoiceDetails",
+            "label": "Invoice Details",
+            "path": "/manager/invoice-details",
+            "order": 17,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": true
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": true
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": true
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": true
+              }
+            ],
+            "cards": [
+              {
+                "key": "hsdTotalQty",
+                "label": "HSD Total Qty",
+                "enabled": false
+              },
+              {
+                "key": "msTotalQty",
+                "label": "MS Total Qty",
+                "enabled": false
+              },
+              {
+                "key": "totalHsdLfrAmount",
+                "label": "Total HSD LFR Amount",
+                "enabled": false
+              },
+              {
+                "key": "totalMsLfrAmount",
+                "label": "Total MS LFR Amount",
+                "enabled": false
+              },
+              {
+                "key": "avgPurchaseRateHsd",
+                "label": "Avg Purchase Rate HSD",
+                "enabled": false
+              },
+              {
+                "key": "avgPurchaseRateMs",
+                "label": "Avg Purchase Rate MS",
+                "enabled": false
+              },
+              {
+                "key": "totalInvoiceAmountHsd",
+                "label": "Total Invoice Amount HSD",
+                "enabled": false
+              },
+              {
+                "key": "totalTransportCostHsd",
+                "label": "Total Transport Cost HSD",
+                "enabled": false
+              },
+              {
+                "key": "totalInvoiceAmountMs",
+                "label": "Total Invoice Amount MS",
+                "enabled": false
+              },
+              {
+                "key": "totalTransportCostMs",
+                "label": "Total Transport Cost MS",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "ttDrivers",
+            "label": "TT Drivers",
+            "path": "/manager/ttdrivers",
+            "order": 17,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addDriver",
+                "label": "Add Driver",
+                "enabled": false
+              },
+              {
+                "key": "editDriver",
+                "label": "Edit Driver",
+                "enabled": false
+              },
+              {
+                "key": "deleteDriver",
+                "label": "Delete Driver",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "dailySales",
+            "label": "Daily Sales",
+            "path": "/manager/daily-sales",
+            "order": 18,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addEntry",
+                "label": "Add Entry",
+                "enabled": true
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": true
+              },
+              {
+                "key": "deleteEntry",
+                "label": "Delete Entry",
+                "enabled": true
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": true
+              }
+            ],
+            "cards": [
+              {
+                "key": "hsdSale",
+                "label": "HSD Sale",
+                "enabled": false
+              },
+              {
+                "key": "msSale",
+                "label": "MS Sale",
+                "enabled": false
+              },
+              {
+                "key": "hsdProfit",
+                "label": "HSD Profit",
+                "enabled": false
+              },
+              {
+                "key": "msProfit",
+                "label": "MS Profit",
+                "enabled": false
+              },
+              {
+                "key": "avgHsdPrice",
+                "label": "Avg HSD Price",
+                "enabled": true
+              },
+              {
+                "key": "avgMsPrice",
+                "label": "Avg MS Price",
+                "enabled": false
+              },
+              {
+                "key": "hsdLossGain",
+                "label": "HSD Loss / Gain",
+                "enabled": false
+              },
+              {
+                "key": "msLossGain",
+                "label": "MS Loss / Gain",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "customerDrivers",
+            "label": "Customer Drivers",
+            "path": "/manager/customerdrivers",
+            "order": 18,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addDriver",
+                "label": "Add Driver",
+                "enabled": false
+              },
+              {
+                "key": "editDriver",
+                "label": "Edit Driver",
+                "enabled": false
+              },
+              {
+                "key": "deleteDriver",
+                "label": "Delete Driver",
+                "enabled": false
+              },
+              {
+                "key": "generateReport",
+                "label": "Generate Report",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "financeDashboard",
+            "label": "Finance Dashboard",
+            "path": "/manager/finance-dashboard",
+            "order": 19,
+            "hidden": false,
+            "buttons": [],
+            "cards": []
+          },
+          {
+            "key": "secureNotes",
+            "label": "Secure Notes",
+            "path": "/manager/secure-notes",
+            "order": 19,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addNote",
+                "label": "Add Note",
+                "enabled": false
+              },
+              {
+                "key": "editNote",
+                "label": "Edit Note",
+                "enabled": false
+              },
+              {
+                "key": "deleteNote",
+                "label": "Delete Note",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "reminder",
+            "label": "Reminder",
+            "path": "/manager/reminder",
+            "order": 20,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "addReminder",
+                "label": "Add Reminder",
+                "enabled": false
+              },
+              {
+                "key": "editReminder",
+                "label": "Edit Reminder",
+                "enabled": false
+              },
+              {
+                "key": "deleteReminder",
+                "label": "Delete Reminder",
+                "enabled": false
+              }
+            ],
+            "cards": []
+          },
+          {
+            "key": "settings",
+            "label": "Settings",
+            "path": "/manager/settings",
+            "order": 21,
+            "hidden": true,
+            "buttons": [],
+            "cards": []
+          }
+        ],
+        "updatedBy": "Admin",
+        "updatedByRole": "Admin",
+        "createdAt": {
+          "$date": "2026-06-15T15:27:25.693Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-12T10:17:30.416Z"
+        },
+        "__v": 14
+      }
+    ],
+    "customers": [
+      {
+        "_id": {
+          "$oid": "69edbd07e53a1f6738c5de00"
+        },
+        "name": "Rohit Dhakad",
+        "phone": "08319802436",
+        "address": "Jaora",
+        "jama": 0,
+        "baki": 1100,
+        "createdAt": {
+          "$date": "2026-04-26T07:21:43.181Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-26T07:21:57.630Z"
+        },
+        "__v": 0
+      }
+    ],
+    "lubricantproducts": [
+      {
+        "_id": {
+          "$oid": "6a2d6de670d7361ec0c8271f"
+        },
+        "name": "2t",
+        "price": 20,
+        "costPrice": 14,
+        "stock": 6,
+        "addedDate": "2026-06-13",
+        "createdByName": "Admin",
+        "createdByRole": "Admin",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "lastStockAddedAt": {
+          "$date": "2026-06-13T14:49:10.767Z"
+        },
+        "lastStockAddedBy": "Admin",
+        "lastStockAddedByRole": "Admin",
+        "stockHistory": [
+          {
+            "quantity": 10,
+            "addedAt": {
+              "$date": "2026-06-13T14:49:10.767Z"
+            },
+            "addedBy": "Admin",
+            "addedByRole": "Admin",
+            "_id": {
+              "$oid": "6a2d6de670d7361ec0c82720"
+            }
+          }
+        ],
+        "createdAt": {
+          "$date": "2026-06-13T14:49:10.788Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-12T11:53:27.748Z"
+        },
+        "__v": 0
+      }
+    ],
+    "lubricantsales": [
+      {
+        "_id": {
+          "$oid": "6a2e33edad89a82acf103187"
+        },
+        "date": "2026-06-14",
+        "product": "2t",
+        "price": 20,
+        "quantity": 2,
+        "total": 40,
+        "unitProfit": 6,
+        "totalProfit": 12,
+        "soldBy": "Manager",
+        "createdByRole": "Admin",
+        "createdByName": "Manager",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-06-14T04:54:05.460Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T04:54:05.460Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2e33edad89a82acf10318d"
+        },
+        "date": "2026-06-14",
+        "product": "2t",
+        "price": 20,
+        "quantity": 1,
+        "total": 20,
+        "unitProfit": 6,
+        "totalProfit": 6,
+        "soldBy": "Admin",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-06-14T04:54:05.470Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T04:54:05.470Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7c5eb74d524fc321451853"
+        },
+        "date": "2026-08-12",
+        "product": "2t",
+        "price": 20,
+        "quantity": 1,
+        "total": 20,
+        "unitProfit": 6,
+        "totalProfit": 6,
+        "soldBy": "Admin",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-12T11:53:27.774Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-12T11:53:27.774Z"
+        },
+        "__v": 0
+      }
+    ],
+    "billgenerators": [
+      {
+        "_id": {
+          "$oid": "6a777716347983b02b9ed0de"
+        },
+        "billNo": "BILL-848807",
+        "billDate": "2026-08-08",
+        "customerName": "kuyt",
+        "customerPhone": "663646",
+        "vehicleNo": "opoudtfghj",
+        "paymentMode": "Cash",
+        "remark": "",
+        "items": [
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-08",
+            "unit": "Ltr",
+            "quantity": 87,
+            "rate": 50,
+            "amount": 4350
+          },
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-08",
+            "unit": "Ltr",
+            "quantity": 50,
+            "rate": 60,
+            "amount": 3000
+          }
+        ],
+        "subTotal": 7350,
+        "discount": 0,
+        "grandTotal": 7350,
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "expiresAt": {
+          "$date": "2026-08-18T18:36:06.073Z"
+        },
+        "createdAt": {
+          "$date": "2026-08-08T18:36:06.081Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-08T18:36:06.081Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a777a69347983b02b9ed1a4"
+        },
+        "billNo": "BILL-971403",
+        "billDate": "2026-08-08",
+        "customerName": "deepak",
+        "customerPhone": "8319802436",
+        "vehicleNo": "2056",
+        "paymentMode": "Cash",
+        "remark": "",
+        "items": [
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-08",
+            "unit": "Ltr",
+            "quantity": 50,
+            "rate": 96,
+            "amount": 4800
+          },
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-07",
+            "unit": "Ltr",
+            "quantity": 60,
+            "rate": 96.5,
+            "amount": 5790
+          }
+        ],
+        "subTotal": 10590,
+        "discount": 100,
+        "grandTotal": 10490,
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "expiresAt": {
+          "$date": "2026-08-18T18:50:17.985Z"
+        },
+        "createdAt": {
+          "$date": "2026-08-08T18:50:17.988Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-08T18:50:17.988Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a777ce4e3234ea1ac83041c"
+        },
+        "billNo": "BILL-576394",
+        "billDate": "2026-08-08",
+        "customerName": "Rohit Dhakad",
+        "customerPhone": "9032659711",
+        "vehicleNo": "5236",
+        "paymentMode": "Card",
+        "remark": "",
+        "items": [
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-06",
+            "unit": "Ltr",
+            "quantity": 20,
+            "rate": 96.5,
+            "amount": 1930
+          },
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-07",
+            "unit": "Ltr",
+            "quantity": 60,
+            "rate": 96,
+            "amount": 5760
+          },
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-08",
+            "unit": "Ltr",
+            "quantity": 50,
+            "rate": 60,
+            "amount": 3000
+          },
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-05",
+            "unit": "Ltr",
+            "quantity": 30,
+            "rate": 90,
+            "amount": 2700
+          }
+        ],
+        "subTotal": 13390,
+        "discount": 500,
+        "grandTotal": 12890,
+        "createdBy": "Admin",
+        "lastEditedBy": "Admin",
+        "lastEditedByRole": "Admin",
+        "createdAt": {
+          "$date": "2026-08-08T19:00:52.985Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-08T19:36:57.964Z"
+        },
+        "__v": 0,
+        "lastEditedAt": {
+          "$date": "2026-08-08T19:36:57.956Z"
+        }
+      },
+      {
+        "_id": {
+          "$oid": "6a777fb7e3234ea1ac830486"
+        },
+        "billNo": "BILL-331782",
+        "billDate": "2026-08-08",
+        "customerName": "",
+        "customerPhone": "",
+        "vehicleNo": "",
+        "paymentMode": "Cash",
+        "remark": "",
+        "items": [
+          {
+            "product": "Diesel",
+            "description": "",
+            "date": "2026-08-08",
+            "unit": "Ltr",
+            "quantity": 60,
+            "rate": 96.6,
+            "amount": 5796
+          }
+        ],
+        "subTotal": 5796,
+        "discount": 0,
+        "grandTotal": 5796,
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-08T19:12:55.599Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-08T19:12:55.599Z"
+        },
+        "__v": 0
+      }
+    ],
+    "dailysales": [],
+    "admindashboardsettings": [
+      {
+        "_id": {
+          "$oid": "6a45022b4983212dcf4f3dea"
+        },
+        "pages": [
+          {
+            "key": "dashboard",
+            "label": "Dashboard",
+            "path": "/admin",
+            "order": 1
+          },
+          {
+            "key": "approvals",
+            "label": "Approvals",
+            "path": "/admin/approvals",
+            "order": 2
+          },
+          {
+            "key": "notifications",
+            "label": "Notifications",
+            "path": "/admin/notifications",
+            "order": 3
+          },
+          {
+            "key": "dailyReports",
+            "label": "Daily Reports",
+            "path": "/admin/daily-reports",
+            "order": 4
+          },
+          {
+            "key": "meterReadings",
+            "label": "Meter Readings",
+            "path": "/admin/meter-readings",
+            "order": 5
+          },
+          {
+            "key": "tankerDeliveries",
+            "label": "Tanker Deliveries",
+            "path": "/admin/tanker-deliveries",
+            "order": 6
+          },
+          {
+            "key": "employees",
+            "label": "Employees",
+            "path": "/admin/employees",
+            "order": 7
+          },
+          {
+            "key": "adminDashboardEditor",
+            "label": "Admin Edit Dashboard",
+            "path": "/admin/admin-dashboard-editor",
+            "order": 8
+          },
+          {
+            "key": "employeeDashboardEditor",
+            "label": "Employee Edit Dashboard",
+            "path": "/admin/employee-dashboard-editor",
+            "order": 9
+          },
+          {
+            "key": "managerDashboardEditor",
+            "label": "Manager Edit Dashboard",
+            "path": "/admin/manager-dashboard-editor",
+            "order": 10
+          },
+          {
+            "key": "leaves",
+            "label": "Leave Management",
+            "path": "/admin/leaves",
+            "order": 11
+          },
+          {
+            "key": "shifts",
+            "label": "Shift Schedule",
+            "path": "/admin/shifts",
+            "order": 12
+          },
+          {
+            "key": "tasks",
+            "label": "Task Assignments",
+            "path": "/admin/tasks",
+            "order": 13
+          },
+          {
+            "key": "creditCustomers",
+            "label": "Credit Customers",
+            "path": "/admin/credit-customers",
+            "order": 14
+          },
+          {
+            "key": "expenses",
+            "label": "Expenses",
+            "path": "/admin/expenses",
+            "order": 15
+          },
+          {
+            "key": "lubricants",
+            "label": "Lubricants",
+            "path": "/admin/lubricants",
+            "order": 16
+          },
+          {
+            "key": "mobileDispenser",
+            "label": "Mobile Dispenser",
+            "path": "/admin/mobile-dispenser",
+            "order": 17
+          },
+          {
+            "key": "cardSwipe",
+            "label": "Card Swipe",
+            "path": "/admin/card-swipe",
+            "order": 18
+          },
+          {
+            "key": "dcd",
+            "label": "D.C.D",
+            "path": "/admin/dcd",
+            "order": 19
+          },
+          {
+            "key": "mdu",
+            "label": "M.D.U",
+            "path": "/admin/mdu",
+            "order": 20
+          },
+          {
+            "key": "invoiceDetails",
+            "label": "Invoice Details",
+            "path": "/admin/invoice-details",
+            "order": 21
+          },
+          {
+            "key": "dailySales",
+            "label": "Daily Sales",
+            "path": "/admin/daily-sales",
+            "order": 22
+          },
+          {
+            "key": "financeDashboard",
+            "label": "Finance Dashboard",
+            "path": "/admin/finance-dashboard",
+            "order": 23
+          },
+          {
+            "key": "smartCalculator",
+            "label": "Smart Calculator",
+            "path": "/admin/smart-calculator",
+            "order": 23
+          },
+          {
+            "key": "densityCalculator",
+            "label": "Density Calculator",
+            "path": "/admin/density-calculator",
+            "order": 24
+          },
+          {
+            "key": "ttDrivers",
+            "label": "TT Drivers",
+            "path": "/admin/ttdrivers",
+            "order": 25
+          },
+          {
+            "key": "customerDrivers",
+            "label": "Customer Drivers",
+            "path": "/admin/customerdrivers",
+            "order": 26
+          },
+          {
+            "key": "secureNotes",
+            "label": "Secure Notes",
+            "path": "/admin/secure-notes",
+            "order": 27
+          },
+          {
+            "key": "reminder",
+            "label": "Reminder",
+            "path": "/admin/reminder",
+            "order": 28
+          },
+          {
+            "key": "storage",
+            "label": "Storage",
+            "path": "/admin/storage",
+            "order": 29
+          },
+          {
+            "key": "billGenerator",
+            "label": "Bill Generator",
+            "path": "/admin/bill-generator",
+            "order": 30
+          },
+          {
+            "key": "loginSessions",
+            "label": "Login Sessions",
+            "path": "/admin/login-sessions",
+            "order": 31
+          },
+          {
+            "key": "settings",
+            "label": "Settings",
+            "path": "/admin/settings",
+            "order": 31
+          },
+          {
+            "key": "backupRestore",
+            "label": "Backup & Restore",
+            "path": "/admin/backup-restore",
+            "order": 32
+          },
+          {
+            "key": "aiChat",
+            "label": "AI Chat",
+            "path": "/admin/ai-chat",
+            "order": 32
+          }
+        ],
+        "updatedBy": "",
+        "updatedByRole": "",
+        "createdAt": {
+          "$date": "2026-07-01T12:03:55.300Z"
+        },
+        "updatedAt": {
+          "$date": "2026-09-16T04:39:12.349Z"
+        },
+        "__v": 4
+      }
+    ],
+    "smartcalculatorentries": [],
+    "approvalrequests": [],
+    "employeeleaves": [
+      {
+        "_id": {
+          "$oid": "69ef595876ffe72e5dad5b85"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "leaveType": "LOP",
+        "startDate": {
+          "$date": "2026-04-26T18:30:00Z"
+        },
+        "endDate": {
+          "$date": "2026-04-28T18:30:00Z"
+        },
+        "days": 3,
+        "reason": "heath issue",
+        "status": "approved",
+        "requestedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-27T12:40:56.980Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-27T13:03:37.320Z"
+        },
+        "__v": 0,
+        "adminNote": "ok",
+        "reviewedAt": {
+          "$date": "2026-04-27T13:03:37.319Z"
+        },
+        "reviewedByName": "Admin",
+        "reviewedByRole": "Admin"
+      },
+      {
+        "_id": {
+          "$oid": "69ef606d76ffe72e5dad5d71"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "leaveType": "CL",
+        "startDate": {
+          "$date": "2026-04-26T18:30:00Z"
+        },
+        "endDate": {
+          "$date": "2026-04-26T18:30:00Z"
+        },
+        "days": 1,
+        "reason": "",
+        "status": "rejected",
+        "requestedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-27T13:11:09.066Z"
+        },
+        "updatedAt": {
+          "$date": "2026-05-01T21:30:49.007Z"
+        },
+        "__v": 0,
+        "adminNote": "",
+        "reviewedAt": {
+          "$date": "2026-05-01T21:30:49.006Z"
+        },
+        "reviewedByName": "Admin",
+        "reviewedByRole": "Admin"
+      },
+      {
+        "_id": {
+          "$oid": "69ef65de76ffe72e5dad5e1a"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "leaveType": "CL",
+        "startDate": {
+          "$date": "2026-04-28T18:30:00Z"
+        },
+        "endDate": {
+          "$date": "2026-04-29T18:30:00Z"
+        },
+        "days": 2,
+        "reason": "ok",
+        "status": "approved",
+        "requestedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-27T13:34:22.747Z"
+        },
+        "updatedAt": {
+          "$date": "2026-05-01T21:30:43.154Z"
+        },
+        "__v": 0,
+        "adminNote": "",
+        "reviewedAt": {
+          "$date": "2026-05-01T21:30:43.154Z"
+        },
+        "reviewedByName": "Admin",
+        "reviewedByRole": "Admin"
+      },
+      {
+        "_id": {
+          "$oid": "69ef760576ffe72e5dad5f1d"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "leaveType": "LOP",
+        "startDate": {
+          "$date": "2026-05-27T18:30:00Z"
+        },
+        "endDate": {
+          "$date": "2026-05-29T18:30:00Z"
+        },
+        "days": 3,
+        "reason": "",
+        "status": "approved",
+        "requestedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-27T14:43:17.049Z"
+        },
+        "updatedAt": {
+          "$date": "2026-05-01T21:30:25.559Z"
+        },
+        "__v": 0,
+        "adminNote": "",
+        "reviewedAt": {
+          "$date": "2026-05-01T21:30:25.558Z"
+        },
+        "reviewedByName": "Admin",
+        "reviewedByRole": "Admin"
+      },
+      {
+        "_id": {
+          "$oid": "69f10c8196c0a401a7e95173"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "leaveType": "LOP",
+        "startDate": {
+          "$date": "2026-05-01T18:30:00Z"
+        },
+        "endDate": {
+          "$date": "2026-05-04T18:30:00Z"
+        },
+        "days": 4,
+        "reason": "kjvhjxhzg",
+        "status": "approved",
+        "requestedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-28T19:37:37.208Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:50:20.468Z"
+        },
+        "__v": 0,
+        "adminNote": "ok",
+        "reviewedAt": {
+          "$date": "2026-04-28T19:50:20.467Z"
+        },
+        "reviewedByName": "Admin",
+        "reviewedByRole": "Admin"
+      },
+      {
+        "_id": {
+          "$oid": "69f1102a96c0a401a7e95367"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "leaveType": "LOP",
+        "startDate": {
+          "$date": "2026-05-10T18:30:00Z"
+        },
+        "endDate": {
+          "$date": "2026-05-14T18:30:00Z"
+        },
+        "days": 5,
+        "reason": "5 din ki chhutii",
+        "status": "approved",
+        "requestedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-28T19:53:14.488Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:54:22.243Z"
+        },
+        "__v": 0,
+        "adminNote": "karo",
+        "reviewedAt": {
+          "$date": "2026-04-28T19:54:22.243Z"
+        },
+        "reviewedByName": "Admin",
+        "reviewedByRole": "Admin"
+      }
+    ],
+    "reminders": [
+      {
+        "_id": {
+          "$oid": "69edb350764c911d552e3991"
+        },
+        "title": "ok",
+        "description": "hello",
+        "dateTime": "2026-04-26T12:10",
+        "completed": true,
+        "createdAt": {
+          "$date": "2026-04-26T06:40:16.389Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69f103bb96c0a401a7e94fce"
+        },
+        "title": "ok",
+        "description": "chalo",
+        "dateTime": "2026-04-29T01:30",
+        "completed": false,
+        "createdAt": {
+          "$date": "2026-04-28T19:00:11.682Z"
+        },
+        "__v": 0
+      }
+    ],
+    "dcdentries": [
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e34"
+        },
+        "date": "2026-04-09",
+        "product": "D.C.D",
+        "volume": 35,
+        "purchasePrice": 85,
+        "salePrice": 92.05,
+        "profit": 246.7499999999999,
+        "shift": "A",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.364Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.364Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e36"
+        },
+        "date": "2026-04-10",
+        "product": "D.C.D",
+        "volume": 80,
+        "purchasePrice": 86,
+        "salePrice": 92.05,
+        "profit": 483.9999999999998,
+        "shift": "A",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.371Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.371Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e38"
+        },
+        "date": "2026-05-15",
+        "product": "D.C.D",
+        "volume": 30,
+        "purchasePrice": 80,
+        "salePrice": 95.15,
+        "profit": 454.50000000000017,
+        "shift": "B",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.373Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.373Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e3a"
+        },
+        "date": "2026-05-15",
+        "product": "D.C.D",
+        "volume": 60,
+        "purchasePrice": 85,
+        "salePrice": 95.15,
+        "profit": 609.0000000000003,
+        "shift": "B",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.374Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.374Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e3c"
+        },
+        "date": "2026-05-19",
+        "product": "D.C.D",
+        "volume": 30,
+        "purchasePrice": 85,
+        "salePrice": 96.09,
+        "profit": 332.7000000000001,
+        "shift": "B",
+        "remark": "D.G. में डाला",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.375Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.375Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e3e"
+        },
+        "date": "2026-05-26",
+        "product": "D.C.D",
+        "volume": 100,
+        "purchasePrice": 90,
+        "salePrice": 99.83,
+        "profit": 982.9999999999998,
+        "shift": "C",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.378Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.378Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e43"
+        },
+        "date": "2026-05-26",
+        "product": "D.C.D",
+        "volume": 71,
+        "purchasePrice": 85,
+        "salePrice": 99.83,
+        "profit": 1052.9299999999998,
+        "shift": "C",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.403Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.403Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e45"
+        },
+        "date": "2026-05-02",
+        "product": "D.C.D",
+        "volume": 20,
+        "purchasePrice": 90,
+        "salePrice": 99.83,
+        "profit": 196.59999999999997,
+        "shift": "A",
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.404Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.404Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0d6ae0bc3582af8f9e47"
+        },
+        "date": "2026-05-05",
+        "product": "D.C.D",
+        "volume": 20,
+        "purchasePrice": 85,
+        "salePrice": 99.83,
+        "profit": 296.59999999999997,
+        "shift": "B",
+        "remark": "MOU से",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:31:06.405Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:31:06.405Z"
+        },
+        "__v": 0
+      }
+    ],
+    "users": [],
+    "securenotes": [
+      {
+        "_id": {
+          "$oid": "69e9003db3a3cdcc37c7ed4b"
+        },
+        "title": "ok",
+        "username": "rohit",
+        "password": "123456",
+        "website": "www",
+        "note": "okkkkk",
+        "color": "bg-orange-200",
+        "favorite": false,
+        "createdAt": {
+          "$date": "2026-04-22T17:07:09.483Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-22T17:07:09.483Z"
+        },
+        "__v": 0
+      }
+    ],
+    "backuprecords": [],
+    "customerdrivers": [
+      {
+        "_id": {
+          "$oid": "69e8ffe3b3a3cdcc37c7ec5f"
+        },
+        "name": "Deepak Nagar ",
+        "number": "6465",
+        "gadiNumber": "mp645654",
+        "transportName": "ratlam",
+        "route": "j to p",
+        "carrierId": "5468465",
+        "remark": "Ok",
+        "createdAt": {
+          "$date": "2026-04-22T17:05:39.659Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-22T17:05:39.659Z"
+        },
+        "__v": 0
+      }
+    ],
+    "expenses": [
+      {
+        "_id": {
+          "$oid": "69e90043b3a3cdcc37c7ed60"
+        },
+        "date": "2026-04-21",
+        "category": "Maintenance",
+        "description": "okk",
+        "amount": 5000,
+        "paymentMode": "UPI",
+        "addedBy": "Account Team",
+        "createdAt": {
+          "$date": "2026-04-22T17:07:15.945Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:32:12.285Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69ef59db76ffe72e5dad5b9b"
+        },
+        "date": "2026-04-27",
+        "category": "Food",
+        "description": "ok",
+        "amount": 200,
+        "paymentMode": "UPI",
+        "addedBy": "Deepak Nagar",
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "createdByRole": "Employee",
+        "expenseSource": "employee",
+        "createdAt": {
+          "$date": "2026-04-27T12:43:07.185Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-27T12:43:07.185Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69ef6b6b76ffe72e5dad5eb4"
+        },
+        "date": "2026-04-29",
+        "category": "Stationery",
+        "description": "ok",
+        "amount": 500,
+        "paymentMode": "Cash",
+        "addedBy": "Deepak Nagar",
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "createdByRole": "Employee",
+        "expenseSource": "employee",
+        "createdAt": {
+          "$date": "2026-04-27T13:58:03.944Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-27T13:58:03.944Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69f10cd796c0a401a7e95189"
+        },
+        "date": "2026-04-28",
+        "category": "Food",
+        "description": "fooo",
+        "amount": 5000,
+        "paymentMode": "UPI",
+        "addedBy": "Deepak Nagar",
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "createdByRole": "Employee",
+        "expenseSource": "employee",
+        "createdAt": {
+          "$date": "2026-04-28T19:39:03.227Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:25:33.243Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d30523c48012f840f56c0"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": "dcvdcxvcx",
+        "amount": 500,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:26:26.427Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:26:26.427Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d305d3c48012f840f56c7"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": "5",
+        "amount": 5301,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:26:37.917Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:26:37.917Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d30663c48012f840f56cc"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": "4568",
+        "amount": 65556,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:26:46.619Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:26:46.619Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d30713c48012f840f56d3"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": "'lklnm",
+        "amount": 3546,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:26:57.691Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:26:57.691Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d30783c48012f840f56db"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": "';;lnkj",
+        "amount": 65,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:27:04.333Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:27:04.333Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d30823c48012f840f56e0"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": "jhg",
+        "amount": 6953,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:27:14.827Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:27:14.827Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d30883c48012f840f56e7"
+        },
+        "date": "2026-06-13",
+        "category": "Electricity",
+        "description": ";kjkjh",
+        "amount": 653,
+        "paymentMode": "Cash",
+        "addedBy": "Admin",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:27:20.512Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:27:20.512Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d31f13c48012f840f5764"
+        },
+        "date": "2026-06-13",
+        "category": "Salary",
+        "description": "fg",
+        "amount": 500,
+        "paymentMode": "dsm",
+        "addedBy": "deepak",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T10:33:21.945Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T10:33:55.458Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2d71fc70d7361ec0c8283d"
+        },
+        "date": "2026-06-13",
+        "category": "khana",
+        "description": "OKK",
+        "amount": 505,
+        "paymentMode": "Cash",
+        "addedBy": "SHIVAM",
+        "createdByRole": "Admin",
+        "expenseSource": "station",
+        "createdAt": {
+          "$date": "2026-06-13T15:06:36.622Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T17:02:48.796Z"
+        },
+        "__v": 0,
+        "lastEditedAt": {
+          "$date": "2026-06-13T17:02:48.781Z"
+        },
+        "lastEditedBy": "Admin",
+        "lastEditedByRole": "Admin"
+      }
+    ],
+    "loginsessions": [
+      {
+        "_id": {
+          "$oid": "6aaa17e9371d6156daf56015"
+        },
+        "userRole": "Admin",
+        "userName": "Admin",
+        "employeeId": null,
+        "logoutAt": null,
+        "expiresAt": {
+          "$date": "2026-09-21T04:15:37.373Z"
+        },
+        "status": "Active",
+        "ipAddress": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "browser": "Chrome",
+        "os": "Windows",
+        "deviceType": "Desktop",
+        "loginAt": {
+          "$date": "2026-09-16T04:15:37.376Z"
+        },
+        "lastSeenAt": {
+          "$date": "2026-09-16T04:20:53.711Z"
+        },
+        "createdAt": {
+          "$date": "2026-09-16T04:15:37.378Z"
+        },
+        "updatedAt": {
+          "$date": "2026-09-16T04:20:53.711Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6aaa193cf87d2c137a048aa7"
+        },
+        "userRole": "Admin",
+        "userName": "Admin",
+        "employeeId": null,
+        "logoutAt": null,
+        "expiresAt": {
+          "$date": "2026-09-21T04:21:16.266Z"
+        },
+        "status": "Active",
+        "ipAddress": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "browser": "Chrome",
+        "os": "Windows",
+        "deviceType": "Desktop",
+        "loginAt": {
+          "$date": "2026-09-16T04:21:16.269Z"
+        },
+        "lastSeenAt": {
+          "$date": "2026-09-16T05:09:35.942Z"
+        },
+        "createdAt": {
+          "$date": "2026-09-16T04:21:16.272Z"
+        },
+        "updatedAt": {
+          "$date": "2026-09-16T05:09:35.942Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6aaa25f39e7a8da3715fcc81"
+        },
+        "userRole": "Admin",
+        "userName": "Admin",
+        "employeeId": null,
+        "logoutAt": null,
+        "expiresAt": {
+          "$date": "2026-09-21T05:15:31.261Z"
+        },
+        "status": "Active",
+        "ipAddress": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "browser": "Chrome",
+        "os": "Windows",
+        "deviceType": "Desktop",
+        "loginAt": {
+          "$date": "2026-09-16T05:15:31.265Z"
+        },
+        "lastSeenAt": {
+          "$date": "2026-09-16T05:17:23.557Z"
+        },
+        "createdAt": {
+          "$date": "2026-09-16T05:15:31.270Z"
+        },
+        "updatedAt": {
+          "$date": "2026-09-16T05:17:23.557Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6aaa29fc57271f60835973d9"
+        },
+        "userRole": "Admin",
+        "userName": "Admin",
+        "employeeId": null,
+        "logoutAt": null,
+        "expiresAt": {
+          "$date": "2026-09-21T05:32:44.141Z"
+        },
+        "status": "Active",
+        "ipAddress": "127.0.0.1",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+        "browser": "Chrome",
+        "os": "Windows",
+        "deviceType": "Desktop",
+        "loginAt": {
+          "$date": "2026-09-16T05:32:44.143Z"
+        },
+        "lastSeenAt": {
+          "$date": "2026-09-16T05:38:06.529Z"
+        },
+        "createdAt": {
+          "$date": "2026-09-16T05:32:44.146Z"
+        },
+        "updatedAt": {
+          "$date": "2026-09-16T05:38:06.529Z"
+        },
+        "__v": 0
+      }
+    ],
+    "employees": [
+      {
+        "_id": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "name": "Deepak Nagar",
+        "phone": "45965",
+        "role": "admin",
+        "shift": "A",
+        "salary": 10000,
+        "tshirt": "L",
+        "pant": "28",
+        "shoes": "5",
+        "status": "Active",
+        "createdAt": {
+          "$date": "2026-04-22T17:07:17.088Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T04:50:48.511Z"
+        },
+        "__v": 0,
+        "loginPassword": "5",
+        "lastEditedAt": {
+          "$date": "2026-06-14T04:50:48.500Z"
+        },
+        "lastEditedBy": "Admin",
+        "lastEditedByRole": "Admin"
+      }
+    ],
+    "tankerdeliveries": [
+      {
+        "_id": {
+          "$oid": "6a3416fee3964f0b8840a38c"
+        },
+        "date": "2026-06-18",
+        "truckNo": "456",
+        "transportName": ",jjhgh",
+        "driverName": "asf",
+        "number": "4562",
+        "product": "Diesel",
+        "qty": 24000,
+        "initialStock": 3669.12,
+        "initialTemp": 37.55,
+        "finalStock": 26570.27,
+        "finalTemp": 35.82,
+        "fuelSales": 700.4,
+        "unloadedQty": 23601.55,
+        "lossGain": 398.4500000000007,
+        "supplier": ",jjhgh",
+        "fuel": "Diesel",
+        "quantity": 24000,
+        "invoice": "456",
+        "createdBy": "Admin",
+        "createdAt": {
+          "$date": "2026-06-18T16:04:14.556Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-18T16:05:55.624Z"
+        },
+        "__v": 0,
+        "lastEditedAt": {
+          "$date": "2026-06-18T16:05:55.623Z"
+        },
+        "lastEditedBy": "Admin",
+        "lastEditedByRole": "Admin"
+      }
+    ],
+    "petrolsales": [],
+    "employeeattendances": [
+      {
+        "_id": {
+          "$oid": "6a7b941c2be8266a5d9dc962"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "date": {
+          "$date": "2026-08-09T00:00:00Z"
+        },
+        "status": "present",
+        "shortage": 0,
+        "advanceCash": 0,
+        "advancePetrol": 0,
+        "bonusAmount": 0,
+        "remark": "",
+        "createdByRole": "Admin",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-11T21:29:00.412Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-11T21:29:00.412Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7b94282be8266a5d9dc96e"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "date": {
+          "$date": "2026-08-10T00:00:00Z"
+        },
+        "status": "half",
+        "shortage": 0,
+        "advanceCash": 0,
+        "advancePetrol": 0,
+        "bonusAmount": 0,
+        "remark": "",
+        "createdByRole": "Admin",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-11T21:29:12.730Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-11T21:29:12.730Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7b943b2be8266a5d9dc97a"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "date": {
+          "$date": "2026-08-11T00:00:00Z"
+        },
+        "status": "present_half",
+        "shortage": 0,
+        "advanceCash": 0,
+        "advancePetrol": 0,
+        "bonusAmount": 0,
+        "remark": "",
+        "createdByRole": "Admin",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-11T21:29:31.699Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-11T21:29:31.699Z"
+        },
+        "__v": 0
+      }
+    ],
+    "shiftschedules": [
+      {
+        "_id": {
+          "$oid": "69ef58e076ffe72e5dad5b5c"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "appliesToAll": false,
+        "scheduleType": "recurring",
+        "weekDay": 3,
+        "shiftName": "B Shift",
+        "startTime": "02:00",
+        "endTime": "10:00",
+        "period": "night",
+        "notes": "night",
+        "createdByRole": "Manager",
+        "createdByName": "Manager",
+        "createdAt": {
+          "$date": "2026-04-27T12:38:56.729Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-27T12:38:56.729Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69f1090d96c0a401a7e950ce"
+        },
+        "employeeId": null,
+        "appliesToAll": true,
+        "scheduleType": "one-time",
+        "date": {
+          "$date": "2026-04-28T00:00:00Z"
+        },
+        "shiftName": "A Shift",
+        "startTime": "08:00",
+        "endTime": "20:02",
+        "period": "night",
+        "notes": "lkhii",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "createdAt": {
+          "$date": "2026-04-28T19:22:53.553Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:22:53.553Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69f10eac96c0a401a7e9525f"
+        },
+        "employeeId": null,
+        "appliesToAll": true,
+        "scheduleType": "recurring",
+        "weekDay": 1,
+        "shiftName": "A Shift",
+        "startTime": "08:00",
+        "endTime": "16:00",
+        "period": "day",
+        "notes": "",
+        "createdByRole": "Admin",
+        "createdByName": "Admin",
+        "createdAt": {
+          "$date": "2026-04-28T19:46:52.365Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-28T19:46:52.365Z"
+        },
+        "__v": 0
+      }
+    ],
+    "tanks": [],
+    "ttdrivers": [
+      {
+        "_id": {
+          "$oid": "69e9003fb3a3cdcc37c7ed50"
+        },
+        "name": "Rohit Dhakad",
+        "number": "64654752",
+        "ttNumber": "836565",
+        "transportName": "uyu",
+        "short": "+55",
+        "remark": "ok",
+        "createdAt": {
+          "$date": "2026-04-22T17:07:11.931Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-22T17:07:11.931Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69e90757b3a3cdcc37c7f2e8"
+        },
+        "name": "deepak",
+        "number": "646555",
+        "ttNumber": "83656536fd",
+        "transportName": "h t i",
+        "short": "100",
+        "remark": "okklo",
+        "createdAt": {
+          "$date": "2026-04-22T17:37:27.465Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-22T17:37:27.465Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69e90758b3a3cdcc37c7f2ed"
+        },
+        "name": "Rohit ",
+        "number": "646555",
+        "ttNumber": "836565",
+        "transportName": "h t o",
+        "short": "-40",
+        "remark": "okk",
+        "createdAt": {
+          "$date": "2026-04-22T17:37:28.879Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-22T17:37:28.879Z"
+        },
+        "__v": 0
+      }
+    ],
+    "mduentries": [
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9e99"
+        },
+        "date": "2026-03-22",
+        "openingStock": 1075,
+        "decant": 875,
+        "sale": 0,
+        "physicalStock": 1950,
+        "lossGain": 0,
+        "rate": 96,
+        "remark": "0",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.314Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.314Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9e9b"
+        },
+        "date": "2026-03-23",
+        "openingStock": 1950,
+        "decant": 0,
+        "sale": 1619,
+        "physicalStock": 340,
+        "lossGain": 9,
+        "rate": 92.2,
+        "remark": "+9",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.317Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.317Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9e9d"
+        },
+        "date": "2026-03-26",
+        "openingStock": 560,
+        "decant": 1395,
+        "sale": 1803,
+        "physicalStock": 165,
+        "lossGain": 13,
+        "rate": 92.2,
+        "remark": "+18",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.318Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.318Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9e9f"
+        },
+        "date": "2026-03-27",
+        "openingStock": 165,
+        "decant": 1800,
+        "sale": 1787,
+        "physicalStock": 200,
+        "lossGain": 22,
+        "rate": 92.2,
+        "remark": "+22",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.319Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.319Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9ea1"
+        },
+        "date": "2026-03-28",
+        "openingStock": 200,
+        "decant": 700,
+        "sale": 601,
+        "physicalStock": 310,
+        "lossGain": 11,
+        "rate": 92.2,
+        "remark": "+11",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.320Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.320Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9ea3"
+        },
+        "date": "2026-03-29",
+        "openingStock": 310,
+        "decant": 1640,
+        "sale": 0,
+        "physicalStock": 1950,
+        "lossGain": 0,
+        "rate": 96.5,
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.322Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.322Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9eab"
+        },
+        "date": "2026-04-06",
+        "openingStock": 1950,
+        "decant": 888,
+        "sale": 444,
+        "physicalStock": 1500,
+        "lossGain": -894,
+        "rate": 92.05,
+        "remark": "-6",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.334Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.334Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9ead"
+        },
+        "date": "2026-04-08",
+        "openingStock": 1500,
+        "decant": 854,
+        "sale": 1400,
+        "physicalStock": 130,
+        "lossGain": -824,
+        "rate": 92.05,
+        "remark": "+30",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.337Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.337Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9eaf"
+        },
+        "date": "2026-04-09",
+        "openingStock": 130,
+        "decant": 451,
+        "sale": 100,
+        "physicalStock": 110,
+        "lossGain": -371,
+        "rate": 92.05,
+        "remark": "+10",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.338Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.338Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9eb1"
+        },
+        "date": "2026-04-15",
+        "openingStock": 110,
+        "decant": 852,
+        "sale": 600,
+        "physicalStock": 120,
+        "lossGain": -242,
+        "rate": 92.2,
+        "remark": "+20",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.338Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.338Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9eb3"
+        },
+        "date": "2026-04-20",
+        "openingStock": 110,
+        "decant": 1850,
+        "sale": 551,
+        "physicalStock": 1960,
+        "lossGain": 551,
+        "rate": 96,
+        "remark": "",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.339Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.339Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9eb5"
+        },
+        "date": "2026-04-19",
+        "openingStock": 120,
+        "decant": 530,
+        "sale": 551,
+        "physicalStock": 110,
+        "lossGain": 11,
+        "rate": 92.05,
+        "remark": "+11",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.340Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.340Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9eba"
+        },
+        "date": "2026-04-28",
+        "openingStock": 1960,
+        "decant": 65,
+        "sale": 521,
+        "physicalStock": 1325,
+        "lossGain": -179,
+        "rate": 92.05,
+        "remark": "+7",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.350Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.350Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9ebc"
+        },
+        "date": "2026-05-06",
+        "openingStock": 1325,
+        "decant": 625,
+        "sale": 1076,
+        "physicalStock": 890,
+        "lossGain": 16,
+        "rate": 92.05,
+        "remark": "+16",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.351Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.351Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a7e0e63e0bc3582af8f9ebe"
+        },
+        "date": "2026-05-08",
+        "openingStock": 890,
+        "decant": 52,
+        "sale": 1200,
+        "physicalStock": 963,
+        "lossGain": 1221,
+        "rate": 92.05,
+        "remark": "+50",
+        "createdBy": "Admin",
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-08-13T18:35:15.352Z"
+        },
+        "updatedAt": {
+          "$date": "2026-08-13T18:35:15.352Z"
+        },
+        "__v": 0
+      }
+    ],
+    "employeedailyreports": [
+      {
+        "_id": {
+          "$oid": "69ed0ca6e638c511d6227964"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "reportDate": {
+          "$date": "2026-04-25T00:00:00Z"
+        },
+        "location": "JAORA EXPRESSWAY",
+        "shift": "A",
+        "lube": "1",
+        "manualTotalEnabled": true,
+        "manualTotalSales": 50000,
+        "totals": {
+          "grandAmount": 0,
+          "cashTotal": 30000,
+          "cashNet": 30000,
+          "onlineTotal": 8000,
+          "fleetAmount": 6000,
+          "creditTotal": 0,
+          "totalCollection": 44000,
+          "shortOver": -6000,
+          "hhtTotal": 0,
+          "difference": -50000,
+          "denominationTotal": 0,
+          "summaryTotal": 14000
+        },
+        "totaliserRows": [
+          {
+            "label": "HSD - (Nozzle - No. 1)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 2)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "HSD - (Nozzle - No. 3)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 4)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "HSD - (Nozzle - No. 5)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 6)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "HSD - (Nozzle - No. 7)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 8)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 2",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 3",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 4",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 5",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Others",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          }
+        ],
+        "cashDrops": [
+          0,
+          0,
+          0,
+          0,
+          30000
+        ],
+        "online": {
+          "upiNo": 0,
+          "upiAmt": 5000,
+          "cardNo": 0,
+          "cardAmt": 3000
+        },
+        "fleet": {
+          "count": 0,
+          "amount": 6000
+        },
+        "creditCustomers": [],
+        "hht": {
+          "creditCard": 0,
+          "fleet": 0,
+          "other": 0
+        },
+        "denominations": [
+          {
+            "label": "500",
+            "value": 500,
+            "qty": 0
+          },
+          {
+            "label": "200",
+            "value": 200,
+            "qty": 0
+          },
+          {
+            "label": "100",
+            "value": 100,
+            "qty": 0
+          },
+          {
+            "label": "50",
+            "value": 50,
+            "qty": 0
+          },
+          {
+            "label": "20",
+            "value": 20,
+            "qty": 0
+          },
+          {
+            "label": "10",
+            "value": 10,
+            "qty": 0
+          },
+          {
+            "label": "COIN",
+            "value": 1,
+            "qty": 0
+          }
+        ],
+        "creditList": [],
+        "signatures": {
+          "systemLogin": "",
+          "shiftSupervisor": ""
+        },
+        "createdByRole": "Employee",
+        "createdByEmployeeId": "69e90045b3a3cdcc37c7ed65",
+        "createdByName": "Deepak Nagar",
+        "updatedByRole": "Employee",
+        "updatedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-04-25T18:49:10.993Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-25T18:49:10.993Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a10823570c44e16f7e63b9e"
+        },
+        "employeeId": {
+          "$oid": "69e90045b3a3cdcc37c7ed65"
+        },
+        "employeeName": "Deepak Nagar",
+        "reportDate": {
+          "$date": "2026-05-22T00:00:00Z"
+        },
+        "location": "JAORA EXPRESSWAY",
+        "shift": "",
+        "lube": "",
+        "manualTotalEnabled": false,
+        "manualTotalSales": 0,
+        "totals": {
+          "grandAmount": 0,
+          "cashTotal": 0,
+          "cashNet": 0,
+          "onlineTotal": 0,
+          "fleetAmount": 0,
+          "creditTotal": 0,
+          "totalCollection": 0,
+          "shortOver": 0,
+          "hhtTotal": 0,
+          "difference": 0,
+          "denominationTotal": 0,
+          "summaryTotal": 0
+        },
+        "totaliserRows": [
+          {
+            "label": "HSD - (Nozzle - No. 1)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 2)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "HSD - (Nozzle - No. 3)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 4)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "HSD - (Nozzle - No. 5)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 6)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "HSD - (Nozzle - No. 7)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "MS - (Nozzle - No. 8)",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 2",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 3",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 4",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Lubes - 5",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          },
+          {
+            "label": "Others",
+            "closing": 0,
+            "opening": 0,
+            "dispensed": 0,
+            "pumpTest": 0,
+            "ownUse": 0,
+            "netDispensed": 0,
+            "rate": 0,
+            "amount": 0
+          }
+        ],
+        "cashDrops": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "online": {
+          "upiNo": 0,
+          "upiAmt": 0,
+          "cardNo": 0,
+          "cardAmt": 0
+        },
+        "fleet": {
+          "count": 0,
+          "amount": 0
+        },
+        "creditCustomers": [],
+        "hht": {
+          "creditCard": 0,
+          "fleet": 0,
+          "other": 0
+        },
+        "denominations": [
+          {
+            "label": "500",
+            "value": 500,
+            "qty": 0
+          },
+          {
+            "label": "200",
+            "value": 200,
+            "qty": 0
+          },
+          {
+            "label": "100",
+            "value": 100,
+            "qty": 0
+          },
+          {
+            "label": "50",
+            "value": 50,
+            "qty": 0
+          },
+          {
+            "label": "20",
+            "value": 20,
+            "qty": 0
+          },
+          {
+            "label": "10",
+            "value": 10,
+            "qty": 0
+          },
+          {
+            "label": "COIN",
+            "value": 1,
+            "qty": 0
+          }
+        ],
+        "creditList": [],
+        "signatures": {
+          "systemLogin": "",
+          "shiftSupervisor": ""
+        },
+        "createdByRole": "Employee",
+        "createdByEmployeeId": "69e90045b3a3cdcc37c7ed65",
+        "createdByName": "Deepak Nagar",
+        "updatedByRole": "Employee",
+        "updatedByName": "Deepak Nagar",
+        "createdAt": {
+          "$date": "2026-05-22T16:20:05.692Z"
+        },
+        "updatedAt": {
+          "$date": "2026-05-22T16:20:05.692Z"
+        },
+        "__v": 0
+      }
+    ],
+    "densitycalculatorentries": [],
+    "settings": [
+      {
+        "_id": {
+          "$oid": "69ee0968987348a330632db6"
+        },
+        "companyName": "",
+        "stationName": "",
+        "gstNumber": "",
+        "address": "",
+        "contacts": [],
+        "loginPasswords": {
+          "admin": "147",
+          "manager": "456",
+          "employee": "789"
+        },
+        "__v": 0,
+        "passwordSecurity": {
+          "masterUnlockPassword": "jiobp",
+          "authVersion": 2,
+          "lastPasswordChangedAt": {
+            "$date": "2026-05-05T18:51:20.679Z"
+          }
+        },
+        "updatedAt": {
+          "$date": "2026-05-05T18:51:20.689Z"
+        }
+      }
+    ],
+    "backuprestorelogs": [
+      {
+        "_id": {
+          "$oid": "6aaa2a2757271f6083597475"
+        },
+        "action": "HEALTH_CHECK",
+        "backupId": null,
+        "fileName": "Uploaded backup",
+        "performedBy": "Admin",
+        "status": "Success",
+        "message": "Backup health check passed",
+        "details": {
+          "collections": 1,
+          "records": 38
+        },
+        "createdAt": {
+          "$date": "2026-09-16T05:33:27.089Z"
+        },
+        "updatedAt": {
+          "$date": "2026-09-16T05:33:27.089Z"
+        },
+        "__v": 0
+      }
+    ],
+    "meterreadings": [
+      {
+        "_id": {
+          "$oid": "69edbcd7e53a1f6738c5ddc9"
+        },
+        "nozzle": "02",
+        "shift": "Morning",
+        "opening": 55,
+        "closing": 33,
+        "fuelSold": -22,
+        "date": "2026-04-26",
+        "__v": 0
+      }
+    ],
+    "employeedashboardsettings": [
+      {
+        "_id": {
+          "$oid": "6a2e391fb7c3124d342b2d01"
+        },
+        "pages": [
+          {
+            "key": "overview",
+            "label": "Overview",
+            "path": "/employee",
+            "order": 1,
+            "hidden": false,
+            "buttons": []
+          },
+          {
+            "key": "info",
+            "label": "My Info",
+            "path": "/employee/info",
+            "order": 2,
+            "hidden": false,
+            "buttons": []
+          },
+          {
+            "key": "attendance",
+            "label": "My Attendance",
+            "path": "/employee/attendance",
+            "order": 3,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "newEntry",
+                "label": "New Entry",
+                "enabled": false
+              },
+              {
+                "key": "editEntry",
+                "label": "Edit Entry",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "leaves",
+            "label": "Leave Management",
+            "path": "/employee/leaves",
+            "order": 4,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "applyLeave",
+                "label": "Apply Leave",
+                "enabled": true
+              }
+            ]
+          },
+          {
+            "key": "shifts",
+            "label": "Shift Schedule",
+            "path": "/employee/shifts",
+            "order": 5,
+            "hidden": false,
+            "buttons": []
+          },
+          {
+            "key": "tasks",
+            "label": "My Tasks",
+            "path": "/employee/tasks",
+            "order": 6,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "updateStatus",
+                "label": "Update Task Status",
+                "enabled": true
+              }
+            ]
+          },
+          {
+            "key": "expenses",
+            "label": "My Expenses",
+            "path": "/employee/expenses",
+            "order": 7,
+            "hidden": true,
+            "buttons": [
+              {
+                "key": "newExpense",
+                "label": "New Expense",
+                "enabled": true
+              },
+              {
+                "key": "editExpense",
+                "label": "Edit Expense",
+                "enabled": true
+              }
+            ]
+          },
+          {
+            "key": "smartCalculator",
+            "label": "Smart Calculator",
+            "path": "/employee/smart-calculator",
+            "order": 8,
+            "hidden": false,
+            "buttons": []
+          },
+          {
+            "key": "densityCalculator",
+            "label": "Density Calculator",
+            "path": "/employee/density-calculator",
+            "order": 9,
+            "hidden": false,
+            "buttons": []
+          },
+          {
+            "key": "lubricants",
+            "label": "My Lubricants",
+            "path": "/employee/lubricants",
+            "order": 10,
+            "hidden": false,
+            "buttons": [
+              {
+                "key": "newSale",
+                "label": "New Sale",
+                "enabled": false
+              },
+              {
+                "key": "editSale",
+                "label": "Edit Sale",
+                "enabled": false
+              }
+            ]
+          },
+          {
+            "key": "performance",
+            "label": "Performance",
+            "path": "/employee/performance",
+            "order": 11,
+            "hidden": true,
+            "buttons": []
+          },
+          {
+            "key": "salary",
+            "label": "My Salary",
+            "path": "/employee/salary",
+            "order": 12,
+            "hidden": false,
+            "buttons": []
+          },
+          {
+            "key": "dailyReport",
+            "label": "My Daily Sheet",
+            "path": "/employee/daily-report",
+            "order": 13,
+            "hidden": true,
+            "buttons": [
+              {
+                "key": "newDailySheet",
+                "label": "New Daily Sheet",
+                "enabled": true
+              },
+              {
+                "key": "submitDailySheet",
+                "label": "Submit Daily Sheet",
+                "enabled": true
+              }
+            ]
+          },
+          {
+            "key": "notifications",
+            "label": "Notifications",
+            "path": "/employee/notifications",
+            "order": 14,
+            "hidden": false,
+            "buttons": []
+          }
+        ],
+        "updatedBy": "Admin",
+        "updatedByRole": "Admin",
+        "createdAt": {
+          "$date": "2026-06-14T05:16:15.570Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T05:50:29.696Z"
+        },
+        "__v": 1
+      }
+    ],
+    "customertransactions": [
+      {
+        "_id": {
+          "$oid": "69edbd15e53a1f6738c5de06"
+        },
+        "customerId": {
+          "$oid": "69edbd07e53a1f6738c5de00"
+        },
+        "type": "fuel",
+        "fuelType": "Petrol",
+        "liters": 55,
+        "rate": 20,
+        "amount": 1100,
+        "payment": 0,
+        "balance": 1100,
+        "date": {
+          "$date": "2026-04-26T00:00:00Z"
+        },
+        "createdAt": {
+          "$date": "2026-04-26T07:21:57.627Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-26T07:21:57.627Z"
+        },
+        "__v": 0
+      }
+    ],
+    "mobiledispensers": [
+      {
+        "_id": {
+          "$oid": "69ed0818e638c511d6227743"
+        },
+        "date": {
+          "$date": "2026-04-25T00:00:00Z"
+        },
+        "stockAdd": 200,
+        "startNozzle": 1,
+        "endNozzle": 50,
+        "saleLiter": 49,
+        "startKM": 19,
+        "endKM": 25,
+        "totalKM": 6,
+        "profit": 122.5,
+        "dieselCost": 30,
+        "finalProfit": 92.5,
+        "createdAt": {
+          "$date": "2026-04-25T18:29:44.870Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-25T18:29:44.870Z"
+        },
+        "__v": 0
+      }
+    ],
+    "notifications": [
+      {
+        "_id": {
+          "$oid": "69e90073b3a3cdcc37c7ed94"
+        },
+        "title": "ok",
+        "message": "depak",
+        "sender": {
+          "role": "Admin",
+          "name": "Admin"
+        },
+        "targetRoles": [],
+        "targetEmployeeIds": [
+          {
+            "$oid": "69e90045b3a3cdcc37c7ed65"
+          }
+        ],
+        "readBy": [
+          {
+            "userId": "Employee:69e90045b3a3cdcc37c7ed65",
+            "role": "Employee",
+            "name": "Deepak Nagar ",
+            "employeeId": "69e90045b3a3cdcc37c7ed65",
+            "readAt": {
+              "$date": "2026-04-22T17:10:59.599Z"
+            }
+          }
+        ],
+        "createdAt": {
+          "$date": "2026-04-22T17:08:03.693Z"
+        },
+        "updatedAt": {
+          "$date": "2026-04-22T17:10:59.603Z"
+        },
+        "__v": 1
+      },
+      {
+        "_id": {
+          "$oid": "69f515118d1e2cf873260702"
+        },
+        "title": "Smart Calculator Entry Shared",
+        "message": "Deepak Nagar shared a credit entry for No Name of Rs 37500",
+        "sender": {
+          "role": "Employee",
+          "name": "Deepak Nagar",
+          "employeeId": "69e90045b3a3cdcc37c7ed65"
+        },
+        "targetRoles": [
+          "Admin",
+          "Manager"
+        ],
+        "targetEmployeeIds": [],
+        "recipientKeys": [
+          "Admin:Admin",
+          "Manager:Manager"
+        ],
+        "readBy": [],
+        "createdAt": {
+          "$date": "2026-05-01T21:03:13.982Z"
+        },
+        "updatedAt": {
+          "$date": "2026-05-01T21:03:13.982Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "69f515cc8d1e2cf87326071d"
+        },
+        "title": "Smart Calculator Entry Shared",
+        "message": "Deepak Nagar shared a credit entry for No Name of Rs 2500",
+        "sender": {
+          "role": "Employee",
+          "name": "Deepak Nagar",
+          "employeeId": "69e90045b3a3cdcc37c7ed65"
+        },
+        "targetRoles": [
+          "Admin",
+          "Manager"
+        ],
+        "targetEmployeeIds": [],
+        "recipientKeys": [
+          "Admin:Admin",
+          "Manager:Manager"
+        ],
+        "readBy": [],
+        "createdAt": {
+          "$date": "2026-05-01T21:06:20.184Z"
+        },
+        "updatedAt": {
+          "$date": "2026-05-01T21:06:20.184Z"
+        },
+        "__v": 0
+      }
+    ],
+    "invoicedetails": [],
+    "cardswipes": [
+      {
+        "_id": {
+          "$oid": "6a2d755070d7361ec0c828f2"
+        },
+        "date": {
+          "$date": "2026-06-13T00:00:00Z"
+        },
+        "time": "00:00",
+        "amount": 54000,
+        "charges": 540,
+        "txnDetails": "-",
+        "machine": "Self",
+        "paymentMethod": "Cash",
+        "remark": "ok",
+        "createdAt": {
+          "$date": "2026-06-13T15:20:48.140Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-13T15:20:48.140Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2e3172ad89a82acf1030cf"
+        },
+        "date": {
+          "$date": "2026-06-14T00:00:00Z"
+        },
+        "time": "",
+        "amount": 50000,
+        "charges": 500,
+        "txnDetails": "",
+        "machine": "Self",
+        "paymentMethod": "Online",
+        "remark": "",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-06-14T04:43:30.383Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T04:43:30.383Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2e3172ad89a82acf1030d2"
+        },
+        "date": {
+          "$date": "2026-06-14T00:00:00Z"
+        },
+        "time": "",
+        "amount": 300000,
+        "charges": 300,
+        "txnDetails": "",
+        "machine": "Self",
+        "paymentMethod": "Cash",
+        "remark": "",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-06-14T04:43:30.400Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T04:43:30.400Z"
+        },
+        "__v": 0
+      },
+      {
+        "_id": {
+          "$oid": "6a2e3206ad89a82acf1030ed"
+        },
+        "date": {
+          "$date": "2026-06-14T00:00:00Z"
+        },
+        "time": "",
+        "amount": 60000,
+        "charges": 600,
+        "txnDetails": "",
+        "machine": "DSM",
+        "paymentMethod": "Cash",
+        "remark": "",
+        "lastEditedAt": null,
+        "lastEditedBy": "",
+        "lastEditedByRole": "",
+        "createdAt": {
+          "$date": "2026-06-14T04:45:58.045Z"
+        },
+        "updatedAt": {
+          "$date": "2026-06-14T04:45:58.045Z"
+        },
+        "__v": 0
+      }
+    ],
+    "dieselsales": []
+  }
+}

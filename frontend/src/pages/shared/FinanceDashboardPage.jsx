@@ -41,6 +41,7 @@ import { getInvoiceDetails } from "../../services/invoiceDetailApi"
 import { getExpenses } from "../../services/expenseApi"
 import { getEmployees } from "../../services/employeeApi"
 import { getAttendance } from "../../services/attendanceApi"
+import { getCustomers } from "../../services/customerApi"
 
 const currentMonth = () => new Date().toISOString().slice(0, 7)
 const today = () => new Date().toISOString().slice(0, 10)
@@ -322,6 +323,7 @@ export default function FinanceDashboardPage() {
   const [showLegacyModal, setShowLegacyModal] = useState(false)
   const [chartTab, setChartTab] = useState("all")
   const [cashflowPeriod, setCashflowPeriod] = useState("monthly")
+  const [pnlPeriod, setPnlPeriod] = useState("monthly")
   const [legacySearch, setLegacySearch] = useState("")
 
   const [data, setData] = useState({
@@ -333,6 +335,7 @@ export default function FinanceDashboardPage() {
     invoiceDetails: [],
     expenses: [],
     employees: [],
+    customers: [],
     attendanceByEmployee: {},
   })
 
@@ -340,7 +343,7 @@ export default function FinanceDashboardPage() {
     setLoading(true)
     setError("")
     try {
-      const [cardSwipe, lubricants, mdu, dcd, dailySales, invoiceDetails, expenses, employees] = await Promise.all([
+      const [cardSwipe, lubricants, mdu, dcd, dailySales, invoiceDetails, expenses, employees, customers] = await Promise.all([
         getCardSwipeEntries(),
         getLubricants(),
         getMduEntries(),
@@ -349,6 +352,7 @@ export default function FinanceDashboardPage() {
         getInvoiceDetails(),
         getExpenses(),
         getEmployees(),
+        getCustomers(),
       ])
 
       const attendancePairs = await Promise.all(
@@ -371,6 +375,7 @@ export default function FinanceDashboardPage() {
         invoiceDetails: invoiceDetails || [],
         expenses: expenses || [],
         employees: employees || [],
+        customers: customers || [],
         attendanceByEmployee: Object.fromEntries(attendancePairs),
       })
     } catch (err) {
@@ -385,6 +390,49 @@ export default function FinanceDashboardPage() {
   }, [])
 
   const metrics = useMemo(() => calculateMetricsForPeriod(data, filters), [data, filters])
+
+  const pnlMetrics = useMemo(() => {
+    if (pnlPeriod === "yearly") {
+      const year = (filters.month || currentMonth()).slice(0, 4)
+      return calculateMetricsForPeriod(data, {
+        month: filters.month,
+        fromDate: `${year}-01-01`,
+        toDate: `${year}-12-31`,
+      })
+    }
+
+    return calculateMetricsForPeriod(data, { month: filters.month, fromDate: "", toDate: "" })
+  }, [data, filters.month, pnlPeriod])
+
+  const profitLossStatement = useMemo(() => {
+    const fuelProfit = pnlMetrics.msProfit + pnlMetrics.hsdProfit + pnlMetrics.dcdProfit + pnlMetrics.mduOtherProfit
+    const productLoss = Math.abs(Math.min(pnlMetrics.msProductLoss, 0)) + Math.abs(Math.min(pnlMetrics.hsdProductLoss, 0))
+    const creditPending = (data.customers || []).reduce((sum, customer) => sum + Math.max(Number(customer?.baki || 0), 0), 0)
+
+    const incomeRows = [
+      { label: "Fuel Profit", value: fuelProfit, helper: "MS, HSD, D.C.D and M.D.U margin" },
+      { label: "Lubricant Profit", value: pnlMetrics.lubricantProfit, helper: "Lubricant sales profit" },
+      { label: "Card Swipe Charges", value: pnlMetrics.cardSwipeProfit, helper: "Card swipe charge income" },
+    ]
+
+    const costRows = [
+      { label: "Expenses", value: pnlMetrics.monthExpense, helper: "Recorded station expenses" },
+      { label: "Salary & Bonus", value: pnlMetrics.earnedBonus, helper: "Employee earned salary and bonus" },
+      { label: "Product Loss", value: productLoss, helper: "Negative MS/HSD stock value" },
+    ]
+
+    const totalIncome = incomeRows.reduce((sum, row) => sum + Number(row.value || 0), 0)
+    const totalCost = costRows.reduce((sum, row) => sum + Number(row.value || 0), 0)
+
+    return {
+      incomeRows,
+      costRows,
+      totalIncome,
+      totalCost,
+      netProfit: totalIncome - totalCost,
+      creditPending,
+    }
+  }, [data.customers, pnlMetrics])
 
   const previousMetrics = useMemo(() => {
     const prevMonth = getPreviousMonth(filters.month)
@@ -587,6 +635,119 @@ export default function FinanceDashboardPage() {
           {error}
         </div>
       ) : null}
+
+      <section className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)] sm:p-5">
+        <div className="flex flex-col gap-3 border-b border-[var(--border-color)] pb-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-400">
+              Profit & Loss Statement
+            </p>
+            <h2 className="mt-1 text-xl font-black text-[color:var(--text-strong)] sm:text-2xl">
+              Station P&L Summary
+            </h2>
+            <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">
+              Fuel profit, lubricant profit, card swipe charges, expenses, salary, and credit pending in one view.
+            </p>
+          </div>
+
+          <div className="flex w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1 sm:w-auto">
+            {["monthly", "yearly"].map((period) => (
+              <button
+                key={period}
+                type="button"
+                onClick={() => setPnlPeriod(period)}
+                className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold capitalize transition-all sm:flex-none ${
+                  pnlPeriod === period
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "text-[color:var(--text-secondary)] hover:bg-[var(--bg-panel)]"
+                }`}
+              >
+                {period}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_0.9fr]">
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
+            <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                Income
+              </p>
+              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                {formatCurrency(profitLossStatement.totalIncome)}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {profitLossStatement.incomeRows.map((row) => (
+                <div key={row.label} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-[color:var(--text-strong)]">{row.label}</p>
+                      <p className="mt-0.5 text-[11px] font-medium text-[color:var(--text-secondary)]">{row.helper}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(row.value)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
+            <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-rose-500 to-orange-400" />
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-rose-700 dark:text-rose-300">
+                Cost
+              </p>
+              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-[10px] font-bold text-rose-700 dark:text-rose-300">
+                {formatCurrency(profitLossStatement.totalCost)}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {profitLossStatement.costRows.map((row) => (
+                <div key={row.label} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-[color:var(--text-strong)]">{row.label}</p>
+                      <p className="mt-0.5 text-[11px] font-medium text-[color:var(--text-secondary)]">{row.helper}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-black text-rose-600 dark:text-rose-400">{formatCurrency(row.value)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div className={`relative overflow-hidden rounded-2xl border bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)] ${
+              profitLossStatement.netProfit >= 0
+                ? "border-emerald-500/25"
+                : "border-rose-500/25"
+            }`}>
+              <div className={`absolute left-0 right-0 top-0 h-1 ${profitLossStatement.netProfit >= 0 ? "bg-emerald-500" : "bg-rose-500"}`} />
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">Net Profit</p>
+              <p className={`mt-2 text-2xl font-black ${profitLossStatement.netProfit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                {formatCurrency(profitLossStatement.netProfit)}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">
+                Income minus expenses, salary, and product loss.
+              </p>
+            </div>
+
+            <div className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
+              <div className="absolute left-0 right-0 top-0 h-1 bg-amber-500" />
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">Credit Pending</p>
+              <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
+                {formatCurrency(profitLossStatement.creditPending)}
+              </p>
+              <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">
+                Current unpaid customer balance.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Row 1: Executive Station Performance Hub + Stacked Metrics + Cash Flow Bar Chart */}
       <section className="grid gap-5 lg:grid-cols-12">
