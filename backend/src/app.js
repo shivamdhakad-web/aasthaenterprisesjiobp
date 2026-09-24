@@ -46,6 +46,7 @@ const employeeDashboardSettingRoutes = require("./routes/employeeDashboardSettin
 const managerDashboardSettingRoutes = require("./routes/managerDashboardSettingRoutes")
 const adminDashboardSettingRoutes = require("./routes/adminDashboardSettingRoutes")
 const aiRoutes = require("./routes/aiRoutes")
+const stationDocumentRoutes = require("./routes/stationDocumentRoutes")
 const app = express()
 
 app.use(cors())
@@ -112,5 +113,6 @@ app.use("/api/employee-dashboard-settings", employeeDashboardSettingRoutes)
 app.use("/api/manager-dashboard-settings", managerDashboardSettingRoutes)
 app.use("/api/admin-dashboard-settings", adminDashboardSettingRoutes)
 app.use("/api/ai", aiRoutes)
+app.use("/api/station-documents", stationDocumentRoutes)
 
 module.exports = app

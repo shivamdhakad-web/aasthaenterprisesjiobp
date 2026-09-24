@@ -95,7 +95,7 @@ function ModuleCard({ icon: Icon, title, subtitle, value, helper, tone = "emeral
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">{subtitle}</p>
-          <h3 className="mt-1 text-base font-black text-[color:var(--text-strong)]">{title}</h3>
+          <h3 className="mt-1 text-lg  font-semibold text-[color:var(--text-strong)]">{title}</h3>
         </div>
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${tones[tone] || tones.emerald}`}>
           <Icon size={19} />
@@ -103,7 +103,7 @@ function ModuleCard({ icon: Icon, title, subtitle, value, helper, tone = "emeral
       </div>
 
       <div className="mt-3 pb-2 border-b border-[var(--border-color)]">
-        <p className="text-xl font-black text-[color:var(--text-strong)]">{value}</p>
+        <p className="text-xl font-bold text-[color:var(--text-strong)]">{value}</p>
         <p className="mt-0.5 text-xs font-semibold text-[color:var(--text-secondary)]">{helper}</p>
       </div>
 
@@ -126,10 +126,10 @@ function MiniList({ items, emptyText }) {
       {items.map((item, index) => (
         <div key={`${item.title}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 transition hover:bg-[var(--bg-hover)]">
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-[color:var(--text-strong)]">{item.title}</p>
+            <p className="truncate text-sm text-[color:var(--text-strong)]">{item.title}</p>
             <p className="truncate text-[11px] font-semibold text-[color:var(--text-secondary)]">{item.meta}</p>
           </div>
-          <p className="shrink-0 text-sm font-black text-[color:var(--text-strong)]">{item.value}</p>
+          <p className="shrink-0 text-sm text-[color:var(--text-strong)]">{item.value}</p>
         </div>
       ))}
     </div>
@@ -162,7 +162,7 @@ function HorizontalEmployeeCard({ snapshot }) {
               </span>
             </div>
             <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
-              <h3 className="text-xl font-black text-[color:var(--text-strong)]">Employees</h3>
+              <h2 className="text-lg font-semibold text-[color:var(--text-strong)]">Employees</h2>
               <span className="text-xs font-semibold text-[color:var(--text-secondary)]">
                 · {snapshot.presentCount} present · {snapshot.absentCount} absent · {snapshot.attendance.length} marked
               </span>
@@ -222,7 +222,7 @@ function HorizontalEmployeeCard({ snapshot }) {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-[color:var(--text-strong)]">
+                      <p className="truncate text-sm font-bold text-[color:var(--text-strong)]">
                         {item.employeeName || "Employee"}
                       </p>
                       <p className="text-[11px] font-semibold capitalize text-[color:var(--text-secondary)]">
@@ -230,7 +230,7 @@ function HorizontalEmployeeCard({ snapshot }) {
                       </p>
                     </div>
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-black capitalize ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold capitalize ${
                         item.status === "absent"
                           ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                           : item.status === "double"
@@ -247,19 +247,19 @@ function HorizontalEmployeeCard({ snapshot }) {
                   <div className="mt-3 grid grid-cols-3 gap-1.5">
                     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2 text-center">
                       <p className="text-[9px] font-black uppercase tracking-wider text-[color:var(--text-muted)]">Shortage</p>
-                      <p className={`mt-0.5 text-xs font-black ${numberValue(item.shortage) !== 0 ? "text-rose-600 dark:text-rose-400" : "text-[color:var(--text-strong)]"}`}>
+                      <p className={`mt-0.5 text-xs font-bold ${numberValue(item.shortage) !== 0 ? "text-rose-600 dark:text-rose-400" : "text-[color:var(--text-strong)]"}`}>
                         {formatCurrency(item.shortage)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2 text-center">
                       <p className="text-[9px] font-black uppercase tracking-wider text-[color:var(--text-muted)]">Advance</p>
-                      <p className={`mt-0.5 text-xs font-black ${advance > 0 ? "text-amber-600 dark:text-amber-400" : "text-[color:var(--text-strong)]"}`}>
+                      <p className={`mt-0.5 text-xs font-bold ${advance > 0 ? "text-amber-600 dark:text-amber-400" : "text-[color:var(--text-strong)]"}`}>
                         {formatCurrency(advance)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2 text-center">
                       <p className="text-[9px] font-black uppercase tracking-wider text-[color:var(--text-muted)]">Bonus</p>
-                      <p className={`mt-0.5 text-xs font-black ${numberValue(item.bonusAmount) > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-[color:var(--text-strong)]"}`}>
+                      <p className={`mt-0.5 text-xs font-bold ${numberValue(item.bonusAmount) > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-[color:var(--text-strong)]"}`}>
                         {formatCurrency(item.bonusAmount)}
                       </p>
                     </div>
@@ -428,7 +428,7 @@ export default function DailySnapshotPage() {
   return (
     <div className="min-h-screen min-w-0 w-full max-w-full overflow-x-hidden bg-[var(--bg-main)] p-3 pb-28 text-[color:var(--text-primary)] transition-colors duration-300 sm:p-6 lg:pb-6">
       {/* Top Header Card */}
-      <div className="mb-4 rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)]">
+      <div className="mb-4 rounded-[15px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-[0_16px_32px_rgba(16,24,20,0.05)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -436,12 +436,11 @@ export default function DailySnapshotPage() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-black text-[color:var(--text-strong)]">Daily Station Snapshot</h1>
+                <h1 className="text-xl font-black text-[color:var(--text-strong)]">Daily Station Snapshot</h1>
                 <span className="rounded-full bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                   {snapshot.totalEntries} entries
                 </span>
               </div>
-              <p className="mt-1 text-sm font-medium text-[color:var(--text-secondary)]">One selected day, every module summarized in cards.</p>
             </div>
           </div>
 
@@ -518,10 +517,10 @@ export default function DailySnapshotPage() {
           helper={`${formatCurrency(snapshot.cardSwipeCharges)} charges · ${snapshot.cardSwipe.length} entries`}
           tone="blue"
         >
-          <div className="grid grid-cols-2 gap-2 mb-1">
+          {/* <div className="grid grid-cols-2 gap-2 mb-1">
             <MetricPill label="Net" value={formatCurrency(snapshot.cardSwipeAmount - snapshot.cardSwipeCharges)} tone="emerald" />
             <MetricPill label="Charges" value={formatCurrency(snapshot.cardSwipeCharges)} tone="amber" />
-          </div>
+          </div> */}
           <MiniList
             emptyText="No card swipe entries."
             items={snapshot.cardSwipe.map((item) => ({

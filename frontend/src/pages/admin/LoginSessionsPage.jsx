@@ -106,22 +106,16 @@ export default function LoginSessionsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 overflow-x-hidden p-4 font-sans sm:p-6 lg:p-5">
-      <section className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
+      <section className="rounded-[15px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-[var(--shadow-soft)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
               <MonitorSmartphone size={24} />
             </div>
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600">
-                Security Monitor
-              </p>
-              <h1 className="text-2xl font-black tracking-tight text-[color:var(--text-strong)]">
+              <h1 className="text-xl font-black tracking-tight text-[color:var(--text-strong)]">
                 Login Sessions
               </h1>
-              <p className="text-sm font-medium text-[color:var(--text-secondary)]">
-                Track who logged in, which device was used, and when sessions ended.
-              </p>
             </div>
           </div>
           <button
@@ -132,7 +126,7 @@ export default function LoginSessionsPage() {
             }}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] transition hover:bg-[var(--bg-hover)]"
           >
-            <RefreshCw size={17} className={loading ? "animate-spin text-emerald-600" : ""} />
+            <RefreshCw size={14} className={loading ? "animate-spin text-emerald-600" : ""} />
             Refresh
           </button>
         </div>
@@ -195,7 +189,7 @@ export default function LoginSessionsPage() {
               {sessions.map((session) => (
                 <tr key={session.id} className="transition hover:bg-[var(--bg-soft)]">
                   <td className="px-5 py-4">
-                    <p className="font-black text-[color:var(--text-strong)]">{session.userName}</p>
+                    <p className="font-bold text-[color:var(--text-strong)]">{session.userName}</p>
                     <p className="text-xs font-bold text-[color:var(--text-secondary)]">{session.userRole}</p>
                   </td>
                   <td className="px-5 py-4">
@@ -206,7 +200,7 @@ export default function LoginSessionsPage() {
                   <td className="px-5 py-4 font-semibold text-[color:var(--text-secondary)]">{formatDateTime(session.loginAt)}</td>
                   <td className="px-5 py-4 font-semibold text-[color:var(--text-secondary)]">{formatDateTime(session.logoutAt)}</td>
                   <td className="px-5 py-4">
-                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${statusClass[session.status] || statusClass.Expired}`}>
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${statusClass[session.status] || statusClass.Expired}`}>
                       {session.status}
                     </span>
                   </td>

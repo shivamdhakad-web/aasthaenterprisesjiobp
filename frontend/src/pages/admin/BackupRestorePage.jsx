@@ -417,22 +417,16 @@ export default function BackupRestorePage() {
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 overflow-x-hidden p-4 font-sans sm:p-6 lg:p-5">
-      <section className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
+      <section className="rounded-[15px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-[var(--shadow-soft)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
               <DatabaseBackup size={24} />
             </div>
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600">
-                Admin Safety
-              </p>
-              <h1 className="text-2xl font-black tracking-tight text-[color:var(--text-strong)]">
+              <h1 className="text-xl font-black tracking-tight text-[color:var(--text-strong)]">
                 Backup & Restore
               </h1>
-              <p className="text-sm font-medium text-[color:var(--text-secondary)]">
-                Create JSON or ZIP backups, preview data, and restore with master password protection.
-              </p>
             </div>
           </div>
           <button
@@ -462,7 +456,7 @@ export default function BackupRestorePage() {
       <div className="grid gap-5 xl:grid-cols-[420px_1fr]">
         <section className="space-y-4 rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
           <div>
-            <h2 className="text-lg font-black text-[color:var(--text-strong)]">Create Backup</h2>
+            <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Create Backup</h2>
             <p className="text-xs font-medium text-[color:var(--text-secondary)]">Choose format and scope before generating a backup.</p>
           </div>
 
@@ -579,7 +573,7 @@ export default function BackupRestorePage() {
           </button>
 
           <div className="border-t border-[var(--border-color)] pt-4">
-            <h2 className="text-lg font-black text-[color:var(--text-strong)]">Upload & Preview</h2>
+            <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Upload & Preview</h2>
             <p className="text-xs font-medium text-[color:var(--text-secondary)]">Upload a .json or app-created .zip backup before restoring.</p>
             <input
               type="password"
@@ -617,7 +611,7 @@ export default function BackupRestorePage() {
         <section className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-black text-[color:var(--text-strong)]">Backup Preview</h2>
+              <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Backup Preview</h2>
               <p className="text-xs font-medium text-[color:var(--text-secondary)]">Review collections, record counts, and sample documents first.</p>
             </div>
             {lastBackup ? (
@@ -642,7 +636,7 @@ export default function BackupRestorePage() {
       <section className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <h2 className="text-lg font-black text-[color:var(--text-strong)]">Compare & Emergency Restore</h2>
+            <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Compare & Emergency Restore</h2>
             <p className="text-xs font-medium text-[color:var(--text-secondary)]">
               Compare two backups, or restore the latest backup quickly with master password.
             </p>
@@ -663,11 +657,11 @@ export default function BackupRestorePage() {
               placeholder="Master password"
               className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold outline-none"
             />
-            <button type="button" onClick={handleCompare} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-black text-white">
+            <button type="button" onClick={handleCompare} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-bold text-gray-50">
               <GitCompare size={17} />
               Compare
             </button>
-            <button type="button" onClick={handleEmergencyRestore} disabled={!masterPassword.trim() || busy === "emergency"} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50">
+            <button type="button" onClick={handleEmergencyRestore} disabled={!masterPassword.trim() || busy === "emergency"} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-black text-gray-50 disabled:opacity-50">
               {busy === "emergency" ? <Loader2 size={17} className="animate-spin" /> : <Zap size={17} />}
               Emergency Restore
             </button>
@@ -690,7 +684,7 @@ export default function BackupRestorePage() {
       <section className="overflow-hidden rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] shadow-[var(--shadow-soft)]">
         <div className="flex items-center justify-between gap-3 border-b border-[var(--border-color)] p-5">
           <div>
-            <h2 className="text-lg font-black text-[color:var(--text-strong)]">Backup History</h2>
+            <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Backup History</h2>
             <p className="text-xs font-medium text-[color:var(--text-secondary)]">Download, preview, restore, or delete saved backups.</p>
           </div>
         </div>
@@ -762,7 +756,7 @@ export default function BackupRestorePage() {
       </section>
 
       <section className="rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
-        <h2 className="text-lg font-black text-[color:var(--text-strong)]">Restore Logs</h2>
+        <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Restore Logs</h2>
         <div className="mt-3 grid gap-2 lg:grid-cols-2">
           {logs.slice(0, 8).map((log) => (
             <div key={log._id} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">

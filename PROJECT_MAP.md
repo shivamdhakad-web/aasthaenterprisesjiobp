@@ -47,6 +47,7 @@
 - `frontend/src/pages/admin/AdminOverview.jsx`: Admin dashboard overview
 - `frontend/src/pages/manager/ManagerOverview.jsx`: Manager dashboard overview
 - `frontend/src/pages/admin/StorageOverview.jsx`: Storage/RAM page
+- `frontend/src/pages/admin/StationDocumentsPage.jsx`: Admin-only station documents and image vault
 
 ### New Operational Pages
 - `frontend/src/pages/shared/LeaveManagementPage.jsx`: Leave management for admin/manager
@@ -134,6 +135,7 @@
 - `backend/src/controllers/shiftController.js`: Shift schedule
 - `backend/src/controllers/taskController.js`: Tasks/work assignments
 - `backend/src/controllers/storageController.js`: Storage/RAM stats
+- `backend/src/controllers/stationDocumentController.js`: Station document metadata and Cloudinary usage/delete integration
 - `backend/src/controllers/settingsController.js`: Settings/passwords/contact/security
 - `backend/src/controllers/secureNoteController.js`: Secure notes
 - `backend/src/controllers/mobileDispenserController.js`: Mobile dispenser
@@ -162,6 +164,7 @@
 - `backend/src/models/Settings.js`: App settings/passwords/security
 - `backend/src/models/MobileDispenser.js`: Mobile dispenser entries
 - `backend/src/models/TTDriver.js`: TT drivers
+- `backend/src/models/StationDocument.js`: Uploaded station document metadata
 
 ### Backend Routes
 - `backend/src/routes/authRoutes.js`
@@ -182,6 +185,23 @@
 - `backend/src/routes/storageRoutes.js`
 - `backend/src/routes/settingsRoutes.js`
 - `backend/src/routes/secureNoteRoutes.js`
+- `backend/src/routes/stationDocumentRoutes.js`
+
+### Station Documents changes
+Read:
+- `frontend/src/pages/admin/StationDocumentsPage.jsx`
+- `frontend/src/services/stationDocumentApi.js`
+- `backend/src/controllers/stationDocumentController.js`
+- `backend/src/models/StationDocument.js`
+- `backend/src/routes/stationDocumentRoutes.js`
+- `frontend/src/config/navigation.js`
+- `backend/src/controllers/adminDashboardSettingController.js`
+
+Cloudinary environment values are required for live uploads and account usage:
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `CLOUDINARY_UPLOAD_PRESET` (unsigned preset restricted to PDF/JPG/JPEG/PNG/WEBP and 10 MB max)
 
 ## Feature To File Guide
 

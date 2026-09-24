@@ -34,9 +34,10 @@ const DEFAULT_ADMIN_DASHBOARD_PAGES = [
   { key: "storage", label: "Storage", path: "/admin/storage", order: 31 },
   { key: "loginSessions", label: "Login Sessions", path: "/admin/login-sessions", order: 32 },
   { key: "backupRestore", label: "Backup & Restore", path: "/admin/backup-restore", order: 33 },
-  { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 34 },
-  { key: "aiChat", label: "AI Chat", path: "/admin/ai-chat", order: 35 },
-  { key: "settings", label: "Settings", path: "/admin/settings", order: 36 },
+  { key: "stationDocuments", label: "Station Documents", path: "/admin/station-documents", order: 34 },
+  { key: "billGenerator", label: "Bill Generator", path: "/admin/bill-generator", order: 35 },
+  { key: "aiChat", label: "AI Chat", path: "/admin/ai-chat", order: 36 },
+  { key: "settings", label: "Settings", path: "/admin/settings", order: 37 },
 ]
 
 const cloneDefaultPages = () => DEFAULT_ADMIN_DASHBOARD_PAGES.map((page) => ({ ...page }))

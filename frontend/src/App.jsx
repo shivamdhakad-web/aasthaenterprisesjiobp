@@ -63,6 +63,7 @@ import DailySalesDashboardPage from "./pages/finance/DailySalesDashboardPage"
 import MduDashboardPage from "./pages/finance/MduDashboardPage"
 import InvoiceDetailsDashboardPage from "./pages/finance/InvoiceDetailsDashboardPage"
 import DcdDashboardPage from "./pages/finance/DcdDashboardPage"
+import StationDocumentsPage from "./pages/admin/StationDocumentsPage"
 
 export default function App() {
   const AppRouter =
@@ -104,6 +105,7 @@ export default function App() {
             <Route path="storage" element={<StorageOverview />} />
             <Route path="login-sessions" element={<LoginSessionsPage />} />
             <Route path="backup-restore" element={<BackupRestorePage />} />
+            <Route path="station-documents" element={<StationDocumentsPage />} />
             <Route path="daily-snapshot" element={<DailySnapshotPage />} />
             <Route path="bill-generator" element={<BillGeneratorPage />} />
             <Route path="ai-chat" element={<AiChatPage />} />
