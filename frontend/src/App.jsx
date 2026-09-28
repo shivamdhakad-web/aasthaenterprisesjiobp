@@ -43,6 +43,7 @@ import StorageOverview from "./pages/admin/StorageOverview"
 import LoginSessionsPage from "./pages/admin/LoginSessionsPage"
 import BackupRestorePage from "./pages/admin/BackupRestorePage"
 import DailySnapshotPage from "./pages/admin/DailySnapshotPage"
+import MonthlySnapshotPage from "./pages/admin/MonthlySnapshotPage"
 import EmployeeDashboardEditor from "./pages/admin/EmployeeDashboardEditor"
 import ManagerDashboardEditor from "./pages/admin/ManagerDashboardEditor"
 import AdminDashboardEditor from "./pages/admin/AdminDashboardEditor"
@@ -107,6 +108,7 @@ export default function App() {
             <Route path="backup-restore" element={<BackupRestorePage />} />
             <Route path="station-documents" element={<StationDocumentsPage />} />
             <Route path="daily-snapshot" element={<DailySnapshotPage />} />
+            <Route path="monthly-snapshot" element={<MonthlySnapshotPage />} />
             <Route path="bill-generator" element={<BillGeneratorPage />} />
             <Route path="ai-chat" element={<AiChatPage />} />
             <Route path="lubricants" element={<Lubricants />} />

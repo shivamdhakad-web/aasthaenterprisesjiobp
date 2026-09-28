@@ -35,6 +35,7 @@ export const navigationByRole = {
     { key: "notifications", label: "Notifications", path: "/admin/notifications", icon: Bell },
     { key: "dailyReports", label: "Daily Reports", path: "/admin/daily-reports", icon: NotebookTabs },
     { key: "dailySnapshot", label: "Daily Snapshot", path: "/admin/daily-snapshot", icon: Activity },
+    { key: "monthlySnapshot", label: "Monthly Snapshot", path: "/admin/monthly-snapshot", icon: CalendarDays },
     { key: "meterReadings", label: "Meter Readings", path: "/admin/meter-readings", icon: Activity },
     { key: "tankerDeliveries", label: "Tanker Deliveries", path: "/admin/tanker-deliveries", icon: Truck },
     { key: "employees", label: "Employees", path: "/admin/employees", icon: Users },
