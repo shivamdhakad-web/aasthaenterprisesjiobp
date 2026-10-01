@@ -46,17 +46,8 @@ import * as XLSX from "xlsx"
 
 import { useAuth } from "../contexts/AuthContext"
 import useManagerDashboardSettings from "../hooks/useManagerDashboardSettings"
-import {
-  addLubricant,
-  addProduct,
-  deleteLubricant,
-  deleteMonth,
-  deleteProduct,
-  getLubricants,
-  getProducts,
-  updateLubricant,
-  updateProduct,
-} from "../services/lubricantApi"
+import * as lubricantApi from "../services/lubricantApi"
+import * as campaApi from "../services/campaApi"
 
 const getToday = () => new Date().toISOString().slice(0, 10)
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
@@ -86,7 +77,7 @@ const formatDateTime = (value) => {
   })
 }
 
-const getLubricantMeta = (productName = "") => {
+const getLubricantMeta = (productName = "", isCampa = false) => {
   const name = String(productName).toLowerCase()
   if (name.includes("4t") || name.includes("bike") || name.includes("moto") || name.includes("scooter")) {
     return {
@@ -140,7 +131,7 @@ const getLubricantMeta = (productName = "") => {
     icon: Droplets,
     bgColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
     tagColor: "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300",
-    badge: "Lubricant",
+    badge: isCampa ? "Campa" : "Lubricant",
   }
 }
 
@@ -181,11 +172,15 @@ const defaultProductForm = () => ({
   addedDate: getToday(),
 })
 
-export default function Lubricants() {
+export default function Lubricants({ businessType = "lubricant" }) {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const isCampa = businessType === "campa"
+  const brandName = isCampa ? "Campa" : "Lubricant"
+  const pluralBrandName = isCampa ? "Campa" : "Lubricants"
+  const pageApi = isCampa ? campaApi : lubricantApi
   const isManager = user?.role === "Manager"
-  const { canUse, canShowCard } = useManagerDashboardSettings("lubricants", isManager)
+  const { canUse, canShowCard } = useManagerDashboardSettings(isCampa ? "campa" : "lubricants", isManager)
   const [data, setData] = useState([])
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState("")
@@ -257,12 +252,12 @@ export default function Lubricants() {
   }, [notice])
 
   const loadSales = async () => {
-    const res = await getLubricants()
+    const res = isCampa ? await pageApi.getSales() : await pageApi.getLubricants()
     setData(Array.isArray(res) ? res : [])
   }
 
   const loadProducts = async () => {
-    const res = await getProducts()
+    const res = await pageApi.getProducts()
     setProducts(Array.isArray(res) ? res : [])
   }
 
@@ -458,11 +453,11 @@ export default function Lubricants() {
 
   const openSaleModal = (entry = null) => {
     if (entry && !canManagerUse("editSale")) {
-      showNoAccess("You do not have access to edit lubricant sales.")
+      showNoAccess(`You do not have access to edit ${brandName.toLowerCase()} sales.`)
       return
     }
     if (!entry && !canManagerUse("addSale")) {
-      showNoAccess("You do not have access to add lubricant sales.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} sales.`)
       return
     }
 
@@ -484,7 +479,7 @@ export default function Lubricants() {
 
   const openEntryModePrompt = () => {
     if (!canManagerUse("addSale")) {
-      showNoAccess("You do not have access to add lubricant sales.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} sales.`)
       return
     }
 
@@ -493,7 +488,7 @@ export default function Lubricants() {
 
   const openBulkSaleModal = () => {
     if (!canManagerUse("addSale")) {
-      showNoAccess("You do not have access to add lubricant sales.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} sales.`)
       return
     }
 
@@ -554,7 +549,7 @@ export default function Lubricants() {
 
   const saveBulkSales = async () => {
     if (!canManagerUse("addSale")) {
-      showNoAccess("You do not have access to add lubricant sales.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} sales.`)
       return
     }
 
@@ -574,7 +569,7 @@ export default function Lubricants() {
         const quantity = Number(row.quantity || 0)
         const rowUnitProfit = Number((price - Number(product?.costPrice || 0)).toFixed(2))
 
-        await addLubricant({
+        await pageApi[isCampa ? "addSale" : "addLubricant"]({
           date: row.date,
           product: row.product,
           price,
@@ -603,7 +598,7 @@ export default function Lubricants() {
 
   const openCreateProductModal = () => {
     if (!canManagerUse("addProduct")) {
-      showNoAccess("You do not have access to add lubricant products.")
+      showNoAccess(`You do not have access to add ${pluralBrandName.toLowerCase()} products.`)
       return
     }
 
@@ -614,7 +609,7 @@ export default function Lubricants() {
 
   const openEditProductModal = (product) => {
     if (!canManagerUse("editProduct")) {
-      showNoAccess("You do not have access to edit lubricant products.")
+      showNoAccess(`You do not have access to edit ${pluralBrandName.toLowerCase()} products.`)
       return
     }
 
@@ -632,7 +627,7 @@ export default function Lubricants() {
 
   const openAddStockModal = (product) => {
     if (!canManagerUse("addStock")) {
-      showNoAccess("You do not have access to add lubricant stock.")
+      showNoAccess(`You do not have access to add ${pluralBrandName.toLowerCase()} stock.`)
       return
     }
 
@@ -660,11 +655,11 @@ export default function Lubricants() {
 
   const saveSale = async () => {
     if (edit && !canManagerUse("editSale")) {
-      showNoAccess("You do not have access to edit lubricant sales.")
+      showNoAccess(`You do not have access to edit ${brandName.toLowerCase()} sales.`)
       return
     }
     if (!edit && !canManagerUse("addSale")) {
-      showNoAccess("You do not have access to add lubricant sales.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} sales.`)
       return
     }
 
@@ -687,7 +682,7 @@ export default function Lubricants() {
       }
 
       if (edit) {
-        await updateLubricant(edit._id, {
+        await pageApi[isCampa ? "updateSale" : "updateLubricant"](edit._id, {
           ...payload,
           lastEditedAt: new Date().toISOString(),
           lastEditedBy: user?.name || "Admin",
@@ -695,7 +690,7 @@ export default function Lubricants() {
         })
         setNotice({ type: "success", text: "Sale updated successfully." })
       } else {
-        await addLubricant(payload)
+        await pageApi[isCampa ? "addSale" : "addLubricant"](payload)
         setNotice({ type: "success", text: "Sale saved successfully." })
       }
 
@@ -713,15 +708,15 @@ export default function Lubricants() {
 
   const saveProduct = async () => {
     if (productMode === "create" && !canManagerUse("addProduct")) {
-      showNoAccess("You do not have access to add lubricant products.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} products.`)
       return
     }
     if (productMode === "edit" && !canManagerUse("editProduct")) {
-      showNoAccess("You do not have access to edit lubricant products.")
+      showNoAccess(`You do not have access to edit ${brandName.toLowerCase()} products.`)
       return
     }
     if (productMode === "stock" && !canManagerUse("addStock")) {
-      showNoAccess("You do not have access to add lubricant stock.")
+      showNoAccess(`You do not have access to add ${brandName.toLowerCase()} stock.`)
       return
     }
 
@@ -735,7 +730,7 @@ export default function Lubricants() {
           return
         }
 
-        await addProduct({
+        await pageApi.addProduct({
           name: productForm.name,
           price: Number(productForm.price || 0),
           costPrice: Number(productForm.costPrice || 0),
@@ -751,7 +746,7 @@ export default function Lubricants() {
       }
 
       if (productMode === "edit") {
-        await updateProduct(activeProduct._id, {
+        await pageApi.updateProduct(activeProduct._id, {
           name: productForm.name,
           price: Number(productForm.price || 0),
           costPrice: Number(productForm.costPrice || 0),
@@ -771,7 +766,7 @@ export default function Lubricants() {
           return
         }
 
-        await updateProduct(activeProduct._id, {
+        await pageApi.updateProduct(activeProduct._id, {
           name: activeProduct.name,
           price: Number(activeProduct.price || 0),
           costPrice: Number(activeProduct.costPrice || 0),
@@ -801,7 +796,7 @@ export default function Lubricants() {
 
   const askDeleteSale = (entry) => {
     if (!canManagerUse("deleteSale")) {
-      showNoAccess("You do not have access to delete lubricant sales.")
+      showNoAccess(`You do not have access to delete ${brandName.toLowerCase()} sales.`)
       return
     }
 
@@ -811,7 +806,7 @@ export default function Lubricants() {
       actionLabel: "Delete",
       variant: "danger",
       onConfirm: async () => {
-        await deleteLubricant(entry._id)
+        await pageApi[isCampa ? "deleteSale" : "deleteLubricant"](entry._id)
         await Promise.all([loadSales(), loadProducts()])
         setNotice({ type: "success", text: "Sale deleted successfully." })
       },
@@ -820,7 +815,7 @@ export default function Lubricants() {
 
   const askDeleteProduct = (product) => {
     if (!canManagerUse("deleteProduct")) {
-      showNoAccess("You do not have access to delete lubricant products.")
+      showNoAccess(`You do not have access to delete ${pluralBrandName.toLowerCase()} products.`)
       return
     }
 
@@ -830,7 +825,7 @@ export default function Lubricants() {
       actionLabel: "Delete",
       variant: "danger",
       onConfirm: async () => {
-        await deleteProduct(product._id)
+        await pageApi.deleteProduct(product._id)
         await loadProducts()
         setNotice({ type: "success", text: "Product deleted successfully." })
       },
@@ -848,7 +843,7 @@ export default function Lubricants() {
       return
     }
 
-    await deleteMonth({ month: monthDeleteForm.month, year: monthDeleteForm.year })
+    await pageApi.deleteMonth({ month: monthDeleteForm.month, year: monthDeleteForm.year })
     setMonthDeleteOpen(false)
     await Promise.all([loadSales(), loadProducts()])
     setNotice({ type: "success", text: "Month records deleted successfully." })
@@ -872,7 +867,7 @@ export default function Lubricants() {
   const generatePDF = () => {
     const doc = new jsPDF()
     doc.setFontSize(16)
-    doc.text("Lubricant Sales Report", 14, 16)
+    doc.text(`${brandName} Sales Report`, 14, 16)
     doc.setFontSize(10)
     doc.text(`From: ${reportForm.fromDate || "All"} To: ${reportForm.toDate || "All"}`, 14, 24)
     doc.text(`Product: ${reportForm.reportProduct || "All Products"}`, 14, 30)
@@ -893,7 +888,7 @@ export default function Lubricants() {
       headStyles: { fillColor: [180, 83, 9], textColor: 255 },
     })
 
-    doc.save("lubricant-report.pdf")
+    doc.save(`${businessType}-report.pdf`)
   }
 
   const generateExcel = () => {
@@ -910,13 +905,13 @@ export default function Lubricants() {
       })),
     )
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Lubricants")
-    XLSX.writeFile(workbook, "lubricant-report.xlsx")
+    XLSX.utils.book_append_sheet(workbook, worksheet, pluralBrandName)
+    XLSX.writeFile(workbook, `${businessType}-report.xlsx`)
   }
 
   const handleGenerate = () => {
     if (!canManagerUse("generateReport")) {
-      showNoAccess("You do not have access to generate lubricant reports.")
+      showNoAccess(`You do not have access to generate ${brandName.toLowerCase()} reports.`)
       return
     }
 
@@ -937,7 +932,7 @@ export default function Lubricants() {
 
   const openReportModal = () => {
     if (!canManagerUse("generateReport")) {
-      showNoAccess("You do not have access to generate lubricant reports.")
+      showNoAccess(`You do not have access to generate ${brandName.toLowerCase()} reports.`)
       return
     }
 
@@ -961,14 +956,14 @@ export default function Lubricants() {
         {/* 1. Mobile Header Card */}
         <div className="flex items-center justify-between gap-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${isCampa ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"}`}>
               <Droplets size={22} />
             </div>
             <div>
               <h1 className="text-lg font-black tracking-tight text-[color:var(--text-strong)] leading-tight">
-                Lubricants
+                {pluralBrandName}
               </h1>
-              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">Oil sales & inventory</p>
+              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">{isCampa ? "Campa sales & inventory" : "Oil sales & inventory"}</p>
             </div>
           </div>
 
@@ -1030,14 +1025,14 @@ export default function Lubricants() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-amber-100/90 tracking-wide flex items-center gap-1.5">
                 <Flame size={14} className="text-amber-300" />
-                Total Lubricant Sales
+                Total {brandName} Sales
               </span>
               {!isManager ? (
                 <button
                   type="button"
-                  onClick={() => navigate("/admin/lubricant-dashboard")}
+                  onClick={() => navigate(isCampa ? "/admin/campa-dashboard" : "/admin/lubricant-dashboard")}
                   className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/20 border border-white/20 text-white shadow-sm active:scale-95 transition-all"
-                  title="Lubricant Dashboard"
+                  title={`${brandName} Dashboard`}
                 >
                   <TrendingUp size={18} />
                 </button>
@@ -1193,11 +1188,11 @@ export default function Lubricants() {
             {filtered.length === 0 ? (
               <div className="rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-8 text-center shadow-sm">
                 <Droplets size={32} className="mx-auto text-amber-400/60 mb-2" />
-                <p className="text-sm font-bold text-[color:var(--text-secondary)]">No lubricant sales found.</p>
+                <p className="text-sm font-bold text-[color:var(--text-secondary)]">No {brandName.toLowerCase()} sales found.</p>
               </div>
             ) : (
               filtered.map((entry) => {
-                const meta = getLubricantMeta(entry.product)
+                const meta = getLubricantMeta(entry.product, isCampa)
                 const Icon = meta.icon
 
                 return (
@@ -1214,7 +1209,7 @@ export default function Lubricants() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <h3 className="truncate text-sm font-extrabold text-[color:var(--text-strong)] leading-tight">
-                            {entry.product || "Lubricant"}
+                            {entry.product || brandName}
                           </h3>
                         </div>
                         <p className="truncate text-[11px] font-semibold text-[color:var(--text-secondary)] mt-0.5">
@@ -1462,7 +1457,7 @@ export default function Lubricants() {
           {!isManager ? (
             <button
               type="button"
-              onClick={() => navigate("/admin/lubricant-dashboard")}
+              onClick={() => navigate(isCampa ? "/admin/campa-dashboard" : "/admin/lubricant-dashboard")}
               className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"
             >
               <LayoutGrid size={19} />
@@ -1479,10 +1474,10 @@ export default function Lubricants() {
         <div className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${isCampa ? "bg-red-50" : "bg-amber-50"}`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-amber-600"
+                  className={`h-6 w-6 ${isCampa ? "text-red-600" : "text-amber-600"}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -1497,14 +1492,14 @@ export default function Lubricants() {
               </div>
 
               <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
-                Lubricant Sales
+                {brandName} Sales
               </h1>
-              <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-semibold text-amber-700">
+              <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${isCampa ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
                 {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
               </span>
             </div>
 
-            <div className="h-1 w-16 rounded-full bg-amber-200"></div>
+            <div className={`h-1 w-16 rounded-full ${isCampa ? "bg-red-200" : "bg-amber-200"}`}></div>
           </div>
         </div>
 
@@ -1528,11 +1523,11 @@ export default function Lubricants() {
             {!isManager ? (
               <button
                 type="button"
-                onClick={() => navigate("/admin/lubricant-dashboard")}
-                className="inline-flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 font-medium text-amber-700 shadow-sm"
+              onClick={() => navigate(isCampa ? "/admin/campa-dashboard" : "/admin/lubricant-dashboard")}
+                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-3 font-medium shadow-sm ${isCampa ? "border-red-200 bg-red-50 text-red-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
               >
                 <ChartNoAxesCombined size={18} />
-                Lubricant Dashboard
+                {brandName} Dashboard
               </button>
             ) : null}
             {canManagerUse("addProduct") ? (
@@ -1582,7 +1577,7 @@ export default function Lubricants() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-sm font-bold text-emerald-950">AI Summary</h2>
-                  <p className="text-xs text-emerald-700">Lubricant sales insights for the selected filters</p>
+                  <p className="text-xs text-emerald-700">{brandName} sales insights for the selected filters</p>
                 </div>
               </div>
               <button
@@ -1877,7 +1872,7 @@ export default function Lubricants() {
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] mb-4">
               <div className="flex items-center gap-2">
                 <Filter size={18} className="text-amber-500" />
-                <h3 className="text-base font-bold text-[color:var(--text-strong)]">Filter Lubricant Sales</h3>
+                <h3 className="text-base font-bold text-[color:var(--text-strong)]">Filter {brandName} Sales</h3>
               </div>
               <button
                 type="button"
@@ -2108,7 +2103,7 @@ export default function Lubricants() {
           DESKTOP & MODAL SYSTEM
       ========================================================================= */}
       {open ? (
-        <ModalShell title={edit ? "Edit Lubricant Sale" : "Add Lubricant Sale"} onClose={closeSaleModal}>
+        <ModalShell title={edit ? `Edit ${brandName} Sale` : `Add ${brandName} Sale`} onClose={closeSaleModal}>
           <div className="grid gap-3">
             <input
               type="date"
@@ -2182,7 +2177,7 @@ export default function Lubricants() {
       ) : null}
 
       {bulkOpen ? (
-        <ModalShell title="Add Multiple Lubricant Sales" onClose={closeBulkSaleModal}>
+        <ModalShell title={`Add Multiple ${brandName} Sales`} onClose={closeBulkSaleModal}>
           <div className="mb-4 grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
@@ -2501,7 +2496,7 @@ export default function Lubricants() {
 
       {entryModePrompt ? (
         <ConfirmDialog
-          title="Add Lubricant Sale"
+          title={`Add ${brandName} Sale`}
           description="Choose whether you want to save one sale entry or add multiple sale entries together."
           actionLabel="Single Entry"
           secondaryLabel="Multiple Entry"
@@ -2524,7 +2519,7 @@ export default function Lubricants() {
           type="button"
           onClick={openEntryModePrompt}
           className="lg:hidden fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-amber-600 hover:bg-amber-700 text-white shadow-xl shadow-amber-900/30 active:scale-95 transition-all"
-          title="Add Lubricant Sale"
+          title={`Add ${brandName} Sale`}
         >
           <Plus size={28} strokeWidth={2.5} />
         </button>

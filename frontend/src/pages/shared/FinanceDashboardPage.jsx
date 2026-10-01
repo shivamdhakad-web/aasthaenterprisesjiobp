@@ -34,6 +34,7 @@ import {
 
 import { getEntries as getCardSwipeEntries } from "../../services/cardSwipeApi"
 import { getLubricants } from "../../services/lubricantApi"
+import * as campaApi from "../../services/campaApi"
 import { getMduEntries } from "../../services/mduApi"
 import { getDcdEntries } from "../../services/dcdApi"
 import { getDailySales } from "../../services/dailySaleApi"
@@ -67,6 +68,10 @@ const formatNumber = (value) => Number(value || 0).toLocaleString("en-IN", { max
 
 const getDateKey = (value) => String(value || "").slice(0, 10)
 const getMonthKey = (value) => getDateKey(value).slice(0, 7)
+const formatShortDate = (value) => {
+  const key = getDateKey(value)
+  return key ? new Date(`${key}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "-"
+}
 
 const getDaysInMonth = (value) => {
   const dateKey = getDateKey(value) || currentMonth()
@@ -139,6 +144,7 @@ const getLfrAmount = (entry) => numberValue(entry.qty) * numberValue(entry.lfr)
 const calculateMetricsForPeriod = (data, filterOpts) => {
   const cardSwipe = filterByPeriod(data.cardSwipe, filterOpts)
   const lubricants = filterByPeriod(data.lubricants, filterOpts)
+  const campa = filterByPeriod(data.campa, filterOpts)
   const mdu = filterByPeriod(data.mdu, filterOpts)
   const dcd = filterByPeriod(data.dcd, filterOpts)
   const dailySales = filterByPeriod(data.dailySales, filterOpts)
@@ -147,6 +153,7 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
 
   const cardSwipeProfit = cardSwipe.reduce((sum, entry) => sum + numberValue(entry.charges), 0)
   const lubricantProfit = lubricants.reduce((sum, entry) => sum + numberValue(entry.totalProfit), 0)
+  const campaProfit = campa.reduce((sum, entry) => sum + numberValue(entry.totalProfit), 0)
 
   const mduRateEntries = mdu.filter((entry) => numberValue(entry.rate) > 0)
   const mduAvgRate = mduRateEntries.length
@@ -212,7 +219,7 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
   )
 
   const earnedBonus = employeeMoney.earned + employeeMoney.bonus
-  const totalProfit = cardSwipeProfit + lubricantProfit + mduOtherProfit + dcdProfit + msProfit + hsdProfit
+  const totalProfit = cardSwipeProfit + lubricantProfit + campaProfit + mduOtherProfit + dcdProfit + msProfit + hsdProfit
   const totalExpense = monthExpense + earnedBonus + Math.abs(msProductLoss) + Math.abs(hsdProductLoss)
   const finalProfit = totalProfit - totalExpense
 
@@ -228,6 +235,7 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
     finalProfit,
     cardSwipeProfit,
     lubricantProfit,
+    campaProfit,
     mduOtherProfit,
     dcdProfit,
     hsdSale,
@@ -329,6 +337,7 @@ export default function FinanceDashboardPage() {
   const [data, setData] = useState({
     cardSwipe: [],
     lubricants: [],
+    campa: [],
     mdu: [],
     dcd: [],
     dailySales: [],
@@ -343,9 +352,10 @@ export default function FinanceDashboardPage() {
     setLoading(true)
     setError("")
     try {
-      const [cardSwipe, lubricants, mdu, dcd, dailySales, invoiceDetails, expenses, employees, customers] = await Promise.all([
+      const [cardSwipe, lubricants, campa, mdu, dcd, dailySales, invoiceDetails, expenses, employees, customers] = await Promise.all([
         getCardSwipeEntries(),
         getLubricants(),
+        campaApi.getSales(),
         getMduEntries(),
         getDcdEntries(),
         getDailySales(),
@@ -369,6 +379,7 @@ export default function FinanceDashboardPage() {
       setData({
         cardSwipe: cardSwipe || [],
         lubricants: lubricants || [],
+        campa: campa || [],
         mdu: mdu || [],
         dcd: dcd || [],
         dailySales: dailySales || [],
@@ -390,6 +401,17 @@ export default function FinanceDashboardPage() {
   }, [])
 
   const metrics = useMemo(() => calculateMetricsForPeriod(data, filters), [data, filters])
+  const fuelSaleEntries = useMemo(
+    () => filterByPeriod(data.dailySales, filters).filter((entry) => ["ms", "hsd"].includes(String(entry.product || "").toLowerCase())),
+    [data.dailySales, filters],
+  )
+  const latestFuelEntries = useMemo(() => ({
+    ms: fuelSaleEntries.filter((entry) => String(entry.product || "").toLowerCase() === "ms").sort((a, b) => getDateKey(b.date).localeCompare(getDateKey(a.date))).slice(0, 2),
+    hsd: fuelSaleEntries.filter((entry) => String(entry.product || "").toLowerCase() === "hsd").sort((a, b) => getDateKey(b.date).localeCompare(getDateKey(a.date))).slice(0, 2),
+  }), [fuelSaleEntries])
+  const totalFuelVolume = metrics.msSale + metrics.hsdSale
+  const msVolumeShare = totalFuelVolume ? Math.round((metrics.msSale / totalFuelVolume) * 100) : 0
+  const hsdVolumeShare = totalFuelVolume ? Math.round((metrics.hsdSale / totalFuelVolume) * 100) : 0
 
   const pnlMetrics = useMemo(() => {
     if (pnlPeriod === "yearly") {
@@ -412,6 +434,7 @@ export default function FinanceDashboardPage() {
     const incomeRows = [
       { label: "Fuel Profit", value: fuelProfit, helper: "MS, HSD, D.C.D and M.D.U margin" },
       { label: "Lubricant Profit", value: pnlMetrics.lubricantProfit, helper: "Lubricant sales profit" },
+      { label: "Campa Profit", value: pnlMetrics.campaProfit, helper: "Campa sales profit" },
       { label: "Card Swipe Charges", value: pnlMetrics.cardSwipeProfit, helper: "Card swipe charge income" },
     ]
 
@@ -509,6 +532,7 @@ export default function FinanceDashboardPage() {
       { name: "MS Petrol Sales Margin", value: Math.max(metrics.msProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.msProfit, 0) / total) * 100), 100), color: "bg-blue-500" },
       { name: "HSD Diesel Sales Margin", value: Math.max(metrics.hsdProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.hsdProfit, 0) / total) * 100), 100), color: "bg-emerald-500" },
       { name: "Lubricants Sales Profit", value: Math.max(metrics.lubricantProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.lubricantProfit, 0) / total) * 100), 100), color: "bg-amber-500" },
+      { name: "Campa Sales Profit", value: Math.max(metrics.campaProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.campaProfit, 0) / total) * 100), 100), color: "bg-rose-500" },
       { name: "Card Swipe Bank Charges", value: Math.max(metrics.cardSwipeProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.cardSwipeProfit, 0) / total) * 100), 100), color: "bg-violet-500" },
       { name: "D.C.D Sales Profit", value: Math.max(metrics.dcdProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.dcdProfit, 0) / total) * 100), 100), color: "bg-cyan-500" },
       { name: "Mobile Dispenser Unit (M.D.U)", value: Math.max(metrics.mduOtherProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.mduOtherProfit, 0) / total) * 100), 100), color: "bg-teal-500" },
@@ -522,6 +546,7 @@ export default function FinanceDashboardPage() {
       { label: "Final Profit", value: formatCurrency(metrics.finalProfit), tone: metrics.finalProfit >= 0 ? "green" : "rose", helper: "Total Profit - Total Expense" },
       { label: "Card Swipe Month Profit", value: formatCurrency(metrics.cardSwipeProfit), tone: "green" },
       { label: "Lubricant Month Profit", value: formatCurrency(metrics.lubricantProfit), tone: "green" },
+      { label: "Campa Month Profit", value: formatCurrency(metrics.campaProfit), tone: "rose" },
       { label: "M.D.U Other Profit", value: formatCurrency(metrics.mduOtherProfit), tone: metrics.mduOtherProfit >= 0 ? "green" : "rose" },
       { label: "D.C.D Total Profit", value: formatCurrency(metrics.dcdProfit), tone: metrics.dcdProfit >= 0 ? "green" : "rose" },
       { label: "HSD Sale", value: formatNumber(metrics.hsdSale), tone: "blue", helper: "Daily Sales" },
@@ -646,7 +671,7 @@ export default function FinanceDashboardPage() {
               Station P&L Summary
             </h2>
             <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">
-              Fuel profit, lubricant profit, card swipe charges, expenses, salary, and credit pending in one view.
+              Fuel, lubricant and Campa profit, card swipe charges, expenses, salary, and credit pending in one view.
             </p>
           </div>
 
@@ -658,7 +683,7 @@ export default function FinanceDashboardPage() {
                 onClick={() => setPnlPeriod(period)}
                 className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold capitalize transition-all sm:flex-none ${
                   pnlPeriod === period
-                    ? "bg-emerald-600 text-white shadow-sm"
+                    ? "bg-emerald-600 text-gray-50 shadow-sm"
                     : "text-[color:var(--text-secondary)] hover:bg-[var(--bg-panel)]"
                 }`}
               >
@@ -866,7 +891,7 @@ export default function FinanceDashboardPage() {
               <button
                 onClick={() => setCashflowPeriod("yearly")}
                 className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase transition-all ${
-                  cashflowPeriod === "yearly" ? "bg-emerald-600 text-white shadow-sm" : "text-[color:var(--text-secondary)]"
+                  cashflowPeriod === "yearly" ? "bg-emerald-600 text-gray-50 shadow-sm" : "text-[color:var(--text-secondary)]"
                 }`}
               >
                 Yearly
@@ -910,7 +935,7 @@ export default function FinanceDashboardPage() {
                   key={tab}
                   onClick={() => setChartTab(tab)}
                   className={`rounded-lg px-3 py-1.5 text-[10px] font-extrabold uppercase transition-all ${
-                    chartTab === tab ? "bg-emerald-500 text-white font-bold shadow-sm" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)]"
+                    chartTab === tab ? "bg-emerald-500 text-gray-50 font-bold shadow-sm" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)]"
                   }`}
                 >
                   {tab}
@@ -1009,8 +1034,8 @@ export default function FinanceDashboardPage() {
       {/* Row 3: Fuel Product Stock & Dispenser Sales Analytics */}
       <section className="grid gap-5 lg:grid-cols-12">
         {/* Left 8 Cols: Fuel Product Inventory & Nozzle Meter Sales */}
-        <div className="lg:col-span-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)] transition-all duration-300 hover:shadow-md flex flex-col justify-between">
-          <div>
+        <div className="lg:col-span-8 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)] transition-all duration-300 hover:shadow-md flex flex-col">
+          <div className="flex flex-1 flex-col">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -1035,7 +1060,7 @@ export default function FinanceDashboardPage() {
                     <span className="text-xs font-bold text-[color:var(--text-strong)]">MS Petrol (Tank 01)</span>
                   </div>
                   <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">
-                    78% Tank Capacity
+                    {msVolumeShare}% Volume Share
                   </span>
                 </div>
 
@@ -1044,13 +1069,14 @@ export default function FinanceDashboardPage() {
                   <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Margin: {formatCurrency(metrics.msMargin)}/L</p>
                 </div>
 
-                <div className="mt-3">
-                  <div className="flex justify-between text-[10px] text-[color:var(--text-muted)] font-semibold mb-1">
-                    <span>Physical Stock: 18,450 L</span>
-                    <span>Max: 25,000 L</span>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-blue-200/70 bg-blue-500/5 px-2.5 py-2">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--text-muted)]">Sales Value</p>
+                    <p className="mt-1 truncate text-xs font-extrabold text-blue-700 dark:text-blue-300">{formatCurrency(metrics.msSale * metrics.avgRateMs)}</p>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: "78%" }} />
+                  <div className="rounded-xl border border-emerald-200/70 bg-emerald-500/5 px-2.5 py-2">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--text-muted)]">Period Profit</p>
+                    <p className="mt-1 truncate text-xs font-extrabold text-emerald-700 dark:text-emerald-300">{formatCurrency(metrics.msProfit)}</p>
                   </div>
                 </div>
               </div>
@@ -1063,7 +1089,7 @@ export default function FinanceDashboardPage() {
                     <span className="text-xs font-bold text-[color:var(--text-strong)]">HSD Diesel (Tank 02)</span>
                   </div>
                   <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                    84% Tank Capacity
+                    {hsdVolumeShare}% Volume Share
                   </span>
                 </div>
 
@@ -1072,15 +1098,36 @@ export default function FinanceDashboardPage() {
                   <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Margin: {formatCurrency(metrics.hsdMargin)}/L</p>
                 </div>
 
-                <div className="mt-3">
-                  <div className="flex justify-between text-[10px] text-[color:var(--text-muted)] font-semibold mb-1">
-                    <span>Physical Stock: 25,200 L</span>
-                    <span>Max: 30,000 L</span>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-blue-200/70 bg-blue-500/5 px-2.5 py-2">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--text-muted)]">Sales Value</p>
+                    <p className="mt-1 truncate text-xs font-extrabold text-blue-700 dark:text-blue-300">{formatCurrency(metrics.hsdSale * metrics.avgRateHsd)}</p>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: "84%" }} />
+                  <div className="rounded-xl border border-emerald-200/70 bg-emerald-500/5 px-2.5 py-2">
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-[color:var(--text-muted)]">Period Profit</p>
+                    <p className="mt-1 truncate text-xs font-extrabold text-emerald-700 dark:text-emerald-300">{formatCurrency(metrics.hsdProfit)}</p>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex-1 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
+                <h4 className="text-[11px] font-extrabold text-[color:var(--text-strong)]">Latest Nozzle Entries</h4>
+                <span className="text-[10px] font-medium text-[color:var(--text-muted)]">{periodLabel}</span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {[{ key: "ms", label: "MS Petrol", tone: "blue", entries: latestFuelEntries.ms }, { key: "hsd", label: "HSD Diesel", tone: "emerald", entries: latestFuelEntries.hsd }].map((fuel) => (
+                  <div key={fuel.key} className="min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
+                    <p className={`mb-1.5 text-[10px] font-extrabold ${fuel.tone === "blue" ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"}`}>{fuel.label}</p>
+                    {fuel.entries.length ? fuel.entries.map((entry, index) => (
+                      <div key={entry._id || `${entry.date}-${index}`} className="flex items-center justify-between gap-2 border-t border-[var(--border-color)] py-1.5 first:border-t-0">
+                        <span className="text-[10px] font-medium text-[color:var(--text-secondary)]">{formatShortDate(entry.date)} · {formatNumber(entry.sale)} L</span>
+                        <span className="shrink-0 text-[10px] font-bold text-[color:var(--text-strong)]">{formatCurrency(entry.rate)}/L</span>
+                      </div>
+                    )) : <p className="border-t border-[var(--border-color)] pt-1.5 text-[10px] text-[color:var(--text-muted)]">No entries in this period.</p>}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1118,6 +1165,10 @@ export default function FinanceDashboardPage() {
               <div className="flex items-center justify-between rounded-xl bg-[var(--bg-soft)] p-2.5 border border-[var(--border-color)] transition-all hover:border-emerald-500/30">
                 <span className="text-xs font-semibold text-[color:var(--text-secondary)]">Lubricant Sales Profit</span>
                 <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{formatCurrency(metrics.lubricantProfit)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-xl bg-[var(--bg-soft)] p-2.5 border border-[var(--border-color)] transition-all hover:border-rose-500/30">
+                <span className="text-xs font-semibold text-[color:var(--text-secondary)]">Campa Sales Profit</span>
+                <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400">{formatCurrency(metrics.campaProfit)}</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-[var(--bg-soft)] p-2.5 border border-[var(--border-color)] transition-all hover:border-cyan-500/30">
                 <span className="text-xs font-semibold text-[color:var(--text-secondary)]">D.C.D Sales Profit</span>

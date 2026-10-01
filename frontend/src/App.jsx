@@ -9,6 +9,7 @@ import Expenses from "./pages/finance/Expenses"
 import ReminderBox from "./components/dashboard/ReminderBox"
 import SettingsPage from "./pages/Settings"
 import Lubricants from "./pages/Lubricants"
+import Campa from "./pages/Campa"
 import Employees from "./pages/Employees"
 import MobileDispenser from "./pages/MobileDispenser"
 import CardSwipe from "./pages/CardSwipe"
@@ -112,7 +113,9 @@ export default function App() {
             <Route path="bill-generator" element={<BillGeneratorPage />} />
             <Route path="ai-chat" element={<AiChatPage />} />
             <Route path="lubricants" element={<Lubricants />} />
+            <Route path="campa" element={<Campa />} />
             <Route path="lubricant-dashboard" element={<LubricantDashboardPage />} />
+            <Route path="campa-dashboard" element={<LubricantDashboardPage businessType="campa" />} />
             <Route path="mobile-dispenser" element={<MobileDispenser />} />
             <Route path="card-swipe" element={<CardSwipe />} />
             <Route path="card-swipe-dashboard" element={<CardSwipeDashboardPage />} />
@@ -202,6 +205,15 @@ export default function App() {
                 "lubricants",
                 <ApprovalWrappedPage moduleKey="lubricant-sales" title="Lubricant Sales">
                   <Lubricants />
+                </ApprovalWrappedPage>,
+              )}
+            />
+            <Route
+              path="campa"
+              element={managerPage(
+                "campa",
+                <ApprovalWrappedPage moduleKey="campa-sales" title="Campa Sales">
+                  <Campa />
                 </ApprovalWrappedPage>,
               )}
             />

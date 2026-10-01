@@ -23,6 +23,7 @@ import { getEmployees } from "../../services/employeeApi"
 import { getExpenses } from "../../services/expenseApi"
 import { getInvoiceDetails } from "../../services/invoiceDetailApi"
 import { getLubricants } from "../../services/lubricantApi"
+import * as campaApi from "../../services/campaApi"
 import { getMduEntries } from "../../services/mduApi"
 
 const getCurrentMonth = () => {
@@ -195,15 +196,15 @@ export default function MonthlySnapshotPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [data, setData] = useState({
-    expenses: [], employees: [], attendance: [], cardSwipe: [], lubricants: [], mdu: [], dailySales: [], dcd: [], invoices: [], ledger: [],
+    expenses: [], employees: [], attendance: [], cardSwipe: [], lubricants: [], campa: [], mdu: [], dailySales: [], dcd: [], invoices: [], ledger: [],
   })
 
   const load = async () => {
     setLoading(true)
     setError("")
     try {
-      const [expenses, employees, cardSwipe, lubricants, mdu, dailySales, dcd, invoices, customers] = await Promise.all([
-        getExpenses(), getEmployees(), getCardSwipeEntries(), getLubricants(), getMduEntries(), getDailySales(), getDcdEntries(), getInvoiceDetails(), getCustomers(),
+      const [expenses, employees, cardSwipe, lubricants, campa, mdu, dailySales, dcd, invoices, customers] = await Promise.all([
+        getExpenses(), getEmployees(), getCardSwipeEntries(), getLubricants(), campaApi.getSales(), getMduEntries(), getDailySales(), getDcdEntries(), getInvoiceDetails(), getCustomers(),
       ])
 
       const [attendanceGroups, ledgerGroups] = await Promise.all([
@@ -227,7 +228,7 @@ export default function MonthlySnapshotPage() {
 
       setData({
         expenses: expenses || [], employees: employees || [], attendance: attendanceGroups.flat(), cardSwipe: cardSwipe || [],
-        lubricants: lubricants || [], mdu: mdu || [], dailySales: dailySales || [], dcd: dcd || [], invoices: invoices || [], ledger: ledgerGroups.flat(),
+        lubricants: lubricants || [], campa: campa || [], mdu: mdu || [], dailySales: dailySales || [], dcd: dcd || [], invoices: invoices || [], ledger: ledgerGroups.flat(),
       })
     } catch (err) {
       setError(err?.response?.data?.message || "Unable to load monthly snapshot.")
@@ -244,6 +245,7 @@ export default function MonthlySnapshotPage() {
     const attendance = inMonth(data.attendance)
     const cardSwipe = inMonth(data.cardSwipe)
     const lubricants = inMonth(data.lubricants)
+    const campa = inMonth(data.campa)
     const mdu = inMonth(data.mdu)
     const dailySales = inMonth(data.dailySales)
     const dcd = inMonth(data.dcd)
@@ -255,6 +257,8 @@ export default function MonthlySnapshotPage() {
     const cardSwipeCharges = sum(cardSwipe, (item) => item.charges)
     const lubricantTotal = sum(lubricants, (item) => item.total)
     const lubricantProfit = sum(lubricants, (item) => item.totalProfit)
+    const campaTotal = sum(campa, (item) => item.total)
+    const campaProfit = sum(campa, (item) => item.totalProfit)
     const mduSale = sum(mdu, (item) => item.sale)
     const mduValue = sum(mdu, (item) => numberValue(item.sale) * numberValue(item.rate))
     const dailySaleValue = sum(dailySales, (item) => numberValue(item.sale) * numberValue(item.rate))
@@ -269,16 +273,16 @@ export default function MonthlySnapshotPage() {
     const bonusTotal = sum(attendance, (item) => item.bonusAmount)
     const shortageTotal = sum(attendance, (item) => item.shortage)
     const advanceTotal = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol))
-    const totalEntries = expenses.length + attendance.length + cardSwipe.length + lubricants.length + mdu.length + dailySales.length + dcd.length + invoices.length + ledger.length
-    const totalIncome = cardSwipeAmount + lubricantTotal + mduValue + dailySaleValue + dcdProfit + creditPayment
+    const totalEntries = expenses.length + attendance.length + cardSwipe.length + lubricants.length + campa.length + mdu.length + dailySales.length + dcd.length + invoices.length + ledger.length
+    const totalIncome = cardSwipeAmount + lubricantTotal + campaTotal + mduValue + dailySaleValue + dcdProfit + creditPayment
     const netCash = totalIncome - expenseTotal - cardSwipeCharges - creditFuel
     const activeDays = new Set([
-      ...expenses, ...attendance, ...cardSwipe, ...lubricants, ...mdu, ...dailySales, ...dcd, ...invoices, ...ledger,
+      ...expenses, ...attendance, ...cardSwipe, ...lubricants, ...campa, ...mdu, ...dailySales, ...dcd, ...invoices, ...ledger,
     ].map((item) => dateKey(item.date)).filter(Boolean)).size
 
     return {
-      expenses, attendance, cardSwipe, lubricants, mdu, dailySales, dcd, invoices, ledger,
-      expenseTotal, cardSwipeAmount, cardSwipeCharges, lubricantTotal, lubricantProfit, mduSale, mduValue,
+      expenses, attendance, cardSwipe, lubricants, campa, mdu, dailySales, dcd, invoices, ledger,
+      expenseTotal, cardSwipeAmount, cardSwipeCharges, lubricantTotal, lubricantProfit, campaTotal, campaProfit, mduSale, mduValue,
       dailySaleValue, dailySaleProfit, dcdProfit, dcdVolume, invoicePurchase, creditFuel, creditPayment,
       presentCount, absentCount, bonusTotal, shortageTotal, advanceTotal, totalEntries, totalIncome, netCash, activeDays,
     }
@@ -311,6 +315,12 @@ export default function MonthlySnapshotPage() {
       helper: `${formatCurrency(snapshot.lubricantProfit)} profit · ${snapshot.lubricants.length} sales`,
       metrics: [{ label: "Profit", value: formatCurrency(snapshot.lubricantProfit) }, { label: "Units", value: formatNumber(sum(snapshot.lubricants, (item) => item.quantity)), tone: "amber" }],
       entries: orderedEntries(snapshot.lubricants, (item) => ({ title: item.product || "Product", meta: `${formatNumber(item.quantity)} qty · ${item.soldBy || "Seller"}`, value: formatCurrency(item.total) })), empty: "No lubricant sales this month.",
+    },
+    {
+      title: "Campa", subtitle: "Campa sales", icon: Droplets, tone: "rose", value: formatCurrency(snapshot.campaTotal),
+      helper: `${formatCurrency(snapshot.campaProfit)} profit · ${snapshot.campa.length} sales`,
+      metrics: [{ label: "Profit", value: formatCurrency(snapshot.campaProfit), tone: "rose" }, { label: "Units", value: formatNumber(sum(snapshot.campa, (item) => item.quantity)), tone: "amber" }],
+      entries: orderedEntries(snapshot.campa, (item) => ({ title: item.product || "Campa product", meta: `${formatNumber(item.quantity)} qty · ${item.soldBy || "Seller"}`, value: formatCurrency(item.total) })), empty: "No Campa sales this month.",
     },
     {
       title: "D.C.D", subtitle: "D.C.D entries", icon: Receipt, tone: "violet", value: formatCurrency(snapshot.dcdProfit),

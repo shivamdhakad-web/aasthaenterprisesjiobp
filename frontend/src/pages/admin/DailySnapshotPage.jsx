@@ -27,6 +27,7 @@ import { getEmployees } from "../../services/employeeApi"
 import { getExpenses } from "../../services/expenseApi"
 import { getInvoiceDetails } from "../../services/invoiceDetailApi"
 import { getLubricants } from "../../services/lubricantApi"
+import * as campaApi from "../../services/campaApi"
 import { getMduEntries } from "../../services/mduApi"
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -98,7 +99,7 @@ function ModuleCard({ icon: Icon, title, subtitle, value, helper, tone = "emeral
           <h3 className="mt-1 text-lg  font-semibold text-[color:var(--text-strong)]">{title}</h3>
         </div>
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${tones[tone] || tones.emerald}`}>
-          <Icon size={19} />
+          {React.createElement(Icon, { size: 19 })}
         </div>
       </div>
 
@@ -284,6 +285,7 @@ export default function DailySnapshotPage() {
     attendance: [],
     cardSwipe: [],
     lubricants: [],
+    campa: [],
     mdu: [],
     dailySales: [],
     dcd: [],
@@ -296,11 +298,12 @@ export default function DailySnapshotPage() {
     setLoading(true)
     setError("")
     try {
-      const [expenses, employees, cardSwipe, lubricants, mdu, dailySales, dcd, invoices, customers] = await Promise.all([
+      const [expenses, employees, cardSwipe, lubricants, campa, mdu, dailySales, dcd, invoices, customers] = await Promise.all([
         getExpenses(),
         getEmployees(),
         getCardSwipeEntries(),
         getLubricants(),
+        campaApi.getSales(),
         getMduEntries(),
         getDailySales(),
         getDcdEntries(),
@@ -336,6 +339,7 @@ export default function DailySnapshotPage() {
         attendance: attendancePairs.flat(),
         cardSwipe: cardSwipe || [],
         lubricants: lubricants || [],
+        campa: campa || [],
         mdu: mdu || [],
         dailySales: dailySales || [],
         dcd: dcd || [],
@@ -360,6 +364,7 @@ export default function DailySnapshotPage() {
     const attendance = byDate(data.attendance)
     const cardSwipe = byDate(data.cardSwipe)
     const lubricants = byDate(data.lubricants)
+    const campa = byDate(data.campa)
     const mdu = byDate(data.mdu)
     const dailySales = byDate(data.dailySales)
     const dcd = byDate(data.dcd)
@@ -371,6 +376,8 @@ export default function DailySnapshotPage() {
     const cardSwipeCharges = sum(cardSwipe, (item) => item.charges)
     const lubricantTotal = sum(lubricants, (item) => item.total)
     const lubricantProfit = sum(lubricants, (item) => item.totalProfit)
+    const campaTotal = sum(campa, (item) => item.total)
+    const campaProfit = sum(campa, (item) => item.totalProfit)
     const mduSale = sum(mdu, (item) => item.sale)
     const mduValue = sum(mdu, (item) => numberValue(item.sale) * numberValue(item.rate))
     const dailySaleValue = sum(dailySales, (item) => numberValue(item.sale) * numberValue(item.rate))
@@ -386,8 +393,8 @@ export default function DailySnapshotPage() {
     const shortageTotal = sum(attendance, (item) => item.shortage)
     const advanceTotal = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol))
     const totalEntries =
-      expenses.length + attendance.length + cardSwipe.length + lubricants.length + mdu.length + dailySales.length + dcd.length + invoices.length + ledger.length
-    const totalIncome = cardSwipeAmount + lubricantTotal + mduValue + dailySaleValue + dcdProfit + creditPayment
+      expenses.length + attendance.length + cardSwipe.length + lubricants.length + campa.length + mdu.length + dailySales.length + dcd.length + invoices.length + ledger.length
+    const totalIncome = cardSwipeAmount + lubricantTotal + campaTotal + mduValue + dailySaleValue + dcdProfit + creditPayment
     const netCash = totalIncome - expenseTotal - cardSwipeCharges - creditFuel
 
     return {
@@ -395,6 +402,7 @@ export default function DailySnapshotPage() {
       attendance,
       cardSwipe,
       lubricants,
+      campa,
       mdu,
       dailySales,
       dcd,
@@ -405,6 +413,8 @@ export default function DailySnapshotPage() {
       cardSwipeCharges,
       lubricantTotal,
       lubricantProfit,
+      campaTotal,
+      campaProfit,
       mduSale,
       mduValue,
       dailySaleValue,
@@ -563,6 +573,24 @@ export default function DailySnapshotPage() {
             emptyText="No lubricant sales."
             items={snapshot.lubricants.map((item) => ({
               title: item.product || "Product",
+              meta: `${formatNumber(item.quantity)} qty · ${item.soldBy || "Seller"}`,
+              value: formatCurrency(item.total),
+            }))}
+          />
+        </ModuleCard>
+
+        <ModuleCard
+          icon={Droplets}
+          title="Campa"
+          subtitle="Campa sales"
+          value={formatCurrency(snapshot.campaTotal)}
+          helper={`${formatCurrency(snapshot.campaProfit)} profit · ${snapshot.campa.length} sales`}
+          tone="rose"
+        >
+          <MiniList
+            emptyText="No Campa sales on this day."
+            items={snapshot.campa.map((item) => ({
+              title: item.product || "Campa product",
               meta: `${formatNumber(item.quantity)} qty · ${item.soldBy || "Seller"}`,
               value: formatCurrency(item.total),
             }))}

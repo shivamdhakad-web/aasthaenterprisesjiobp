@@ -245,8 +245,14 @@ const createOrUpdateMobileSettings = async (payload) => {
   return settings
 }
 
-const adjustProductStock = async (productName, delta) => {
-  const product = await LubricantProduct.findOne({ name: productName })
+const productBusinessFilter = (businessType = "lubricant") => businessType === "campa"
+  ? { businessType: "campa" }
+  : { $or: [{ businessType: "lubricant" }, { businessType: { $exists: false } }] }
+
+const saleBusinessFilter = productBusinessFilter
+
+const adjustProductStock = async (productName, delta, businessType = "lubricant") => {
+  const product = await LubricantProduct.findOne({ name: productName, ...productBusinessFilter(businessType) })
 
   if (!product) {
     throw new Error("Product not found")
@@ -263,60 +269,64 @@ const adjustProductStock = async (productName, delta) => {
   return product
 }
 
-const createLubricantSale = async (payload) => {
+const createLubricantSale = async (payload, businessType = "lubricant") => {
   const salePayload = {
     ...payload,
+    businessType,
     price: Number(payload.price || 0),
     quantity: Number(payload.quantity || 0),
     total: Number(payload.total || Number(payload.price || 0) * Number(payload.quantity || 0)),
   }
 
-  await adjustProductStock(salePayload.product, -salePayload.quantity)
+  await adjustProductStock(salePayload.product, -salePayload.quantity, businessType)
   return LubricantSale.create(salePayload)
 }
 
-const updateLubricantSale = async (id, payload) => {
-  const existing = await LubricantSale.findById(id)
+const updateLubricantSale = async (id, payload, businessType = "lubricant") => {
+  const existing = await LubricantSale.findOne({ _id: id, ...saleBusinessFilter(businessType) })
 
   if (!existing) {
     throw new Error("Lubricant sale not found")
   }
 
-  await adjustProductStock(existing.product, Number(existing.quantity || 0))
+  await adjustProductStock(existing.product, Number(existing.quantity || 0), businessType)
 
   const salePayload = {
     ...payload,
+    businessType,
     price: Number(payload.price || 0),
     quantity: Number(payload.quantity || 0),
     total: Number(payload.total || Number(payload.price || 0) * Number(payload.quantity || 0)),
   }
 
-  await adjustProductStock(salePayload.product, -salePayload.quantity)
-  return LubricantSale.findByIdAndUpdate(id, salePayload, { new: true })
+  await adjustProductStock(salePayload.product, -salePayload.quantity, businessType)
+  return LubricantSale.findOneAndUpdate({ _id: id, ...saleBusinessFilter(businessType) }, salePayload, { new: true })
 }
 
-const deleteLubricantSale = async (id) => {
-  const existing = await LubricantSale.findById(id)
+const deleteLubricantSale = async (id, businessType = "lubricant") => {
+  const existing = await LubricantSale.findOne({ _id: id, ...saleBusinessFilter(businessType) })
 
   if (!existing) {
     return null
   }
 
-  await adjustProductStock(existing.product, Number(existing.quantity || 0))
-  return LubricantSale.findByIdAndDelete(id)
+  await adjustProductStock(existing.product, Number(existing.quantity || 0), businessType)
+  return LubricantSale.findOneAndDelete({ _id: id, ...saleBusinessFilter(businessType) })
 }
 
-const deleteLubricantMonth = async (year, month) => {
+const deleteLubricantMonth = async (year, month, businessType = "lubricant") => {
   const key = `${year}-${String(month).padStart(2, "0")}`
   const sales = await LubricantSale.find({
+    ...saleBusinessFilter(businessType),
     date: { $regex: `^${key}` },
   })
 
   for (const sale of sales) {
-    await adjustProductStock(sale.product, Number(sale.quantity || 0))
+    await adjustProductStock(sale.product, Number(sale.quantity || 0), businessType)
   }
 
   await LubricantSale.deleteMany({
+    ...saleBusinessFilter(businessType),
     date: { $regex: `^${key}` },
   })
 
@@ -481,6 +491,19 @@ const approvalHandlers = {
   "lubricant-sales:delete": ({ resourceId }) => deleteLubricantSale(resourceId),
   "lubricant-sales:deleteMonth": ({ meta }) =>
     deleteLubricantMonth(Number(meta.year), Number(meta.month)),
+
+  "campa-products:create": ({ payload }) => genericCreate(LubricantProduct, { ...payload, businessType: "campa" }),
+  "campa-products:update": ({ resourceId, payload }) =>
+    LubricantProduct.findOneAndUpdate(
+      { _id: resourceId, businessType: "campa" },
+      { ...payload, businessType: "campa" },
+      { new: true },
+    ),
+  "campa-products:delete": async ({ resourceId }) => LubricantProduct.findOneAndDelete({ _id: resourceId, businessType: "campa" }),
+  "campa-sales:create": ({ payload }) => createLubricantSale(payload, "campa"),
+  "campa-sales:update": ({ resourceId, payload }) => updateLubricantSale(resourceId, payload, "campa"),
+  "campa-sales:delete": ({ resourceId }) => deleteLubricantSale(resourceId, "campa"),
+  "campa-sales:deleteMonth": ({ meta }) => deleteLubricantMonth(Number(meta.year), Number(meta.month), "campa"),
 
   "card-swipe:create": ({ payload }) => genericCreate(CardSwipe, payload),
   "card-swipe:update": ({ resourceId, payload }) => genericUpdate(CardSwipe, resourceId, payload),

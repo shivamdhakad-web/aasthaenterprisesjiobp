@@ -2,6 +2,10 @@ const Product = require("../models/LubricantProduct")
 const Sale = require("../models/LubricantSale")
 
 const toNumber = (value)=> Number(value || 0)
+const getBusinessType = (req)=> req.baseUrl.includes("/campa") ? "campa" : "lubricant"
+const getBusinessFilter = (req)=> getBusinessType(req) === "campa"
+ ? {businessType:"campa"}
+ : {$or:[{businessType:"lubricant"},{businessType:{$exists:false}}]}
 
 const buildSalePayload = (body, product, existing = {})=>{
  const price = toNumber(body.price)
@@ -42,7 +46,7 @@ const updateProductStockMeta = (product, quantity, body)=>{
 
 /* GET PRODUCTS */
 exports.getProducts = async(req,res)=>{
- const data = await Product.find().sort({createdAt:-1,name:1})
+ const data = await Product.find(getBusinessFilter(req)).sort({createdAt:-1,name:1})
  res.json(data)
 }
 
@@ -50,6 +54,7 @@ exports.getProducts = async(req,res)=>{
 exports.addProduct = async(req,res)=>{
  const product = new Product({
   ...req.body,
+  businessType:getBusinessType(req),
   price:toNumber(req.body.price),
   costPrice:toNumber(req.body.costPrice),
   stock:toNumber(req.body.stock),
@@ -70,7 +75,7 @@ exports.addProduct = async(req,res)=>{
 
 /* UPDATE PRODUCT */
 exports.updateProduct = async(req,res)=>{
- const existing = await Product.findById(req.params.id)
+ const existing = await Product.findOne({_id:req.params.id,...getBusinessFilter(req)})
 
  if(!existing){
   return res.status(404).json({message:"Product not found"})
@@ -107,20 +112,20 @@ exports.updateProduct = async(req,res)=>{
 
 /* DELETE PRODUCT */
 exports.deleteProduct = async(req,res)=>{
- await Product.findByIdAndDelete(req.params.id)
+ await Product.findOneAndDelete({_id:req.params.id,...getBusinessFilter(req)})
  res.json({message:"Deleted"})
 }
 
 /* GET SALES */
 exports.getSales = async(req,res)=>{
- const data = await Sale.find().sort({_id:-1})
+ const data = await Sale.find(getBusinessFilter(req)).sort({_id:-1})
  res.json(data)
 }
 
 /* ADD SALE + STOCK MINUS */
 exports.addSale = async(req,res)=>{
  const {product,quantity} = req.body
- const p = await Product.findOne({name:product})
+ const p = await Product.findOne({name:product,...getBusinessFilter(req)})
 
  if(!p){
   return res.status(400).json({message:"Product not found"})
@@ -133,7 +138,7 @@ exports.addSale = async(req,res)=>{
  p.stock = toNumber(p.stock) - toNumber(quantity)
  await p.save()
 
- const sale = new Sale(buildSalePayload(req.body, p))
+ const sale = new Sale({...buildSalePayload(req.body, p),businessType:getBusinessType(req)})
  await sale.save()
 
  res.json(sale)
@@ -141,20 +146,20 @@ exports.addSale = async(req,res)=>{
 
 /* UPDATE SALE */
 exports.updateSale = async(req,res)=>{
- const existing = await Sale.findById(req.params.id)
+ const existing = await Sale.findOne({_id:req.params.id,...getBusinessFilter(req)})
 
  if(!existing){
   return res.status(404).json({message:"Sale not found"})
  }
 
- const oldProduct = await Product.findOne({name:existing.product})
+ const oldProduct = await Product.findOne({name:existing.product,...getBusinessFilter(req)})
 
  if(oldProduct){
   oldProduct.stock = toNumber(oldProduct.stock) + toNumber(existing.quantity)
   await oldProduct.save()
  }
 
- const nextProduct = await Product.findOne({name:req.body.product})
+ const nextProduct = await Product.findOne({name:req.body.product,...getBusinessFilter(req)})
 
  if(!nextProduct){
   return res.status(404).json({message:"Product not found"})
@@ -167,9 +172,9 @@ exports.updateSale = async(req,res)=>{
  nextProduct.stock = toNumber(nextProduct.stock) - toNumber(req.body.quantity)
  await nextProduct.save()
 
- const sale = await Sale.findByIdAndUpdate(
-  req.params.id,
-  buildSalePayload(req.body, nextProduct, existing),
+ const sale = await Sale.findOneAndUpdate(
+  {_id:req.params.id,...getBusinessFilter(req)},
+  {...buildSalePayload(req.body, nextProduct, existing),businessType:getBusinessType(req)},
   {new:true}
  )
 
@@ -178,10 +183,10 @@ exports.updateSale = async(req,res)=>{
 
 /* DELETE SALE */
 exports.deleteSale = async(req,res)=>{
- const existing = await Sale.findById(req.params.id)
+ const existing = await Sale.findOne({_id:req.params.id,...getBusinessFilter(req)})
 
  if(existing){
-  const product = await Product.findOne({name:existing.product})
+  const product = await Product.findOne({name:existing.product,...getBusinessFilter(req)})
 
   if(product){
    product.stock = toNumber(product.stock) + toNumber(existing.quantity)
@@ -189,7 +194,7 @@ exports.deleteSale = async(req,res)=>{
   }
  }
 
- await Sale.findByIdAndDelete(req.params.id)
+ await Sale.findOneAndDelete({_id:req.params.id,...getBusinessFilter(req)})
  res.json({message:"Deleted"})
 }
 
@@ -198,11 +203,12 @@ exports.deleteMonth = async(req,res)=>{
  const {month,year} = req.body
  const key = `${year}-${month}`
  const sales = await Sale.find({
+  ...getBusinessFilter(req),
   date:{$regex:key}
  })
 
  for(const sale of sales){
-  const product = await Product.findOne({name:sale.product})
+  const product = await Product.findOne({name:sale.product,...getBusinessFilter(req)})
 
   if(product){
    product.stock = toNumber(product.stock) + toNumber(sale.quantity)
@@ -211,6 +217,7 @@ exports.deleteMonth = async(req,res)=>{
  }
 
  await Sale.deleteMany({
+  ...getBusinessFilter(req),
   date:{$regex:key}
  })
 

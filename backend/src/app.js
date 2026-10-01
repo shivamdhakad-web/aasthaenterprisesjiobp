@@ -77,6 +77,7 @@ app.use("/api/expenses",expenseRoutes)
 app.use("/api/settings", settingsRoutes)
 
 app.use("/api/lubricants",lubricantRoutes)
+app.use("/api/campa",lubricantRoutes)
 
 app.use("/api/employees",employeeRoutes)
 app.use("/api/attendance",attendanceRoutes)

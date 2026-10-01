@@ -4,6 +4,12 @@ const schema = new mongoose.Schema({
 
  name:String,
 
+ businessType:{
+  type:String,
+  enum:["lubricant","campa"],
+  default:"lubricant"
+ },
+
  price:Number,
 
  costPrice:{

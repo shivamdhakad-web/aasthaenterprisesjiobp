@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { Area, AreaChart, Bar, BarChart, Cell, Pie, PieChart, Radar, RadarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PolarGrid, PolarAngleAxis } from "recharts"
 
 import { getLubricants, getProducts } from "../../services/lubricantApi"
+import * as campaApi from "../../services/campaApi"
 
 const todayKey = () => new Date().toISOString().slice(0, 10)
 const currentMonth = () => todayKey().slice(0, 7)
@@ -20,8 +21,10 @@ function Metric({ label, value, helper, tone, icon: Icon }) {
   return <section className={`rounded-2xl border p-4 shadow-[var(--shadow-soft)] ${tones[tone] || tones.amber}`}><div className="flex items-start justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--text-muted)]">{label}</p><p className="mt-2 text-2xl font-black text-[color:var(--text-strong)]">{value}</p><p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">{helper}</p></div><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 shadow-sm"><Icon size={20} /></span></div></section>
 }
 
-export default function LubricantDashboardPage() {
+export default function LubricantDashboardPage({ businessType = "lubricant" }) {
   const navigate = useNavigate()
+  const isCampa = businessType === "campa"
+  const brandName = isCampa ? "Campa" : "Lubricant"
   const [sales, setSales] = useState([])
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,10 +38,13 @@ export default function LubricantDashboardPage() {
   const loadData = async () => {
     setLoading(true); setError("")
     try {
-      const [saleResponse, productResponse] = await Promise.all([getLubricants(), getProducts()])
+      const [saleResponse, productResponse] = await Promise.all([
+        isCampa ? campaApi.getSales() : getLubricants(),
+        isCampa ? campaApi.getProducts() : getProducts(),
+      ])
       setSales(Array.isArray(saleResponse) ? saleResponse : [])
       setProducts(Array.isArray(productResponse) ? productResponse : [])
-    } catch (requestError) { setError(requestError?.response?.data?.message || "Unable to load lubricant data.") } finally { setLoading(false) }
+    } catch (requestError) { setError(requestError?.response?.data?.message || `Unable to load ${brandName.toLowerCase()} data.`) } finally { setLoading(false) }
   }
   useEffect(() => { loadData() }, [])
 
@@ -71,7 +77,7 @@ export default function LubricantDashboardPage() {
   const periodLabel = mode === "all" ? `All records through ${until}` : mode === "yearly" ? `Year ${year}` : new Date(`${month}-01T00:00:00`).toLocaleString("en-IN", { month: "long", year: "numeric" })
 
   return <div className="w-full p-4 text-[color:var(--text-primary)] sm:p-6">
-    <section className="mb-5 overflow-hidden rounded-2xl border border-amber-200 bg-[var(--bg-panel)] shadow-[var(--shadow-soft)]"><div className="flex flex-col gap-4 bg-gradient-to-r from-amber-50 via-white to-emerald-50 px-5 py-5 lg:flex-row lg:items-center lg:justify-between"><div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-gray-50 shadow-sm"><ShoppingBag size={22} /></span><div><p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Lubricant Intelligence</p><h1 className="mt-1 text-2xl font-black tracking-tight text-black">Lubricant Command Deck</h1><p className="mt-1 text-sm text-[color:var(--text-secondary)]">Sales velocity, product margins, inventory cover, and stock risks in one view.</p></div></div><div className="flex flex-wrap gap-2"><button onClick={loadData} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 text-sm font-semibold"><RefreshCw size={16} /> Refresh</button><button onClick={() => navigate("/admin/lubricants")} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-gray-50"><ArrowLeft size={16} /> Lubricant Sales</button></div></div></section>
+    <section className="mb-5 overflow-hidden rounded-2xl border border-amber-200 bg-[var(--bg-panel)] shadow-[var(--shadow-soft)]"><div className="flex flex-col gap-4 bg-gradient-to-r from-amber-50 via-white to-emerald-50 px-5 py-5 lg:flex-row lg:items-center lg:justify-between"><div className="flex items-start gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-gray-50 shadow-sm"><ShoppingBag size={22} /></span><div><p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">{brandName} Intelligence</p><h1 className="mt-1 text-2xl font-black tracking-tight text-black">{brandName} Command Deck</h1><p className="mt-1 text-sm text-[color:var(--text-secondary)]">Sales velocity, product margins, inventory cover, and stock risks in one view.</p></div></div><div className="flex flex-wrap gap-2"><button onClick={loadData} className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 text-sm font-semibold"><RefreshCw size={16} /> Refresh</button><button onClick={() => navigate(isCampa ? "/admin/campa" : "/admin/lubricants")} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-gray-50"><ArrowLeft size={16} /> {brandName} Sales</button></div></div></section>
     {error ? <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div> : null}
     <section className="mb-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]"><div className="flex flex-col gap-3 xl:flex-row xl:items-end"><div className="flex rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1">{[["monthly", "Monthly"], ["yearly", "Yearly"], ["all", "All Time"]].map(([value, label]) => <button key={value} onClick={() => setMode(value)} className={`rounded-lg px-4 py-2 text-sm font-bold ${mode === value ? "bg-amber-500 text-gray-50 shadow-sm" : "text-[color:var(--text-secondary)]"}`}>{label}</button>)}</div>{mode === "monthly" ? <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Month<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} className="input min-w-[160px]" /></label> : null}{mode === "yearly" ? <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Year<select value={year} onChange={(event) => setYear(event.target.value)} className="input min-w-[130px]">{years.map((item) => <option key={item}>{item}</option>)}</select></label> : null}{mode === "all" ? <label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Include records through<input type="date" value={until} onChange={(event) => setUntil(event.target.value)} className="input min-w-[180px]" /></label> : null}<label className="grid gap-1 text-xs font-semibold text-[color:var(--text-muted)]">Product<select value={productFilter} onChange={(event) => setProductFilter(event.target.value)} className="input min-w-[180px]"><option value="all">All Products</option>{products.map((product) => <option key={product._id || product.name} value={product.name}>{product.name}</option>)}</select></label><p className="text-sm font-semibold text-[color:var(--text-secondary)] xl:ml-auto">{periodLabel}</p></div></section>
     <section className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Metric label="Sales Revenue" value={formatCurrency(totals.revenue)} helper={`${totals.orders} sale entries`} tone="amber" icon={CircleDollarSign} /><Metric label="Gross Profit" value={formatCurrency(totals.profit)} helper={`${marginRate.toFixed(1)}% overall margin`} tone="emerald" icon={Trophy} /><Metric label="Units Sold" value={totals.qty.toLocaleString("en-IN")} helper="Selected period sales velocity" tone="blue" icon={PackageCheck} /><Metric label="Inventory Value" value={formatCurrency(inventoryValue)} helper={`${lowStock.length} product${lowStock.length === 1 ? "" : "s"} low in stock`} tone="rose" icon={Boxes} /></section>
@@ -82,4 +88,4 @@ export default function LubricantDashboardPage() {
   </div>
 }
 
-function Loader() { return <div className="flex h-full items-center justify-center text-sm font-medium text-[color:var(--text-muted)]">Loading lubricant analytics...</div> }
+function Loader() { return <div className="flex h-full items-center justify-center text-sm font-medium text-[color:var(--text-muted)]">Loading sales analytics...</div> }
