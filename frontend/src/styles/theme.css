@@ -18,7 +18,6 @@
   --theme-ring-soft: rgba(59, 130, 246, 0.18);
   --theme-toggle-bg: #0a0d14;
   --theme-toggle-text: #e5e7eb;
-  --theme-home-overlay: rgba(0, 0, 0, 0.7);
   --calendar-filter: invert(1);
   --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
@@ -42,7 +41,6 @@
   --theme-ring-soft: rgba(155, 229, 100, 0.24);
   --theme-toggle-bg: #eff8e8;
   --theme-toggle-text: #172314;
-  --theme-home-overlay: rgba(244, 245, 239, 0.68);
   --calendar-filter: invert(0);
   --shadow-soft: 0 14px 36px rgba(16, 24, 20, 0.06);
 }

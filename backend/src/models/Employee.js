@@ -20,7 +20,7 @@ pant:{type:String},
 
 shoes:{type:String},
 
-status:{type:String,default:"Active"}
+status:{type:String,enum:["Active","Not Active"],default:"Active"}
 
 ,
 

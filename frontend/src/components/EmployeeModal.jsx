@@ -1,9 +1,10 @@
-import { useState,useEffect } from "react"
+import { useState } from "react"
 
 export default function EmployeeModal({open,onClose,onSave,editData}){
 
 const emptyForm = {
 name:"",
+status:"Active",
 phone:"",
 role:"",
 shift:"",
@@ -14,22 +15,9 @@ pant:"",
 shoes:""
 }
 
-const [form,setForm] = useState(emptyForm)
-
-
-useEffect(()=>{
-
-if(editData){
-
-setForm(editData)
-
-}else{
-
-setForm(emptyForm)
-
-}
-
-},[editData,open])
+const [form,setForm] = useState(() =>
+  editData ? { ...emptyForm, ...editData, status: editData.status || "Active" } : emptyForm,
+)
 
 
 if(!open) return null
@@ -80,6 +68,19 @@ value={form.role}
 onChange={handleChange}
 className="input"
 />
+
+<label className="block text-sm text-slate-300">
+  Employment Status
+  <select
+    name="status"
+    value={form.status}
+    onChange={handleChange}
+    className="input mt-1"
+  >
+    <option value="Active">Active</option>
+    <option value="Not Active">Not Active</option>
+  </select>
+</label>
 
 <input
 name="shift"

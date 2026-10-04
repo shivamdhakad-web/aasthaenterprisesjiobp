@@ -2,6 +2,7 @@ const Employee = require("../models/Employee")
 
 const normalizeEmployeePayload = (payload = {}) => ({
   ...payload,
+  status: payload.status ? (payload.status === "Not Active" ? "Not Active" : "Active") : undefined,
   name: payload.name?.trim?.() || payload.name,
   phone: payload.phone?.trim?.() || payload.phone,
   role: payload.role?.trim?.() || payload.role,

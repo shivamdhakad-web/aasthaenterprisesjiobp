@@ -44,6 +44,7 @@ const formatCurrency = (value) =>
   `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`
 
 const getCurrentMonth = () => new Date().toISOString().slice(0, 7)
+const isEmployeeActive = (employee) => String(employee?.status || "Active").toLowerCase() !== "not active"
 
 const getPreviousMonth = (month = getCurrentMonth()) => {
   const [year, monthNumber] = String(month).split("-").map(Number)
@@ -320,6 +321,7 @@ export default function Employees() {
   const canManagerShowCard = (cardKey) => !isManager || canShowCard(cardKey)
   const [employees, setEmployees] = useState([])
   const [search, setSearch] = useState("")
+  const [employeeStatusFilter, setEmployeeStatusFilter] = useState("Active")
   const [modalOpen, setModalOpen] = useState(false)
   const [editEmployee, setEditEmployee] = useState(null)
   const [attendance, setAttendance] = useState([])
@@ -395,11 +397,13 @@ export default function Employees() {
     }
   }
 
-  const filteredEmployees = useMemo(() => {
-    return employees.filter((employee) =>
-      employee.name.toLowerCase().includes(search.toLowerCase()),
-    )
-  }, [employees, search])
+  const activeEmployees = useMemo(() => employees.filter(isEmployeeActive), [employees])
+  const filteredEmployees = useMemo(() => employees.filter((employee) => {
+    const matchesSearch = String(employee.name || "").toLowerCase().includes(search.toLowerCase())
+    const matchesStatus = employeeStatusFilter === "All"
+      || (employeeStatusFilter === "Active" ? isEmployeeActive(employee) : !isEmployeeActive(employee))
+    return matchesSearch && matchesStatus
+  }), [employees, employeeStatusFilter, search])
 
   const sortedAttendance = useMemo(() => {
     return [...attendance]
@@ -755,6 +759,12 @@ export default function Employees() {
     allowEmployeeSelect = false,
     mode = "single",
   } = {}) => {
+    const requestedEmployee = employees.find((employee) => employee._id === employeeId)
+    if (requestedEmployee && !isEmployeeActive(requestedEmployee)) {
+      setNotice({ type: "error", message: "Attendance and bonus entries can only be added for active employees." })
+      return
+    }
+
     if (!canManagerUse(editAttendance ? "editEntry" : "addEntry")) {
       setNotice({ type: "error", message: "You do not have access to this attendance action." })
       return
@@ -766,7 +776,7 @@ export default function Employees() {
       employeeId:
         mode === "multiple" && allowEmployeeSelect
           ? ""
-          : employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "",
+          : employeeId || selectedEmployee?._id || activeEmployees[0]?._id || "",
       allowEmployeeSelect,
     })
     setAttendanceModalOpen(true)
@@ -776,18 +786,30 @@ export default function Employees() {
     employeeId = "",
     allowEmployeeSelect = false,
   } = {}) => {
+    const requestedEmployee = employees.find((employee) => employee._id === employeeId)
+    if (requestedEmployee && !isEmployeeActive(requestedEmployee)) {
+      setNotice({ type: "error", message: "Attendance and bonus entries can only be added for active employees." })
+      return
+    }
+
     if (!canManagerUse("addEntry")) {
       setNotice({ type: "error", message: "You do not have access to add attendance entries." })
       return
     }
 
     setAttendanceModePrompt({
-      employeeId: employeeId || selectedEmployee?._id || filteredEmployees[0]?._id || "",
+      employeeId: employeeId || selectedEmployee?._id || activeEmployees[0]?._id || "",
       allowEmployeeSelect,
     })
   }
 
   const openBonusModal = (employeeId = "") => {
+    const requestedEmployee = employees.find((employee) => employee._id === employeeId)
+    if (requestedEmployee && !isEmployeeActive(requestedEmployee)) {
+      setNotice({ type: "error", message: "Attendance and bonus entries can only be added for active employees." })
+      return
+    }
+
     if (!canManagerUse("addBonus")) {
       setNotice({ type: "error", message: "You do not have access to add bonus entries." })
       return
@@ -819,8 +841,8 @@ export default function Employees() {
 
     const targetEmployees =
       bonusForm.employeeTarget === "all"
-        ? employees
-        : employees.filter((employee) => employee._id === bonusForm.employeeId)
+        ? activeEmployees
+        : activeEmployees.filter((employee) => employee._id === bonusForm.employeeId)
 
     if (!targetEmployees.length) {
       setNotice({ type: "error", message: "Please select an employee for bonus entry." })
@@ -1228,8 +1250,7 @@ export default function Employees() {
         </div>
 
         <div className="hidden flex-col gap-3 xl:flex xl:flex-row xl:items-center">
-          <label className="relative block w-full xl:max-w-[420px]">
-            <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--text-secondary)]" />
+          <label className="relative block w-full xl:w-[420px] xl:flex-none">
             <input
               placeholder="Search employees"
               value={search}
@@ -1237,6 +1258,17 @@ export default function Employees() {
               className="input w-full pl-11"
             />
           </label>
+          <select
+            value={employeeStatusFilter}
+            onChange={(event) => setEmployeeStatusFilter(event.target.value)}
+            aria-label="Filter employees by status"
+            className="input shrink-0 cursor-pointer"
+            style={{ width: 160 }}
+          >
+            <option value="Active">Active ({activeEmployees.length})</option>
+            <option value="Not Active">Not Active ({employees.length - activeEmployees.length})</option>
+            <option value="All">All ({employees.length})</option>
+          </select>
 
           <div className="hidden flex-wrap gap-3 sm:flex xl:ml-auto">
             {!isManager ? (
@@ -1353,6 +1385,16 @@ export default function Employees() {
               className="h-[45px] w-full rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-11 pr-3 text-[14px] font-medium text-[color:var(--text-primary)] shadow-sm outline-none placeholder:text-[color:var(--text-secondary)] focus:border-emerald-500"
             />
           </label>
+          <select
+            value={employeeStatusFilter}
+            onChange={(event) => setEmployeeStatusFilter(event.target.value)}
+            aria-label="Filter employees by status"
+            className="h-[45px] min-w-0 max-w-[142px] flex-1 cursor-pointer rounded-[16px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-2 text-xs font-semibold text-[color:var(--text-primary)] shadow-sm outline-none focus:border-emerald-500"
+          >
+            <option value="Active">Active ({activeEmployees.length})</option>
+            <option value="Not Active">Not Active ({employees.length - activeEmployees.length})</option>
+            <option value="All">All ({employees.length})</option>
+          </select>
           <button
             type="button"
             onClick={() => setSearch("")}
@@ -1385,6 +1427,7 @@ export default function Employees() {
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-extrabold text-[color:var(--text-strong)]">{employee.name}</p>
                   <p className="mt-1 truncate text-[11px] font-semibold text-[color:var(--text-secondary)]">{employee.role || "Employee"} · Shift {employee.shift || "-"}</p>
+                  <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-extrabold ${isEmployeeActive(employee) ? "bg-emerald-500/10 text-emerald-700" : "bg-slate-500/10 text-slate-600"}`}>{isEmployeeActive(employee) ? "Active" : "Not Active"}</span>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -1415,6 +1458,7 @@ export default function Employees() {
               <th>Shift</th>
               <th>Phone</th>
               <th>Salary</th>
+              <th>Status</th>
               <th>All Final Balance</th>
               <th>Tshirt</th>
               <th>Pant</th>
@@ -1435,6 +1479,11 @@ export default function Employees() {
                 <td>{employee.shift}</td>
                 <td>{employee.phone}</td>
                 <td>{formatCurrency(employee.salary)}</td>
+                <td>
+                  <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${isEmployeeActive(employee) ? "bg-emerald-500/10 text-emerald-700" : "bg-slate-500/10 text-slate-600"}`}>
+                    {isEmployeeActive(employee) ? "Active" : "Not Active"}
+                  </span>
+                </td>
                 <td>
                   <span className={getEmployeeAllFinalBalance(employee) >= 0 ? "font-semibold text-blue-600" : "font-semibold text-rose-600"}>
                     {formatCurrency(getEmployeeAllFinalBalance(employee))}
@@ -2083,6 +2132,7 @@ export default function Employees() {
       ) : null}
 
       <EmployeeModal
+        key={`${editEmployee?._id || "new"}-${modalOpen ? "open" : "closed"}`}
         open={modalOpen}
         onClose={() => {
           setModalOpen(false)
@@ -2095,7 +2145,7 @@ export default function Employees() {
       {bonusModalOpen ? (
         <BonusModal
           form={bonusForm}
-          employees={employees}
+          employees={activeEmployees}
           saving={bonusSaving}
           onChange={(patch) => setBonusForm((current) => ({ ...current, ...patch }))}
           onClose={() => {
@@ -2121,7 +2171,7 @@ export default function Employees() {
         }}
         onSave={saveAttendance}
         editData={editAttendance}
-        employees={employees}
+        employees={activeEmployees}
         selectedEmployeeId={attendanceContext.employeeId}
         showEmployeeSelector={attendanceContext.allowEmployeeSelect && !editAttendance}
         saving={attendanceSaving}

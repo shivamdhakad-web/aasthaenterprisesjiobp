@@ -237,6 +237,7 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
     lubricantProfit,
     campaProfit,
     mduOtherProfit,
+    mduAvgRate,
     dcdProfit,
     hsdSale,
     msSale,
@@ -491,17 +492,40 @@ export default function FinanceDashboardPage() {
         }
       })
     } else {
-      const totalProfit = metrics.totalProfit
-      const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"]
-      const weights = [0.22, 0.28, 0.24, 0.26]
-      
-      return weeks.map((wName, idx) => ({
-        label: wName,
-        value: Math.round(totalProfit * weights[idx]),
-        isHighlighted: idx === 1,
+      const month = filters.month || currentMonth()
+      const daysInMonth = getDaysInMonth(`${month}-01`)
+      const weekCount = Math.ceil(daysInMonth / 7)
+      const weeklyTotals = Array.from({ length: weekCount }, (_, index) => ({
+        label: `Week ${index + 1}`,
+        value: 0,
       }))
+      const monthMetrics = calculateMetricsForPeriod(data, { month, fromDate: "", toDate: "" })
+      const monthEntries = (entries) => filterByPeriod(entries, { month, fromDate: "", toDate: "" })
+      const addToWeek = (date, amount) => {
+        const day = Number(getDateKey(date).slice(8, 10))
+        if (!day || !Number.isFinite(amount)) return
+        weeklyTotals[Math.floor((day - 1) / 7)].value += amount
+      }
+
+      monthEntries(data.cardSwipe).forEach((entry) => addToWeek(entry.date, numberValue(entry.charges)))
+      monthEntries(data.lubricants).forEach((entry) => addToWeek(entry.date, numberValue(entry.totalProfit)))
+      monthEntries(data.campa).forEach((entry) => addToWeek(entry.date, numberValue(entry.totalProfit)))
+      monthEntries(data.mdu).forEach((entry) => addToWeek(entry.date, getMduLossGain(entry) * monthMetrics.mduAvgRate))
+      monthEntries(data.dcd).forEach((entry) => addToWeek(entry.date, getDcdProfit(entry)))
+      monthEntries(data.dailySales).forEach((entry) => {
+        const product = String(entry.product || "").toLowerCase()
+        const margin = product === "hsd" ? monthMetrics.hsdMargin : product === "ms" ? monthMetrics.msMargin : 0
+        addToWeek(entry.date, numberValue(entry.sale) * margin)
+      })
+
+      const highestWeek = weeklyTotals.reduce(
+        (highest, week, index, list) => (week.value > list[highest].value ? index : highest),
+        0,
+      )
+
+      return weeklyTotals.map((week, index) => ({ ...week, isHighlighted: index === highestWeek }))
     }
-  }, [data, filters.month, cashflowPeriod, metrics.totalProfit])
+  }, [data, filters.month, cashflowPeriod])
 
   // Dynamic Trend Area Graph Data for Recharts
   const areaGraphData = useMemo(() => {
@@ -906,6 +930,8 @@ export default function FinanceDashboardPage() {
                 <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip
                   contentStyle={{ backgroundColor: "#064e3b", borderRadius: "12px", borderColor: "#059669", color: "#fff", fontSize: "11px" }}
+                  labelStyle={{ color: "#fff" }}
+                  itemStyle={{ color: "#fff" }}
                   formatter={(val) => [`Rs. ${Number(val).toLocaleString("en-IN")}`, "Revenue Cash Flow"]}
                 />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>

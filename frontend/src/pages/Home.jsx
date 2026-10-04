@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   LogIn,
   ShieldCheck,
-  Sparkles,
   Truck,
   Users,
 } from "lucide-react"
@@ -77,125 +76,87 @@ export default function Home() {
     { label: "Precision Audits", value: "100% AccuCheck", sub: "Stock & Density Verification", icon: ShieldCheck },
     { label: "Automated Reports", value: "PDF & Excel", sub: "Instant Register Exports", icon: FileSpreadsheet },
     { label: "Role Security", value: "Admin & Manager", sub: "Protected Data Vault", icon: Award },
+    { label: "Unified Operations", value: "One Station View", sub: "Sales, stock & staff in one place", icon: LayoutDashboard },
   ]
 
   return (
     <div className="min-h-screen w-full bg-[var(--bg-main)] text-[color:var(--text-primary)] font-sans transition-colors duration-300 overflow-x-hidden">
       
-      {/* HERO SECTION WITH THEME OVERLAY */}
-      <div className="relative w-full border-b border-[var(--border-color)]">
-        
-        {/* BACKGROUND STATION IMAGE */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('/locate-station-fuel.jpeg')",
-          }}
+      <section className="relative isolate min-h-[650px] overflow-hidden bg-[#10251f] text-white sm:min-h-[680px]">
+        <img
+          src="/locate-station-fuel.jpeg"
+          alt="Jio-bp fuel station"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
         />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#071711]/85 via-[#071711]/60 to-[#071711]/15" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/45 via-transparent to-[#071711]/45" />
 
-        {/* THEME ADAPTIVE OVERLAY (Bright in Light Mode, Dark in Night Mode) */}
-        <div className="absolute inset-0 bg-[var(--theme-home-overlay)] backdrop-blur-[2px]" />
-
-        {/* NAVIGATION HEADER */}
-        <header className="relative z-20 w-full px-3 py-3 sm:px-8 lg:px-20 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-topbar)] backdrop-blur-md shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-600/30 font-black">
-              <Fuel size={22} className="animate-pulse" />
+        <header className="relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between border-b border-white/20 px-3 py-3 sm:px-8 sm:py-4 lg:px-12">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-amber-50 shadow-lg shadow-black/20 sm:h-11 sm:w-11">
+              <Fuel size={21} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black tracking-tight text-[color:var(--text-strong)] sm:text-xl">
-                  Jio-bp <span className="text-emerald-600">Fuel Station</span>
+                <span className="text-base font-bold text-amber-50 sm:text-xl">
+                  Jio-bp <span className="text-emerald-300">Fuel Station</span>
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 border border-emerald-500/20">
-                  <Activity size={10} className="animate-ping text-emerald-600" /> Active
+                <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200/30 bg-black/25 px-2.5 py-1 text-[11px] font-semibold text-emerald-100 sm:inline-flex">
+                  <Activity size={11} className="text-emerald-300" /> Station portal
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">Aastha Enterprises • Fuel Management Deck</p>
+              <p className="text-[11px] font-medium text-white/75">Aastha Enterprises</p>
             </div>
           </div>
 
           <button
             onClick={handleDashboardClick}
-            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-400 hover:bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95"
+            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-amber-50 shadow-lg shadow-black/20 transition-colors hover:bg-emerald-400 sm:min-h-11 sm:px-5 sm:py-2.5 sm:text-sm"
           >
             {isAuthenticated ? (
               <>
-                <LayoutDashboard size={16} /> Open Dashboard
+                <LayoutDashboard size={16} /> <span className="hidden sm:inline">Open Dashboard</span><span className="sm:hidden">Open</span>
               </>
             ) : (
               <>
-                <LogIn size={16} /> Login to Station
+                <LogIn size={16} /> <span className="hidden sm:inline">Login to Station</span><span className="sm:hidden">Login</span>
               </>
             )}
-            <ArrowRight size={16} />
+            <ArrowRight size={16} className="hidden sm:block" />
           </button>
         </header>
 
-        {/* HERO MAIN BODY */}
-        <div className="relative z-10 flex flex-col items-center justify-center px-4 py-16 text-center sm:px-6 lg:px-8 max-w-5xl mx-auto">
-          
-          {/* BADGE */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-4 shadow-sm">
-            <Sparkles size={14} className="text-emerald-600" />
-            <span>Next-Gen Jio-bp Station & Retail Management Portal</span>
-          </div>
-
-          {/* MAIN TITLE */}
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-[color:var(--text-strong)] tracking-tight leading-[1.15] mb-6">
-            Intelligent Fuel Operations for <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 bg-clip-text text-transparent">
+        <div className="mx-auto flex min-h-[590px] w-full max-w-[1440px] items-center px-5 pb-16 pt-24 sm:px-10 lg:px-12">
+          <div className="max-w-2xl">
+            <p className="mb-5 flex items-center gap-2 text-xs font-bold uppercase text-emerald-200 sm:text-sm">
+              <span className="h-px w-8 bg-emerald-300" /> Aastha Enterprises
+            </p>
+            <h1 className="max-w-xl text-4xl font-extrabold leading-tight text-amber-50 sm:text-5xl">
               Jio-bp Fuel Station
-            </span>
-          </h1>
-
-          {/* SUBTITLE */}
-          <p className="max-w-2xl text-base sm:text-lg text-[color:var(--text-primary)] font-medium leading-relaxed mb-5 ">
-            Complete management deck for daily fuel sales, mobile dispenser logistics, density audits, lubricant stock, credit ledgers, and staff attendance.
-          </p>
-
-          {/* MAIN BUTTON */}
-          <div className="w-full max-w-sm mb-9">
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/85 sm:text-lg">
+              A clearer way to manage daily fuel sales, station operations, team records and accounts.
+            </p>
             <button
               onClick={handleDashboardClick}
-              className="w-full group inline-flex items-center justify-center gap-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 px-8 py-4 text-base font-extrabold text-white shadow-xl shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-95"
+              className="mt-8 inline-flex min-h-12 items-center gap-3 rounded-lg bg-emerald-500 px-6 py-3 text-sm font-bold text-gray-200 shadow-xl shadow-black/20 transition-colors hover:bg-emerald-400"
             >
-              <LayoutDashboard size={20} />
-              <span>{isAuthenticated ? `Welcome, ${user?.name || 'User'}` : "Go to Dashboard"}</span>
-              <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" />
+              <LayoutDashboard size={18} />
+              <span>{isAuthenticated ? `Welcome, ${user?.name || "User"}` : "Go to Dashboard"}</span>
+              <ChevronRight size={18} />
             </button>
-          </div>
-
-          {/* LIVE STATION PRICE TICKER CARDS */}
-          <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-3xl border border-[var(--border-strong)] bg-[var(--bg-panel)] shadow-[var(--shadow-soft)]">
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-[var(--bg-soft)] border border-[var(--border-color)]">
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">HSD Diesel</span>
-              <span className="text-base font-extrabold text-[color:var(--text-strong)] mt-0.5">High Speed</span>
-              <span className="text-[11px] font-medium text-[color:var(--text-secondary)]">Live Meter Sale</span>
-            </div>
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-[var(--bg-soft)] border border-[var(--border-color)]">
-              <span className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider">MS Petrol</span>
-              <span className="text-base font-extrabold text-[color:var(--text-strong)] mt-0.5">Motor Spirit</span>
-              <span className="text-[11px] font-medium text-[color:var(--text-secondary)]">Density Verified</span>
-            </div>
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-[var(--bg-soft)] border border-[var(--border-color)]">
-              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Lubricants</span>
-              <span className="text-base font-extrabold text-[color:var(--text-strong)] mt-0.5">Engine Oil</span>
-              <span className="text-[11px] font-medium text-[color:var(--text-secondary)]">In Stock</span>
-            </div>
-            <div className="flex flex-col items-center p-3 rounded-2xl bg-[var(--bg-soft)] border border-[var(--border-color)]">
-              <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">MDU Express</span>
-              <span className="text-base font-extrabold text-[color:var(--text-strong)] mt-0.5">Mobile Dispenser</span>
-              <span className="text-[11px] font-medium text-[color:var(--text-secondary)]">Active Logistics</span>
+            <div className="mt-12 flex flex-wrap gap-x-7 gap-y-3 border-t border-white/25 pt-5 text-sm font-medium text-white/85">
+              <span className="flex items-center gap-2"><Fuel size={16} className="text-emerald-300" /> Fuel sales</span>
+              <span className="flex items-center gap-2"><Truck size={16} className="text-emerald-300" /> Station logistics</span>
+              <span className="flex items-center gap-2"><Users size={16} className="text-emerald-300" /> Team operations</span>
             </div>
           </div>
-
         </div>
-      </div>
+      </section>
 
       {/* OPERATIONAL HIGHLIGHTS BAR */}
       <div className="w-full border-b border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="max-w-[1450px] mx-auto grid grid-cols-2 gap-4 xl:grid-cols-5">
           {stats.map((stat, idx) => {
             const Icon = stat.icon
             return (

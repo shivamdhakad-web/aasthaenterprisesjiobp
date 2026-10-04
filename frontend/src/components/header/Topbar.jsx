@@ -242,9 +242,6 @@ export default function Topbar({ toggleSidebar }) {
             title="Open AI Chat"
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-100"
           >
-            <span className="absolute -top-2 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
-              New
-            </span>
             <Bot size={18} />
           </Link>
         ) : null}

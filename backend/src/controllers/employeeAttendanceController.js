@@ -1,4 +1,5 @@
 const Attendance = require("../models/EmployeeAttendance")
+const Employee = require("../models/Employee")
 
 const getDateRange = (value) => {
 const start = new Date(value)
@@ -58,6 +59,14 @@ exports.addAttendance = async(req,res)=>{
 try{
 
 const {employeeId}=req.params
+const employee = await Employee.findById(employeeId)
+if(!employee){
+return res.status(404).json({message:"Employee not found"})
+}
+if(String(employee.status || "Active").toLowerCase() === "not active"){
+return res.status(400).json({message:"Attendance and bonus entries can only be added for active employees."})
+}
+
 const status = req.body.status || "present"
 
 if(status !== "bonus"){

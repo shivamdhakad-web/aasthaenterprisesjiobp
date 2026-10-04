@@ -369,7 +369,7 @@ export default function MonthlySnapshotPage() {
       <section className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3.5 shadow-[var(--shadow-soft)] sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300"><Activity size={20} /></div>
-          <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="text-lg font-black text-[color:var(--text-strong)] sm:text-xl">Monthly Station Snapshot</h1><span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{snapshot.totalEntries} entries</span>
+          <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="text-lg font-black text-[color:var(--text-strong)] sm:text-xl">Monthly Snapshot</h1><span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{snapshot.totalEntries} entries</span>
           </div></div>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">

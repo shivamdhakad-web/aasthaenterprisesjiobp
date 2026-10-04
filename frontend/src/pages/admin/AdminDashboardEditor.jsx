@@ -60,6 +60,23 @@ export default function AdminDashboardEditor() {
     )
   }
 
+  const movePage = (key, requestedOrder) => {
+    setPages((current) => {
+      const orderedPages = sortPages(current)
+      const currentIndex = orderedPages.findIndex((page) => page.key === key)
+      const targetIndex = Math.max(0, Math.min(orderedPages.length - 1, requestedOrder - 1))
+
+      if (currentIndex < 0 || currentIndex === targetIndex) {
+        return current
+      }
+
+      const [selectedPage] = orderedPages.splice(currentIndex, 1)
+      orderedPages.splice(targetIndex, 0, selectedPage)
+
+      return orderedPages.map((page, index) => ({ ...page, order: index + 1 }))
+    })
+  }
+
   const normalizeOrder = () => {
     setPages((current) =>
       sortPages(current).map((page, index) => ({
@@ -159,13 +176,18 @@ export default function AdminDashboardEditor() {
                 {filteredPages.map((page) => (
                   <tr key={page.key}>
                     <td>
-                      <input
-                        type="number"
-                        min="1"
+                      <select
                         value={page.order}
-                        onChange={(event) => updatePage(page.key, { order: Number(event.target.value || 0) })}
-                        className="input mx-auto max-w-[100px] text-center"
-                      />
+                        onChange={(event) => movePage(page.key, Number(event.target.value))}
+                        aria-label={`Order for ${page.label}`}
+                        className="input mx-auto max-w-[100px] cursor-pointer text-center"
+                      >
+                        {pages.map((_, index) => (
+                          <option key={index + 1} value={index + 1}>
+                            {index + 1}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <input
@@ -194,13 +216,18 @@ export default function AdminDashboardEditor() {
                 <div className="mt-4 grid gap-3">
                   <label className="text-sm font-medium text-[color:var(--text-secondary)]">
                     Order Number
-                    <input
-                      type="number"
-                      min="1"
+                    <select
                       value={page.order}
-                      onChange={(event) => updatePage(page.key, { order: Number(event.target.value || 0) })}
-                      className="input mt-2"
-                    />
+                      onChange={(event) => movePage(page.key, Number(event.target.value))}
+                      aria-label={`Order for ${page.label}`}
+                      className="input mt-2 cursor-pointer"
+                    >
+                      {pages.map((_, index) => (
+                        <option key={index + 1} value={index + 1}>
+                          {index + 1}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label className="text-sm font-medium text-[color:var(--text-secondary)]">
                     Display Name
