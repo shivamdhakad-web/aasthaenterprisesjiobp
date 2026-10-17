@@ -157,13 +157,13 @@ function EmployeeCard({ employee, attendance }) {
   const presentCount = attendance.filter((item) => ["present", "present_half", "half", "double"].includes(item.status)).length
   const absentCount = attendance.filter((item) => item.status === "absent").length
   const shortage = sum(attendance, (item) => item.shortage)
-  const advance = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol))
+  const advance = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol) - numberValue(item.advanceRepayment))
   const bonus = sum(attendance, (item) => item.bonusAmount)
   const entries = attendance.map((item, index) => ({
     id: item._id || `${item.date}-${index}`,
     date: item.date,
     title: item.status || "Present",
-    meta: `Shortage ${formatCurrency(item.shortage)} · Advance ${formatCurrency(numberValue(item.advanceCash) + numberValue(item.advancePetrol))} · Bonus ${formatCurrency(item.bonusAmount)}`,
+    meta: `Shortage ${formatCurrency(item.shortage)} · Advance ${formatCurrency(numberValue(item.advanceCash) + numberValue(item.advancePetrol))} · Repaid ${formatCurrency(item.advanceRepayment)} · Bonus ${formatCurrency(item.bonusAmount)}`,
     value: item.role || "Staff",
   }))
 
@@ -272,7 +272,7 @@ export default function MonthlySnapshotPage() {
     const absentCount = attendance.filter((item) => item.status === "absent").length
     const bonusTotal = sum(attendance, (item) => item.bonusAmount)
     const shortageTotal = sum(attendance, (item) => item.shortage)
-    const advanceTotal = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol))
+    const advanceTotal = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol) - numberValue(item.advanceRepayment))
     const totalEntries = expenses.length + attendance.length + cardSwipe.length + lubricants.length + campa.length + mdu.length + dailySales.length + dcd.length + invoices.length + ledger.length
     const totalIncome = cardSwipeAmount + lubricantTotal + campaTotal + mduValue + dailySaleValue + dcdProfit + creditPayment
     const netCash = totalIncome - expenseTotal - cardSwipeCharges - creditFuel

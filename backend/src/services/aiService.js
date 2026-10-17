@@ -465,7 +465,7 @@ const getRelevantWebsiteData = async (question = "", scope = "", dataRange = "al
   const requestedDate = firstDate && !secondDate ? firstDate : ""
   const rows = source.key === "employees"
     ? (await EmployeeAttendance.find()
-      .select("employeeId date status shortage advanceCash advancePetrol bonusAmount remark")
+      .select("employeeId date status shortage advanceCash advancePetrol advanceRepayment bonusAmount remark")
       .populate("employeeId", "name role shift")
       .sort({ date: -1, createdAt: -1 })
       .lean())
@@ -503,7 +503,7 @@ const getRelevantWebsiteData = async (question = "", scope = "", dataRange = "al
 const getSourceSummary = async (source, dataRange = "all") => {
   if (source.key === "employees") {
     const allRows = await EmployeeAttendance.find()
-      .select("employeeId date status shortage advanceCash advancePetrol bonusAmount remark")
+      .select("employeeId date status shortage advanceCash advancePetrol advanceRepayment bonusAmount remark")
       .populate("employeeId", "name role shift")
       .sort({ date: -1, createdAt: -1 })
       .lean()
@@ -666,6 +666,7 @@ const formatExactRecord = (sourceKey, row) => {
       ["Shortage", formatCurrency(row.shortage)],
       ["Advance cash", formatCurrency(row.advanceCash)],
       ["Advance petrol", formatCurrency(row.advancePetrol)],
+      ["Advance repaid", formatCurrency(row.advanceRepayment)],
       ["Bonus", formatCurrency(row.bonusAmount)],
       ["Remark", row.remark],
     ],

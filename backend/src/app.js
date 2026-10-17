@@ -13,6 +13,7 @@ const meterRoutes = require("./routes/meterRoutes")
 const tankerRoutes = require("./routes/tankerRoutes")
 const customerRoutes = require("./routes/customerRoutes");
 const expenseRoutes = require("./routes/expenseRoutes")
+const manualFinanceEntryRoutes = require("./routes/manualFinanceEntryRoutes")
 const settingsRoutes = require("./routes/settingsRoutes")
 const lubricantRoutes = require("./routes/lubricantRoutes")
 const employeeRoutes = require("./routes/employeeRoutes")
@@ -73,6 +74,7 @@ app.use("/api/customers",customerRoutes);
 
 
 app.use("/api/expenses",expenseRoutes)
+app.use("/api/manual-finance-entries", manualFinanceEntryRoutes)
 
 app.use("/api/settings", settingsRoutes)
 

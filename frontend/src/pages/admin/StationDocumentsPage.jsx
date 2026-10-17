@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   AlertCircle,
   CalendarDays,
   Check,
   Cloud,
+  Download,
   FileText,
   Files,
   Image as ImageIcon,
@@ -40,7 +41,7 @@ const dateLabel = (value) => value
   ? new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
   : ""
 
-const documentKind = (file) => file.type === "application/pdf" ? "PDF" : "IMAGE"
+const getDownloadUrl = (document) => document.secureUrl.replace("/upload/", "/upload/fl_attachment/")
 
 const expiryDays = (date) => Math.ceil((new Date(date).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000)
 
@@ -53,7 +54,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "emerald" }) {
   return (
     <article className={`min-w-0 rounded-xl border p-3.5 ${toneMap[tone]}`}>
       <div className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-[0.12em]">
-        <span className="truncate">{label}</span><Icon size={16} className="shrink-0" />
+        <span className="truncate">{label}</span>{createElement(Icon, { size: 16, className: "shrink-0" })}
       </div>
       <p className="mt-2 text-xl font-extrabold text-[color:var(--text-strong)]">{value}</p>
       <p className="mt-1 truncate text-[11px] text-[color:var(--text-secondary)]">{detail}</p>
@@ -94,7 +95,12 @@ function FilePreview({ document, onClose }) {
         </div>
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-color)] px-4 py-2.5 text-xs text-[color:var(--text-secondary)]">
           <span>{document.category} · Uploaded {dateLabel(document.createdAt)}</span>
-          <a href={document.secureUrl} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline">Open original</a>
+          <div className="flex items-center gap-4">
+            <a href={document.secureUrl} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline">Open original</a>
+            <a href={getDownloadUrl(document)} download={document.fileName} className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 hover:underline">
+              <Download size={14} /> Download
+            </a>
+          </div>
         </footer>
       </section>
     </div>
@@ -326,6 +332,7 @@ export default function StationDocumentsPage() {
                         <span className={`truncate ${days !== null && days <= 30 ? "font-semibold text-amber-700" : "text-[color:var(--text-secondary)]"}`}>{days === null ? `By ${document.uploadedBy || "Admin"}` : days < 0 ? `Expired ${Math.abs(days)}d ago` : `Expires in ${days}d`}</span>
                         <span className="flex shrink-0 items-center gap-0.5">
                           <button type="button" onClick={() => setPreview(document)} aria-label="Preview file" title="Preview" className="rounded p-1 text-blue-600 hover:bg-blue-50"><ImageIcon size={14} /></button>
+                          <a href={getDownloadUrl(document)} download={document.fileName} aria-label={`Download ${document.title}`} title="Download" className="rounded p-1 text-emerald-700 hover:bg-emerald-50"><Download size={14} /></a>
                           <button type="button" onClick={() => setDeleteTarget(document)} disabled={!cloudinary?.usageReady} aria-label="Delete file" title="Delete" className="rounded p-1 text-rose-600 hover:bg-rose-50 disabled:opacity-40"><Trash2 size={14} /></button>
                         </span>
                       </div>

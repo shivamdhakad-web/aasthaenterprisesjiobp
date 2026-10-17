@@ -102,6 +102,7 @@ const createAuthResponse = async (req, user, authVersion) => {
     userAgent,
     ...parseDevice(userAgent),
   })
+  await LoginSession.pruneExpiredKeepingLatest(5)
 
   return {
     token: signAuthToken({ ...user, authVersion, sessionId: session._id.toString() }),

@@ -19,7 +19,10 @@ import {
   Wallet,
   Activity,
   Award,
+  Download,
 } from "lucide-react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import {
   ResponsiveContainer,
   AreaChart,
@@ -43,6 +46,7 @@ import { getExpenses } from "../../services/expenseApi"
 import { getEmployees } from "../../services/employeeApi"
 import { getAttendance } from "../../services/attendanceApi"
 import { getCustomers } from "../../services/customerApi"
+import { getManualFinanceEntries } from "../../services/manualFinanceEntryApi"
 
 const currentMonth = () => new Date().toISOString().slice(0, 7)
 const today = () => new Date().toISOString().slice(0, 10)
@@ -116,7 +120,7 @@ const calculateAttendanceSummary = (employee, entries) => {
     if (entry.status === "bonus") bonus += Number(entry.bonusAmount || 0)
 
     shortage += Number(entry.shortage || 0)
-    advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+    advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0) - Number(entry.advanceRepayment || 0)
 
     if (entry.status === "present") earned += perDay
     if (entry.status === "half") earned += perDay / 2
@@ -150,6 +154,13 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
   const dailySales = filterByPeriod(data.dailySales, filterOpts)
   const invoiceDetails = filterByPeriod(data.invoiceDetails, filterOpts)
   const expenses = filterByPeriod(data.expenses, filterOpts)
+  const manualFinanceEntries = filterByPeriod(data.manualFinanceEntries, filterOpts)
+  const additionalIncome = manualFinanceEntries
+    .filter((entry) => entry.type === "income")
+    .reduce((sum, entry) => sum + numberValue(entry.amount), 0)
+  const additionalExpense = manualFinanceEntries
+    .filter((entry) => entry.type === "expense")
+    .reduce((sum, entry) => sum + numberValue(entry.amount), 0)
 
   const cardSwipeProfit = cardSwipe.reduce((sum, entry) => sum + numberValue(entry.charges), 0)
   const lubricantProfit = lubricants.reduce((sum, entry) => sum + numberValue(entry.totalProfit), 0)
@@ -219,8 +230,10 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
   )
 
   const earnedBonus = employeeMoney.earned + employeeMoney.bonus
-  const totalProfit = cardSwipeProfit + lubricantProfit + campaProfit + mduOtherProfit + dcdProfit + msProfit + hsdProfit
-  const totalExpense = monthExpense + earnedBonus + Math.abs(msProductLoss) + Math.abs(hsdProductLoss)
+  const productLossExpense = Math.abs(Math.min(msProductLoss, 0)) + Math.abs(Math.min(hsdProductLoss, 0))
+  const productGainProfit = Math.max(msProductLoss, 0) + Math.max(hsdProductLoss, 0)
+  const totalProfit = cardSwipeProfit + lubricantProfit + campaProfit + mduOtherProfit + dcdProfit + msProfit + hsdProfit + additionalIncome + productGainProfit
+  const totalExpense = monthExpense + earnedBonus + productLossExpense + additionalExpense
   const finalProfit = totalProfit - totalExpense
 
   let healthScore = 78
@@ -232,6 +245,10 @@ const calculateMetricsForPeriod = (data, filterOpts) => {
   return {
     totalProfit,
     totalExpense,
+    additionalIncome,
+    additionalExpense,
+    productGainProfit,
+    productLossExpense,
     finalProfit,
     cardSwipeProfit,
     lubricantProfit,
@@ -346,6 +363,7 @@ export default function FinanceDashboardPage() {
     expenses: [],
     employees: [],
     customers: [],
+    manualFinanceEntries: [],
     attendanceByEmployee: {},
   })
 
@@ -353,7 +371,7 @@ export default function FinanceDashboardPage() {
     setLoading(true)
     setError("")
     try {
-      const [cardSwipe, lubricants, campa, mdu, dcd, dailySales, invoiceDetails, expenses, employees, customers] = await Promise.all([
+      const [cardSwipe, lubricants, campa, mdu, dcd, dailySales, invoiceDetails, expenses, employees, customers, manualFinanceEntries] = await Promise.all([
         getCardSwipeEntries(),
         getLubricants(),
         campaApi.getSales(),
@@ -364,6 +382,7 @@ export default function FinanceDashboardPage() {
         getExpenses(),
         getEmployees(),
         getCustomers(),
+        getManualFinanceEntries(),
       ])
 
       const attendancePairs = await Promise.all(
@@ -388,6 +407,7 @@ export default function FinanceDashboardPage() {
         expenses: expenses || [],
         employees: employees || [],
         customers: customers || [],
+        manualFinanceEntries: manualFinanceEntries || [],
         attendanceByEmployee: Object.fromEntries(attendancePairs),
       })
     } catch (err) {
@@ -427,22 +447,37 @@ export default function FinanceDashboardPage() {
     return calculateMetricsForPeriod(data, { month: filters.month, fromDate: "", toDate: "" })
   }, [data, filters.month, pnlPeriod])
 
+  const creditSummary = useMemo(() => {
+    const dueCustomers = (data.customers || [])
+      .map((customer) => ({ ...customer, dueAmount: Math.max(Number(customer?.baki || 0), 0) }))
+      .filter((customer) => customer.dueAmount > 0)
+      .sort((a, b) => b.dueAmount - a.dueAmount)
+
+    return {
+      total: dueCustomers.reduce((sum, customer) => sum + customer.dueAmount, 0),
+      dueCount: dueCustomers.length,
+      topCustomers: dueCustomers.slice(0, 3),
+    }
+  }, [data.customers])
+
   const profitLossStatement = useMemo(() => {
     const fuelProfit = pnlMetrics.msProfit + pnlMetrics.hsdProfit + pnlMetrics.dcdProfit + pnlMetrics.mduOtherProfit
-    const productLoss = Math.abs(Math.min(pnlMetrics.msProductLoss, 0)) + Math.abs(Math.min(pnlMetrics.hsdProductLoss, 0))
-    const creditPending = (data.customers || []).reduce((sum, customer) => sum + Math.max(Number(customer?.baki || 0), 0), 0)
+    const productGain = Math.max(pnlMetrics.msProductLoss, 0) + Math.max(pnlMetrics.hsdProductLoss, 0)
 
     const incomeRows = [
       { label: "Fuel Profit", value: fuelProfit, helper: "MS, HSD, D.C.D and M.D.U margin" },
       { label: "Lubricant Profit", value: pnlMetrics.lubricantProfit, helper: "Lubricant sales profit" },
       { label: "Campa Profit", value: pnlMetrics.campaProfit, helper: "Campa sales profit" },
       { label: "Card Swipe Charges", value: pnlMetrics.cardSwipeProfit, helper: "Card swipe charge income" },
+      { label: "Additional Income", value: pnlMetrics.additionalIncome, helper: "Manually recorded income" },
+      { label: "MS/HSD Stock Gain", value: productGain, helper: "Positive MS/HSD loss-gain value added to profit" },
     ]
 
     const costRows = [
       { label: "Expenses", value: pnlMetrics.monthExpense, helper: "Recorded station expenses" },
       { label: "Salary & Bonus", value: pnlMetrics.earnedBonus, helper: "Employee earned salary and bonus" },
-      { label: "Product Loss", value: productLoss, helper: "Negative MS/HSD stock value" },
+      { label: "MS/HSD Product Loss", value: pnlMetrics.productLossExpense, helper: "Negative MS/HSD loss-gain value added to expenses" },
+      { label: "Additional Expenses", value: pnlMetrics.additionalExpense, helper: "Manually recorded expenses" },
     ]
 
     const totalIncome = incomeRows.reduce((sum, row) => sum + Number(row.value || 0), 0)
@@ -454,9 +489,11 @@ export default function FinanceDashboardPage() {
       totalIncome,
       totalCost,
       netProfit: totalIncome - totalCost,
-      creditPending,
+      creditPending: creditSummary.total,
+      dueCustomerCount: creditSummary.dueCount,
+      topDueCustomers: creditSummary.topCustomers,
     }
-  }, [data.customers, pnlMetrics])
+  }, [creditSummary, pnlMetrics])
 
   const previousMetrics = useMemo(() => {
     const prevMonth = getPreviousMonth(filters.month)
@@ -516,6 +553,11 @@ export default function FinanceDashboardPage() {
         const product = String(entry.product || "").toLowerCase()
         const margin = product === "hsd" ? monthMetrics.hsdMargin : product === "ms" ? monthMetrics.msMargin : 0
         addToWeek(entry.date, numberValue(entry.sale) * margin)
+        const purchaseRate = product === "hsd" ? monthMetrics.avgPurchaseHsd : product === "ms" ? monthMetrics.avgPurchaseMs : 0
+        addToWeek(entry.date, numberValue(entry.lossGain) * purchaseRate)
+      })
+      monthEntries(data.manualFinanceEntries).forEach((entry) => {
+        addToWeek(entry.date, numberValue(entry.amount) * (entry.type === "expense" ? -1 : 1))
       })
 
       const highestWeek = weeklyTotals.reduce(
@@ -529,19 +571,15 @@ export default function FinanceDashboardPage() {
 
   // Dynamic Trend Area Graph Data for Recharts
   const areaGraphData = useMemo(() => {
-    const currentYear = (filters.month || "").slice(0, 4) || "2026"
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    const selectedMonthIdx = Number((filters.month || "").slice(5, 7)) - 1
-    
-    const startIdx = Math.max(0, Math.min(selectedMonthIdx - 2, 6))
-    const targetMonths = monthNames.slice(startIdx, startIdx + 6)
-    
-    return targetMonths.map((mName, idx) => {
-      const monthNum = startIdx + idx + 1
-      const mStr = `${currentYear}-${monthNum.toString().padStart(2, "0")}`
+    const [selectedYear, selectedMonth] = (filters.month || currentMonth()).split("-").map(Number)
+
+    return Array.from({ length: 6 }, (_, index) => {
+      const monthDate = new Date(selectedYear, selectedMonth - 1 - 5 + index, 1)
+      const mStr = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`
       const mMetrics = calculateMetricsForPeriod(data, { month: mStr, fromDate: "", toDate: "" })
       return {
-        name: mName,
+        name: monthDate.toLocaleString("en-US", { month: "short" }),
+        month: mStr,
         Revenue: Math.round(mMetrics.totalProfit),
         Expense: Math.round(mMetrics.totalExpense),
         Profit: Math.round(mMetrics.finalProfit),
@@ -560,6 +598,7 @@ export default function FinanceDashboardPage() {
       { name: "Card Swipe Bank Charges", value: Math.max(metrics.cardSwipeProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.cardSwipeProfit, 0) / total) * 100), 100), color: "bg-violet-500" },
       { name: "D.C.D Sales Profit", value: Math.max(metrics.dcdProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.dcdProfit, 0) / total) * 100), 100), color: "bg-cyan-500" },
       { name: "Mobile Dispenser Unit (M.D.U)", value: Math.max(metrics.mduOtherProfit, 0), percentage: Math.min(Math.round((Math.max(metrics.mduOtherProfit, 0) / total) * 100), 100), color: "bg-teal-500" },
+      { name: "MS/HSD Stock Gain", value: metrics.productGainProfit, percentage: Math.min(Math.round((metrics.productGainProfit / total) * 100), 100), color: "bg-lime-500" },
     ]
   }, [metrics])
 
@@ -568,6 +607,10 @@ export default function FinanceDashboardPage() {
       { label: "Total Profit", value: formatCurrency(metrics.totalProfit), tone: metrics.totalProfit >= 0 ? "green" : "rose", helper: "All profit cards combined" },
       { label: "Total Expense", value: formatCurrency(metrics.totalExpense), tone: "rose", helper: "Expenses + salary cost + product loss" },
       { label: "Final Profit", value: formatCurrency(metrics.finalProfit), tone: metrics.finalProfit >= 0 ? "green" : "rose", helper: "Total Profit - Total Expense" },
+      { label: "Additional Income", value: formatCurrency(metrics.additionalIncome), tone: "green", helper: "Manual income entries" },
+      { label: "Additional Expenses", value: formatCurrency(metrics.additionalExpense), tone: "rose", helper: "Manual expense entries" },
+      { label: "MS/HSD Stock Gain", value: formatCurrency(metrics.productGainProfit), tone: "green", helper: "Positive MS/HSD loss-gain value added to profit" },
+      { label: "MS/HSD Product Loss", value: formatCurrency(metrics.productLossExpense), tone: "rose", helper: "Negative MS/HSD loss-gain value added to expenses" },
       { label: "Card Swipe Month Profit", value: formatCurrency(metrics.cardSwipeProfit), tone: "green" },
       { label: "Lubricant Month Profit", value: formatCurrency(metrics.lubricantProfit), tone: "green" },
       { label: "Campa Month Profit", value: formatCurrency(metrics.campaProfit), tone: "rose" },
@@ -583,8 +626,8 @@ export default function FinanceDashboardPage() {
       { label: "Avg Purchase Rate MS", value: formatNumber(metrics.avgPurchaseMs.toFixed(2)), tone: "blue" },
       { label: "MS Margin", value: formatCurrency(metrics.msMargin), tone: metrics.msMargin >= 0 ? "green" : "rose", helper: "Avg Rate MS - Avg Purchase Rate MS" },
       { label: "HSD Margin", value: formatCurrency(metrics.hsdMargin), tone: metrics.hsdMargin >= 0 ? "green" : "rose", helper: "Avg Rate HSD - Avg Purchase Rate HSD" },
-      { label: "MS Product Loss (Rs)", value: formatCurrency(metrics.msProductLoss), tone: metrics.msProductLoss >= 0 ? "green" : "rose", helper: "MS Loss/Gain x Avg Purchase Rate MS" },
-      { label: "HSD Product Loss (Rs)", value: formatCurrency(metrics.hsdProductLoss), tone: metrics.hsdProductLoss >= 0 ? "green" : "rose", helper: "HSD Loss/Gain x Avg Purchase Rate HSD" },
+      { label: "MS Product Loss (Rs)", value: formatCurrency(metrics.msProductLoss), tone: metrics.msProductLoss >= 0 ? "green" : "rose", helper: `${metrics.msProductLoss >= 0 ? "Positive value adds to profit" : "Negative value adds to expenses"} · MS Loss/Gain x Avg Purchase Rate MS` },
+      { label: "HSD Product Loss (Rs)", value: formatCurrency(metrics.hsdProductLoss), tone: metrics.hsdProductLoss >= 0 ? "green" : "rose", helper: `${metrics.hsdProductLoss >= 0 ? "Positive value adds to profit" : "Negative value adds to expenses"} · HSD Loss/Gain x Avg Purchase Rate HSD` },
       { label: "MS Profit (Rs)", value: formatCurrency(metrics.msProfit), tone: metrics.msProfit >= 0 ? "green" : "rose", helper: "MS Margin x MS Sale" },
       { label: "HSD Profit (Rs)", value: formatCurrency(metrics.hsdProfit), tone: metrics.hsdProfit >= 0 ? "green" : "rose", helper: "HSD Margin x HSD Sale" },
       { label: "Month Expense", value: formatCurrency(metrics.monthExpense), tone: "rose" },
@@ -597,6 +640,208 @@ export default function FinanceDashboardPage() {
     const q = legacySearch.toLowerCase()
     return legacyCardList.filter((card) => card.label.toLowerCase().includes(q))
   }, [legacyCardList, legacySearch])
+
+  const handleExportPdf = async () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const margin = 12
+    const contentWidth = pageWidth - margin * 2
+    const reportPeriod = pnlPeriod === "yearly" ? filters.month.slice(0, 4) : periodLabel
+
+    doc.setFillColor(5, 150, 105)
+    doc.rect(0, 0, pageWidth, 31, "F")
+    doc.setTextColor(255, 255, 255)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(18)
+    doc.text("Financial Overview", margin, 14)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
+    doc.text(`Aastha Enterprises  |  Period: ${reportPeriod}  |  ${pnlPeriod.toUpperCase()} SUMMARY`, margin, 22)
+
+    try {
+      const logo = new Image()
+      logo.src = new URL("/jio-bp.png", window.location.href).href
+      await logo.decode()
+      const sourceCanvas = document.createElement("canvas")
+      sourceCanvas.width = logo.naturalWidth
+      sourceCanvas.height = logo.naturalHeight
+      const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true })
+      sourceContext.drawImage(logo, 0, 0)
+      const { data, width, height } = sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height)
+      let left = width
+      let top = height
+      let right = 0
+      let bottom = 0
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          if (data[(y * width + x) * 4 + 3] > 12) {
+            left = Math.min(left, x)
+            top = Math.min(top, y)
+            right = Math.max(right, x)
+            bottom = Math.max(bottom, y)
+          }
+        }
+      }
+      if (right > left && bottom > top) {
+        const logoCanvas = document.createElement("canvas")
+        logoCanvas.width = right - left + 1
+        logoCanvas.height = bottom - top + 1
+        logoCanvas.getContext("2d").drawImage(sourceCanvas, left, top, logoCanvas.width, logoCanvas.height, 0, 0, logoCanvas.width, logoCanvas.height)
+        const backingWidth = 36
+        const backingHeight = 20
+        const backingX = pageWidth - margin - backingWidth
+        const backingY = 5.5
+        doc.setFillColor(255, 255, 255)
+        doc.roundedRect(backingX, backingY, backingWidth, backingHeight, 2, 2, "F")
+
+        const logoWidth = 29
+        const logoHeight = logoWidth * (logoCanvas.height / logoCanvas.width)
+        const logoX = backingX + (backingWidth - logoWidth) / 2
+        const logoY = backingY + (backingHeight - logoHeight) / 2
+        doc.addImage(logoCanvas.toDataURL("image/png"), "PNG", logoX, logoY, logoWidth, logoHeight)
+      }
+    } catch (logoError) {
+      console.warn("Finance report logo could not be embedded:", logoError)
+    }
+
+    const summaryCards = [
+      { label: "TOTAL INCOME", value: profitLossStatement.totalIncome, color: [5, 150, 105] },
+      { label: "TOTAL EXPENSES", value: profitLossStatement.totalCost, color: [31, 41, 55] },
+      { label: "NET PROFIT", value: profitLossStatement.netProfit, color: [5, 150, 105] },
+    ]
+    const gap = 4
+    const cardWidth = (contentWidth - gap * 2) / 3
+    summaryCards.forEach((card, index) => {
+      const x = margin + index * (cardWidth + gap)
+      doc.setFillColor(246, 250, 247)
+      doc.setDrawColor(209, 230, 218)
+      doc.roundedRect(x, 36, cardWidth, 22, 2, 2, "FD")
+      doc.setTextColor(90, 104, 96)
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(7)
+      doc.text(card.label, x + 3, 43)
+      doc.setTextColor(...card.color)
+      doc.setFontSize(10)
+      doc.text(formatCurrency(card.value), x + 3, 52)
+    })
+
+    const tableTheme = {
+      theme: "grid",
+      margin: { left: margin, right: margin },
+      styles: { font: "helvetica", fontSize: 7.5, cellPadding: 2.1, textColor: [31, 41, 55], lineColor: [222, 230, 224], lineWidth: 0.15 },
+      headStyles: { fillColor: [5, 150, 105], textColor: [255, 255, 255], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [247, 250, 248] },
+      columnStyles: { 1: { halign: "right", cellWidth: 31 } },
+    }
+
+    doc.setTextColor(5, 110, 78)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(10)
+    doc.text("Income", margin, 67)
+    doc.text("Expenses", pageWidth / 2 + 2, 67)
+
+    const halfWidth = (contentWidth - 5) / 2
+    autoTable(doc, {
+      ...tableTheme,
+      startY: 70,
+      tableWidth: halfWidth,
+      head: [["Income source", "Amount"]],
+      body: profitLossStatement.incomeRows.map((row) => [row.label, formatCurrency(row.value)]),
+      columnStyles: { 0: { cellWidth: halfWidth - 31 }, 1: { halign: "right", cellWidth: 31 } },
+    })
+    autoTable(doc, {
+      ...tableTheme,
+      startY: 70,
+      margin: { left: pageWidth / 2 + 2, right: margin },
+      tableWidth: halfWidth,
+      head: [["Expense item", "Amount"]],
+      body: profitLossStatement.costRows.map((row) => [row.label, formatCurrency(row.value)]),
+      columnStyles: { 0: { cellWidth: halfWidth - 31 }, 1: { halign: "right", cellWidth: 31 } },
+    })
+
+    const summaryBottom = Math.max(
+      doc.lastAutoTable.finalY,
+      70 + 8 + profitLossStatement.incomeRows.length * 7.1,
+      70 + 8 + profitLossStatement.costRows.length * 7.1,
+    )
+    const metricsTop = summaryBottom + 8
+    doc.setTextColor(5, 110, 78)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(10)
+    doc.text("Station Performance", margin, metricsTop)
+    autoTable(doc, {
+      ...tableTheme,
+      startY: metricsTop + 3,
+      tableWidth: contentWidth,
+      head: [["Metric", "MS Petrol", "HSD Diesel"]],
+      body: [
+        ["Sales volume", `${formatNumber(pnlMetrics.msSale)} L`, `${formatNumber(pnlMetrics.hsdSale)} L`],
+        ["Average margin", `${formatCurrency(pnlMetrics.msMargin)}/L`, `${formatCurrency(pnlMetrics.hsdMargin)}/L`],
+        ["Fuel profit", formatCurrency(pnlMetrics.msProfit), formatCurrency(pnlMetrics.hsdProfit)],
+        ["Stock adjustment", formatCurrency(pnlMetrics.msProductLoss), formatCurrency(pnlMetrics.hsdProductLoss)],
+      ],
+      columnStyles: { 0: { cellWidth: contentWidth * 0.42, fontStyle: "bold" }, 1: { halign: "right" }, 2: { halign: "right" } },
+    })
+
+    const trendTop = doc.lastAutoTable.finalY + 9
+    doc.setTextColor(5, 110, 78)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(10)
+    doc.text("Monthly Financial Trend", margin, trendTop)
+    autoTable(doc, {
+      ...tableTheme,
+      startY: trendTop + 3,
+      tableWidth: contentWidth,
+      head: [["Month", "Income", "Expenses", "Net Profit"]],
+      body: areaGraphData.map((item) => [
+        item.name,
+        formatCurrency(item.Revenue),
+        formatCurrency(item.Expense),
+        formatCurrency(item.Profit),
+      ]),
+      headStyles: { ...tableTheme.headStyles, fontSize: 7 },
+      styles: { ...tableTheme.styles, fontSize: 7, cellPadding: 1.8 },
+      columnStyles: {
+        0: { cellWidth: contentWidth * 0.16, fontStyle: "bold" },
+        1: { halign: "right" },
+        2: { halign: "right" },
+        3: { halign: "right", fontStyle: "bold", textColor: [5, 130, 85] },
+      },
+    })
+
+    const latestTrend = areaGraphData.at(-1)
+    const previousTrend = areaGraphData.at(-2)
+    const trendChange = Number(latestTrend?.Profit || 0) - Number(previousTrend?.Profit || 0)
+    const trendChangePercent = Number(previousTrend?.Profit)
+      ? (trendChange / Math.abs(Number(previousTrend.Profit))) * 100
+      : trendChange > 0 ? 100 : trendChange < 0 ? -100 : 0
+    const comparisonY = doc.lastAutoTable.finalY + 7
+    doc.setFillColor(241, 248, 243)
+    doc.setDrawColor(209, 230, 218)
+    doc.roundedRect(margin, comparisonY - 4, contentWidth, 12, 2, 2, "FD")
+    doc.setCharSpace(0)
+    doc.setTextColor(55, 65, 61)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(8)
+    doc.text(`${latestTrend?.name || "Latest"} vs ${previousTrend?.name || "previous month"}`, margin + 4, comparisonY + 1)
+    doc.setTextColor(trendChange >= 0 ? 5 : 190, trendChange >= 0 ? 130 : 45, trendChange >= 0 ? 85 : 65)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(8)
+    const trendChangeLabel = `${trendChange >= 0 ? "+" : "-"}${formatCurrency(Math.abs(trendChange))}`
+    doc.text(`${trendChangeLabel}  (${trendChangePercent >= 0 ? "+" : ""}${trendChangePercent.toFixed(1)}%)`, pageWidth - margin - 4, comparisonY + 1, { align: "right", charSpace: 0 })
+
+    const footerY = comparisonY + 13
+    doc.setDrawColor(5, 150, 105)
+    doc.setLineWidth(0.5)
+    doc.line(margin, footerY, pageWidth - margin, footerY)
+    doc.setTextColor(100, 116, 110)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(7)
+    doc.text(`Credit pending: ${formatCurrency(profitLossStatement.creditPending)}`, margin, footerY + 5)
+    doc.text(`Generated ${new Date().toLocaleString("en-IN")}`, pageWidth - margin, footerY + 5, { align: "right" })
+
+    doc.save(`Financial_Overview_${String(reportPeriod).replace(/[^\w-]+/g, "_")}.pdf`)
+  }
 
   const periodLabel = filters.fromDate || filters.toDate
     ? `${filters.fromDate || "Start"} to ${filters.toDate || today()}`
@@ -617,6 +862,15 @@ export default function FinanceDashboardPage() {
 
         {/* Action Controls & Period Filters */}
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-xs font-bold text-amber-50 shadow-sm transition-colors hover:bg-emerald-700"
+          >
+            <Download size={15} />
+            PDF
+          </button>
+
           <button
             type="button"
             onClick={() => setShowLegacyModal(true)}
@@ -769,7 +1023,7 @@ export default function FinanceDashboardPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <div className={`relative overflow-hidden rounded-2xl border bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)] ${
+            <div className={`relative flex h-full flex-col overflow-hidden rounded-2xl border bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)] ${
               profitLossStatement.netProfit >= 0
                 ? "border-emerald-500/25"
                 : "border-rose-500/25"
@@ -782,9 +1036,39 @@ export default function FinanceDashboardPage() {
               <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">
                 Income minus expenses, salary, and product loss.
               </p>
+              <div className="mt-auto pt-6">
+                <div className="mb-2 flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-[color:var(--text-secondary)]">Income and cost mix</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                    Margin {profitLossStatement.totalIncome ? `${((profitLossStatement.netProfit / profitLossStatement.totalIncome) * 100).toFixed(1)}%` : "0.0%"}
+                  </span>
+                </div>
+                <div className="flex h-2.5 overflow-hidden rounded-full bg-[var(--bg-soft)]" aria-label="Income and cost mix">
+                  {(() => {
+                    const mixTotal = profitLossStatement.totalIncome + profitLossStatement.totalCost
+                    const incomeShare = mixTotal > 0
+                      ? Math.max(0, Math.min((profitLossStatement.totalIncome / mixTotal) * 100, 100))
+                      : 0
+                    return <>
+                      <div className="h-full bg-emerald-500 transition-all" style={{ width: `${incomeShare}%` }} />
+                      <div className="h-full bg-amber-400 transition-all" style={{ width: `${100 - incomeShare}%` }} />
+                    </>
+                  })()}
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Income</p>
+                    <p className="mt-1 truncate text-xs font-extrabold text-[color:var(--text-strong)]">{formatCurrency(profitLossStatement.totalIncome)}</p>
+                  </div>
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Costs</p>
+                    <p className="mt-1 truncate text-xs font-extrabold text-[color:var(--text-strong)]">{formatCurrency(profitLossStatement.totalCost)}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-2xl border border-amber-500/25 bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-amber-500/25 bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
               <div className="absolute left-0 right-0 top-0 h-1 bg-amber-500" />
               <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">Credit Pending</p>
               <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
@@ -793,6 +1077,29 @@ export default function FinanceDashboardPage() {
               <p className="mt-1 text-xs font-medium text-[color:var(--text-secondary)]">
                 Current unpaid customer balance.
               </p>
+              <div className="mt-auto pt-5">
+                <div className="mb-2 flex items-center justify-between border-b border-[var(--border-color)] pb-2">
+                  <span className="text-[11px] font-semibold text-[color:var(--text-secondary)]">Customers with due</span>
+                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                    {profitLossStatement.dueCustomerCount}
+                  </span>
+                </div>
+                {profitLossStatement.topDueCustomers.length ? (
+                  <div className="space-y-2">
+                    {profitLossStatement.topDueCustomers.map((customer, index) => (
+                      <div key={customer._id || customer.name} className="flex min-w-0 items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-700 dark:text-amber-300">{index + 1}</span>
+                          <span className="truncate text-xs font-semibold text-[color:var(--text-strong)]">{customer.name || "Customer"}</span>
+                        </div>
+                        <span className="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-300">{formatCurrency(customer.dueAmount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-xl bg-[var(--bg-soft)] px-3 py-2 text-xs font-medium text-[color:var(--text-secondary)]">No outstanding customer balances.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

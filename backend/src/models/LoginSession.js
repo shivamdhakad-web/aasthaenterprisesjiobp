@@ -67,4 +67,16 @@ loginSessionSchema.index({ loginAt: -1 })
 loginSessionSchema.index({ status: 1, expiresAt: 1 })
 loginSessionSchema.index({ userRole: 1, userName: 1 })
 
+loginSessionSchema.statics.pruneExpiredKeepingLatest = async function (keep = 5) {
+  const olderExpired = await this.find({ status: "Expired" })
+    .sort({ loginAt: -1, _id: -1 })
+    .skip(keep)
+    .select("_id")
+    .lean()
+
+  if (!olderExpired.length) return { deletedCount: 0 }
+
+  return this.deleteMany({ _id: { $in: olderExpired.map((session) => session._id) } })
+}
+
 module.exports = mongoose.model("LoginSession", loginSessionSchema)

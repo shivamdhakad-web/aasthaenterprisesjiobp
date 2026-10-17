@@ -44,6 +44,20 @@ const getModuleTableSchema = (moduleKey, title) => {
   const key = String(moduleKey || "").toLowerCase().replace(/[^a-z]/g, "")
   const titleKey = String(title || "").toLowerCase().replace(/[^a-z]/g, "")
 
+  if (key.includes("manualfinanceentry") || titleKey.includes("incomeexpenses")) {
+    return {
+      columns: [
+        { label: "Date", render: (item) => formatDate(item.payload?.date || item.createdAt) },
+        { label: "Type", render: (item) => item.payload?.type || "-", className: "font-semibold" },
+        { label: "Category", render: (item) => item.payload?.category || "-" },
+        { label: "Description", render: (item) => item.payload?.description || "-" },
+        { label: "Amount", render: (item) => formatCurrency(item.payload?.amount) },
+        { label: "Payment Mode", render: (item) => item.payload?.paymentMode || "-" },
+        { label: "Submitted By", render: (item) => item.requester?.name || "-" },
+      ],
+    }
+  }
+
   if (key.includes("expense") || titleKey.includes("expense")) {
     return {
       columns: [
@@ -207,20 +221,23 @@ export default function ApprovalActivityPanel({ moduleKey, title }) {
 
   const schema = useMemo(() => getModuleTableSchema(moduleKey, title), [moduleKey, title])
 
-  const load = async () => {
-    try {
-      const data = await getApprovals()
-      setItems(data.filter((item) => item.moduleKey === moduleKey))
-    } catch {
-      setItems([])
-    }
-  }
-
   useEffect(() => {
-    load()
-    const handleRefresh = () => load()
+    let active = true
+    const refresh = async () => {
+      try {
+        const data = await getApprovals()
+        if (active) setItems(data.filter((item) => item.moduleKey === moduleKey))
+      } catch {
+        if (active) setItems([])
+      }
+    }
+    refresh()
+    const handleRefresh = () => refresh()
     window.addEventListener("approval:created", handleRefresh)
-    return () => window.removeEventListener("approval:created", handleRefresh)
+    return () => {
+      active = false
+      window.removeEventListener("approval:created", handleRefresh)
+    }
   }, [moduleKey])
 
   const counts = useMemo(

@@ -215,7 +215,7 @@ function HorizontalEmployeeCard({ snapshot }) {
             style={{ scrollbarWidth: "thin" }}
           >
             {snapshot.attendance.map((item, index) => {
-              const advance = numberValue(item.advanceCash) + numberValue(item.advancePetrol)
+              const advance = numberValue(item.advanceCash) + numberValue(item.advancePetrol) - numberValue(item.advanceRepayment)
               return (
                 <div
                   key={`${item.employeeName}-${index}`}
@@ -245,11 +245,17 @@ function HorizontalEmployeeCard({ snapshot }) {
                     </span>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-3 gap-1.5">
+                  <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
                     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2 text-center">
                       <p className="text-[9px] font-black uppercase tracking-wider text-[color:var(--text-muted)]">Shortage</p>
                       <p className={`mt-0.5 text-xs font-bold ${numberValue(item.shortage) !== 0 ? "text-rose-600 dark:text-rose-400" : "text-[color:var(--text-strong)]"}`}>
                         {formatCurrency(item.shortage)}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-2 text-center dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Repaid</p>
+                      <p className="mt-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                        {formatCurrency(item.advanceRepayment)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2 text-center">
@@ -391,7 +397,7 @@ export default function DailySnapshotPage() {
     const absentCount = attendance.filter((item) => item.status === "absent").length
     const bonusTotal = sum(attendance, (item) => item.bonusAmount)
     const shortageTotal = sum(attendance, (item) => item.shortage)
-    const advanceTotal = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol))
+    const advanceTotal = sum(attendance, (item) => numberValue(item.advanceCash) + numberValue(item.advancePetrol) - numberValue(item.advanceRepayment))
     const totalEntries =
       expenses.length + attendance.length + cardSwipe.length + lubricants.length + campa.length + mdu.length + dailySales.length + dcd.length + invoices.length + ledger.length
     const totalIncome = cardSwipeAmount + lubricantTotal + campaTotal + mduValue + dailySaleValue + dcdProfit + creditPayment

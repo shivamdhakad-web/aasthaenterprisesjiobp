@@ -241,6 +241,10 @@ function SalaryEntryCard({ entry }) {
                     <span className="font-semibold">₹{formatCurrency(entry.advancePetrol)}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
+                    <span className="font-medium">Advance Repaid:</span>
+                    <span className="font-semibold">₹{formatCurrency(entry.advanceRepayment)}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-[color:var(--text-secondary)]">
                     <span className="font-medium">Bonus:</span>
                     <span className="font-semibold">₹{formatCurrency(getEntryBonus(entry))}</span>
                 </span>
@@ -552,6 +556,12 @@ export default function EmployeeSalary() {
                     icon={metricConfigs.advance.icon}
                 />
                 <SalaryMetric
+                    label="Advance Repaid"
+                    value={`₹${formatCurrency(breakdown.advanceRepaid)}`}
+                    tone="green"
+                    icon={metricConfigs.advance.icon}
+                />
+                <SalaryMetric
                     label="Last Month Advance"
                     value={`₹${formatCurrency(lastMonthAdvance)}`}
                     tone="amber"
@@ -628,6 +638,7 @@ export default function EmployeeSalary() {
                                 <th className="px-6 py-4 text-right font-semibold">Shortage</th>
                                 <th className="px-6 py-4 text-right font-semibold">Cash</th>
                                 <th className="px-6 py-4 text-right font-semibold">Petrol</th>
+                                <th className="px-6 py-4 text-right font-semibold">Repaid</th>
                                 <th className="px-6 py-4 text-right font-semibold">Bonus</th>
                                 <th className="px-6 py-4 text-left font-semibold">Remark</th>
                             </tr>
@@ -676,6 +687,9 @@ export default function EmployeeSalary() {
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
                                             ₹{formatCurrency(entry.advancePetrol)}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-medium text-emerald-600">
+                                            ₹{formatCurrency(entry.advanceRepayment)}
                                         </td>
                                         <td className="px-6 py-4 text-right font-medium text-[color:var(--text-secondary)]">
                                             ₹{formatCurrency(getEntryBonus(entry))}

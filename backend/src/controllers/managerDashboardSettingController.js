@@ -318,6 +318,17 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
     buttons: [],
   },
   {
+    key: "manualFinanceEntries",
+    label: "Income & Expenses",
+    path: "/manager/income-expenses",
+    order: 19.5,
+    buttons: [
+      { key: "addEntry", label: "Add Entry", enabled: true },
+      { key: "editEntry", label: "Edit Entry", enabled: true },
+      { key: "deleteEntry", label: "Delete Entry", enabled: true },
+    ],
+  },
+  {
     key: "smartCalculator",
     label: "Smart Calculator",
     path: "/manager/smart-calculator",

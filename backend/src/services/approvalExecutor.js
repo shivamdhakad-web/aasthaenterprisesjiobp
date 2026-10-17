@@ -4,6 +4,7 @@ const mongoose = require("mongoose")
 const Employee = require("../models/Employee")
 const EmployeeAttendance = require("../models/EmployeeAttendance")
 const Expense = require("../models/Expense")
+const ManualFinanceEntry = require("../models/ManualFinanceEntry")
 const LubricantProduct = require("../models/LubricantProduct")
 const LubricantSale = require("../models/LubricantSale")
 const CardSwipe = require("../models/CardSwipe")
@@ -60,7 +61,26 @@ const calculateAttendancePayload = (payload) => ({
   shortage: Number(payload.shortage || 0),
   advanceCash: Number(payload.advanceCash || 0),
   advancePetrol: Number(payload.advancePetrol || 0),
+  advanceRepayment: Number(payload.advanceRepayment || 0),
 })
+
+const saveAttendanceApproval = async ({ payload, meta = {}, resourceId }) => {
+  const existing = resourceId ? await EmployeeAttendance.findById(resourceId) : null
+  if (resourceId && !existing) throw new Error("Attendance entry not found")
+  const employeeId = existing?.employeeId || toObjectId(meta.employeeId || payload.employeeId)
+  const attendanceQuery = { employeeId }
+  if (resourceId) attendanceQuery._id = { $ne: resourceId }
+  const previousEntries = await EmployeeAttendance.find(attendanceQuery).select("advanceCash advancePetrol advanceRepayment")
+  const previousDue = Math.max(0, previousEntries.reduce((sum, entry) =>
+    sum + Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0) - Number(entry.advanceRepayment || 0), 0))
+  const attendancePayload = calculateAttendancePayload(payload)
+  const available = previousDue + attendancePayload.advanceCash + attendancePayload.advancePetrol
+  if (![attendancePayload.advanceCash, attendancePayload.advancePetrol, attendancePayload.advanceRepayment].every(Number.isFinite) || attendancePayload.advanceCash < 0 || attendancePayload.advancePetrol < 0 || attendancePayload.advanceRepayment < 0 || attendancePayload.advanceRepayment > available) {
+    throw new Error(`Advance repayment cannot exceed the outstanding advance of Rs. ${available.toLocaleString("en-IN")}.`)
+  }
+  const data = { ...attendancePayload, employeeId }
+  return resourceId ? genericUpdate(EmployeeAttendance, resourceId, data) : genericCreate(EmployeeAttendance, data)
+}
 
 const calculateDcdPayload = (payload) => {
   const volume = Number(payload.volume || 0)
@@ -466,13 +486,8 @@ const approvalHandlers = {
   "employees:update": ({ resourceId, payload }) => genericUpdate(Employee, resourceId, payload),
   "employees:delete": ({ resourceId }) => genericDelete(Employee, resourceId),
 
-  "attendance:create": ({ payload, meta }) =>
-    genericCreate(EmployeeAttendance, {
-      ...calculateAttendancePayload(payload),
-      employeeId: toObjectId(meta.employeeId || payload.employeeId),
-    }),
-  "attendance:update": ({ resourceId, payload }) =>
-    genericUpdate(EmployeeAttendance, resourceId, calculateAttendancePayload(payload)),
+  "attendance:create": saveAttendanceApproval,
+  "attendance:update": saveAttendanceApproval,
   "attendance:delete": ({ resourceId }) => genericDelete(EmployeeAttendance, resourceId),
   "attendance:deleteMonth": ({ meta }) =>
     deleteAttendanceMonth(meta.employeeId, Number(meta.year), Number(meta.month)),
@@ -480,6 +495,30 @@ const approvalHandlers = {
   "expenses:create": ({ payload }) => genericCreate(Expense, payload),
   "expenses:update": ({ resourceId, payload }) => genericUpdate(Expense, resourceId, payload),
   "expenses:delete": ({ resourceId }) => genericDelete(Expense, resourceId),
+
+  "manual-finance-entries:create": ({ payload, requester }) =>
+    genericCreate(ManualFinanceEntry, {
+      ...payload,
+      addedBy: payload.addedBy || requester?.name || "Manager",
+      createdByRole: "Manager",
+    }),
+  "manual-finance-entries:update": ({ resourceId, payload, requester }) =>
+    ManualFinanceEntry.findByIdAndUpdate(
+      resourceId,
+      {
+        date: payload.date,
+        type: payload.type,
+        category: payload.category,
+        description: payload.description || "",
+        amount: Number(payload.amount),
+        paymentMode: payload.paymentMode || "Cash",
+        lastEditedAt: new Date(),
+        lastEditedBy: requester?.name || "Manager",
+        lastEditedByRole: "Manager",
+      },
+      { new: true, runValidators: true },
+    ),
+  "manual-finance-entries:delete": ({ resourceId }) => ManualFinanceEntry.findByIdAndDelete(resourceId),
 
   "lubricant-products:create": ({ payload }) => genericCreate(LubricantProduct, payload),
   "lubricant-products:update": ({ resourceId, payload }) =>

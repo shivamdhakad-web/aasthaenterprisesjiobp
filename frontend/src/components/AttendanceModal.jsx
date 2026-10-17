@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
 
 const getTodayString = () => new Date().toISOString().slice(0, 10)
+const addDays = (date, days) => {
+  const [year, month, day] = String(date || getTodayString()).split("-").map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10)
+}
 
 const buildEmptyRow = (employeeId = "", date = getTodayString()) => ({
   employeeId,
@@ -9,6 +13,7 @@ const buildEmptyRow = (employeeId = "", date = getTodayString()) => ({
   shortage: "",
   advanceCash: "",
   advancePetrol: "",
+  advanceRepayment: "",
   bonusAmount: "",
   remark: "",
 })
@@ -45,6 +50,7 @@ export default function AttendanceModal({
         shortage: editData.shortage ?? "",
         advanceCash: editData.advanceCash ?? "",
         advancePetrol: editData.advancePetrol ?? "",
+        advanceRepayment: editData.advanceRepayment ?? "",
         bonusAmount: editData.bonusAmount ?? "",
         remark: editData.remark ?? "",
       }
@@ -85,7 +91,13 @@ export default function AttendanceModal({
   const addBulkRow = () => {
     setBulkState((current) => ({
       ...current,
-      entries: [...current.entries, buildEmptyRow(current.employeeId, current.date)],
+      entries: [
+        ...current.entries,
+        buildEmptyRow(
+          current.employeeId,
+          addDays(current.entries.at(-1)?.date || current.date, 1),
+        ),
+      ],
     }))
   }
 
@@ -280,6 +292,20 @@ export default function AttendanceModal({
 
                     <label className="block">
                       <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                        Advance Repaid
+                      </span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={entry.advanceRepayment}
+                        onChange={(event) => updateBulkRow(index, "advanceRepayment", event.target.value)}
+                        placeholder="Amount returned"
+                        className="input"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
                         Bonus Amount
                       </span>
                       <input
@@ -379,6 +405,14 @@ export default function AttendanceModal({
                 Advance Petrol
               </span>
               <input type="text" inputMode="decimal" name="advancePetrol" placeholder="0" value={form.advancePetrol} onChange={handleChange} className="input" />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                Advance Repaid
+              </span>
+              <input type="text" inputMode="decimal" name="advanceRepayment" placeholder="Amount returned" value={form.advanceRepayment} onChange={handleChange} className="input" />
+              <span className="mt-1 block text-xs text-[color:var(--text-muted)]">Reduces the employee's outstanding advance.</span>
             </label>
 
             <label className="block">

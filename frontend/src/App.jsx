@@ -57,6 +57,7 @@ import MduPage from "./pages/shared/MduPage"
 import InvoiceDetailsPage from "./pages/shared/InvoiceDetailsPage"
 import DailySalesPage from "./pages/shared/DailySalesPage"
 import FinanceDashboardPage from "./pages/shared/FinanceDashboardPage"
+import ManualFinanceEntriesPage from "./pages/shared/ManualFinanceEntriesPage"
 import ExpenseDashboardPage from "./pages/finance/ExpenseDashboardPage"
 import CardSwipeDashboardPage from "./pages/finance/CardSwipeDashboardPage"
 import EmployeeAttendanceDashboardPage from "./pages/finance/EmployeeAttendanceDashboardPage"
@@ -128,6 +129,7 @@ export default function App() {
             <Route path="daily-sales" element={<DailySalesPage />} />
             <Route path="daily-sales-dashboard" element={<DailySalesDashboardPage />} />
             <Route path="finance-dashboard" element={<FinanceDashboardPage />} />
+            <Route path="income-expenses" element={<ManualFinanceEntriesPage />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
             <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="ttdrivers" element={<TTDrivers />} />
@@ -280,6 +282,15 @@ export default function App() {
                 "financeDashboard",
                 <ApprovalWrappedPage moduleKey="finance-dashboard" title="Finance Dashboard">
                   <FinanceDashboardPage />
+                </ApprovalWrappedPage>,
+              )}
+            />
+            <Route
+              path="income-expenses"
+              element={managerPage(
+                "manualFinanceEntries",
+                <ApprovalWrappedPage moduleKey="manual-finance-entries" title="Income & Expenses">
+                  <ManualFinanceEntriesPage />
                 </ApprovalWrappedPage>,
               )}
             />

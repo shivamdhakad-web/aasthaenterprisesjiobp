@@ -32,6 +32,7 @@ function calculateEmployee(employee, entries) {
     result.bonus += numberValue(entry.bonusAmount)
     result.shortage += numberValue(entry.shortage)
     result.advance += numberValue(entry.advanceCash) + numberValue(entry.advancePetrol)
+    result.advance -= numberValue(entry.advanceRepayment)
     result[status] = (result[status] || 0) + 1
     result.records += 1
     return result

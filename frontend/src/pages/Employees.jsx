@@ -124,6 +124,7 @@ const calculateAttendanceSummary = (employee, entries) => {
   let doubleShift = 0
   let shortage = 0
   let advance = 0
+  let advanceRepaid = 0
   let bonus = 0
   let earned = 0
 
@@ -151,6 +152,7 @@ const calculateAttendanceSummary = (employee, entries) => {
 
     shortage += Number(entry.shortage || 0)
     advance += Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+    advanceRepaid += Number(entry.advanceRepayment || 0)
 
     if (entry.status === "present") {
       earned += perDay
@@ -167,7 +169,8 @@ const calculateAttendanceSummary = (employee, entries) => {
   })
 
   earned = Math.round(earned)
-  const final = Math.round(earned + bonus + shortage - advance)
+  const outstandingAdvance = advance - advanceRepaid
+  const final = Math.round(earned + bonus + shortage - outstandingAdvance)
 
   return {
     present,
@@ -178,6 +181,8 @@ const calculateAttendanceSummary = (employee, entries) => {
     earned,
     shortage,
     advance,
+    advanceRepaid,
+    outstandingAdvance,
     bonus,
     final,
   }
@@ -213,12 +218,13 @@ const buildAttendanceReportPdf = ({ employee, entries, fromDate, toDate }) => {
   doc.text(`Bonus: ${formatCurrency(summary.bonus)}`, 78, 84)
   doc.text(`Shortage: ${formatCurrency(summary.shortage)}`, 140, 84)
   doc.text(`Advance: ${formatCurrency(summary.advance)}`, 14, 92)
+  doc.text(`Advance Repaid: ${formatCurrency(summary.advanceRepaid)}`, 78, 92)
   doc.setFont("helvetica", "bold")
-  doc.text(`Final Balance: ${formatCurrency(summary.final)}`, 78, 92)
+  doc.text(`Final Balance: ${formatCurrency(summary.final)}`, 14, 100)
 
   autoTable(doc, {
-    startY: 100,
-    head: [["Date", "Status", "Bonus", "Shortage", "Cash", "Petrol", "Remark"]],
+    startY: 108,
+    head: [["Date", "Status", "Bonus", "Shortage", "Cash", "Petrol", "Repaid", "Remark"]],
     body: entries.map((entry) => [
       entry.date ? String(entry.date).slice(0, 10) : "-",
       statusMeta[entry.status]?.label || entry.status,
@@ -226,6 +232,7 @@ const buildAttendanceReportPdf = ({ employee, entries, fromDate, toDate }) => {
       entry.shortage || 0,
       entry.advanceCash || 0,
       entry.advancePetrol || 0,
+      entry.advanceRepayment || 0,
       entry.remark || "-",
     ]),
     styles: { fontSize: 9, cellPadding: 3 },
@@ -256,6 +263,7 @@ const buildAttendanceReportExcel = ({ employee, entries, fromDate, toDate }) => 
       Bonus: summary.bonus,
       Shortage: summary.shortage,
       Advance: summary.advance,
+      AdvanceRepaid: summary.advanceRepaid,
       FinalBalance: summary.final,
     },
   ])
@@ -268,6 +276,7 @@ const buildAttendanceReportExcel = ({ employee, entries, fromDate, toDate }) => 
       Shortage: entry.shortage || 0,
       AdvanceCash: entry.advanceCash || 0,
       AdvancePetrol: entry.advancePetrol || 0,
+      AdvanceRepaid: entry.advanceRepayment || 0,
       Remark: entry.remark || "-",
     })),
   )
@@ -448,7 +457,7 @@ export default function Employees() {
       if (entryMonth !== previousMonth) {
         return total
       }
-      return total + Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0)
+      return total + Number(entry.advanceCash || 0) + Number(entry.advancePetrol || 0) - Number(entry.advanceRepayment || 0)
     }, 0)
   }, [attendance, selectedMonth])
 
@@ -615,6 +624,20 @@ export default function Employees() {
         value: formatCurrency(summary.advance),
         accent: "text-amber-600",
         ring: "border-amber-200 bg-amber-50/80",
+      },
+      {
+        key: "advanceRepaid",
+        label: "Advance Repaid",
+        value: formatCurrency(summary.advanceRepaid),
+        accent: "text-emerald-600",
+        ring: "border-emerald-200 bg-emerald-50/80",
+      },
+      {
+        key: "outstandingAdvance",
+        label: "Outstanding Advance",
+        value: formatCurrency(allTimeSummary.outstandingAdvance),
+        accent: "text-orange-600",
+        ring: "border-orange-200 bg-orange-50/80",
       },
       {
         key: "lastMonthAdvance",
@@ -1864,6 +1887,7 @@ export default function Employees() {
                   <th>Short</th>
                   <th>Cash</th>
                   <th>Petrol</th>
+                  <th>Repaid</th>
                   <th>Bonus</th>
                   <th>Remark</th>
                   <th>Audit</th>
@@ -1884,6 +1908,7 @@ export default function Employees() {
                     </td>
                     <td>{entry.advanceCash || 0}</td>
                     <td>{entry.advancePetrol || 0}</td>
+                    <td>{entry.advanceRepayment || 0}</td>
                     <td className="text-violet-500">{entry.bonusAmount || 0}</td>
                     <td>{entry.remark || "-"}</td>
                     <td className="text-left text-xs leading-6 text-[color:var(--text-secondary)]">
@@ -1994,7 +2019,7 @@ export default function Employees() {
                         </p>
                       </div>
                       <p className="mt-2 text-sm text-[color:var(--text-secondary)]">
-                        Cash {entry.advanceCash || 0} | Petrol {entry.advancePetrol || 0} | Bonus {entry.bonusAmount || 0}
+                        Cash {entry.advanceCash || 0} | Petrol {entry.advancePetrol || 0} | Repaid {entry.advanceRepayment || 0} | Bonus {entry.bonusAmount || 0}
                       </p>
                     </div>
 

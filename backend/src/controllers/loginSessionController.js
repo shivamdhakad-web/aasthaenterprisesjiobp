@@ -30,6 +30,7 @@ const expireOldSessions = () =>
 exports.listLoginSessions = async (req, res) => {
   try {
     await expireOldSessions()
+    await LoginSession.pruneExpiredKeepingLatest(5)
 
     const { status = "all", role = "all", search = "" } = req.query
     const query = {}

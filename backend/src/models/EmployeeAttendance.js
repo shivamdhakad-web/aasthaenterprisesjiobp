@@ -22,6 +22,8 @@ advanceCash:{type:Number,default:0},
 
 advancePetrol:{type:Number,default:0},
 
+advanceRepayment:{type:Number,default:0,min:0},
+
 bonusAmount:{type:Number,default:0},
 
 remark:{type:String},

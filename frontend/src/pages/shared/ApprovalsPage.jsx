@@ -81,6 +81,7 @@ const moduleColumns = {
     { label: "Short", keys: ["shortage"], type: "currency" },
     { label: "Cash", keys: ["advanceCash"], type: "currency" },
     { label: "Petrol", keys: ["advancePetrol"], type: "currency" },
+    { label: "Advance Repaid", keys: ["advanceRepayment"], type: "currency" },
     { label: "Bonus", keys: ["bonusAmount"], type: "currency", className: "text-violet-600" },
     { label: "Remark", keys: ["remark"] },
   ],

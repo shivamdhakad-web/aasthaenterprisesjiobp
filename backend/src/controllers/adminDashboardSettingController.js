@@ -27,6 +27,7 @@ const DEFAULT_ADMIN_DASHBOARD_PAGES = [
   { key: "invoiceDetails", label: "Invoice Details", path: "/admin/invoice-details", order: 24 },
   { key: "dailySales", label: "Daily Sales", path: "/admin/daily-sales", order: 25 },
   { key: "financeDashboard", label: "Finance Dashboard", path: "/admin/finance-dashboard", order: 26 },
+  { key: "manualFinanceEntries", label: "Income & Expenses", path: "/admin/income-expenses", order: 26.5 },
   { key: "smartCalculator", label: "Smart Calculator", path: "/admin/smart-calculator", order: 27 },
   { key: "densityCalculator", label: "Density Calculator", path: "/admin/density-calculator", order: 28 },
   { key: "ttDrivers", label: "TT Drivers", path: "/admin/ttdrivers", order: 29 },
