@@ -495,6 +495,16 @@ const approvalHandlers = {
   "expenses:create": ({ payload }) => genericCreate(Expense, payload),
   "expenses:update": ({ resourceId, payload }) => genericUpdate(Expense, resourceId, payload),
   "expenses:delete": ({ resourceId }) => genericDelete(Expense, resourceId),
+  "expenses:deleteMonth": async ({ meta }) => {
+    const year = Number(meta.year)
+    const month = Number(meta.month)
+    if (!Number.isInteger(year) || year < 2000 || year > 9999 || !Number.isInteger(month) || month < 1 || month > 12) {
+      throw new Error("A valid year and month are required.")
+    }
+    const monthKey = `${year}-${String(month).padStart(2, "0")}`
+    const nextMonth = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10)
+    return Expense.deleteMany({ date: { $gte: `${monthKey}-01`, $lt: nextMonth } })
+  },
 
   "manual-finance-entries:create": ({ payload, requester }) =>
     genericCreate(ManualFinanceEntry, {
@@ -519,6 +529,16 @@ const approvalHandlers = {
       { new: true, runValidators: true },
     ),
   "manual-finance-entries:delete": ({ resourceId }) => ManualFinanceEntry.findByIdAndDelete(resourceId),
+  "manual-finance-entries:deleteMonth": async ({ meta }) => {
+    const year = Number(meta.year)
+    const month = Number(meta.month)
+    if (!Number.isInteger(year) || year < 2000 || year > 9999 || !Number.isInteger(month) || month < 1 || month > 12) {
+      throw new Error("A valid year and month are required.")
+    }
+    const monthKey = `${year}-${String(month).padStart(2, "0")}`
+    const nextMonth = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10)
+    return ManualFinanceEntry.deleteMany({ date: { $gte: `${monthKey}-01`, $lt: nextMonth } })
+  },
 
   "lubricant-products:create": ({ payload }) => genericCreate(LubricantProduct, payload),
   "lubricant-products:update": ({ resourceId, payload }) =>

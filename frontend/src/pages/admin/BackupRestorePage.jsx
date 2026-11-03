@@ -198,6 +198,7 @@ export default function BackupRestorePage() {
   const [masterPassword, setMasterPassword] = useState("")
   const [restoreMode, setRestoreMode] = useState("replace")
   const [message, setMessage] = useState("")
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const lastBackup = useMemo(() => backups[0], [backups])
 
@@ -226,6 +227,7 @@ export default function BackupRestorePage() {
       setSelectedCollections((data.preview?.collections || []).map((collection) => collection.name))
       setMessage(data.message || "Backup created successfully.")
       setBackupPassword("")
+      setCreateModalOpen(false)
       await loadBackups()
     } catch (error) {
       setMessage(error?.response?.data?.message || "Unable to create backup.")
@@ -429,14 +431,24 @@ export default function BackupRestorePage() {
               </h1>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={loadBackups}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] transition hover:bg-[var(--bg-hover)]"
-          >
-            <RefreshCw size={17} className={loading ? "animate-spin text-emerald-600" : ""} />
-            Refresh
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setCreateModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700"
+            >
+              <DatabaseBackup size={17} />
+              Create Backup
+            </button>
+            <button
+              type="button"
+              onClick={loadBackups}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] transition hover:bg-[var(--bg-hover)]"
+            >
+              <RefreshCw size={17} className={loading ? "animate-spin text-emerald-600" : ""} />
+              Refresh
+            </button>
+          </div>
         </div>
       </section>
 
@@ -455,123 +467,6 @@ export default function BackupRestorePage() {
 
       <div className="grid gap-5 xl:grid-cols-[420px_1fr]">
         <section className="space-y-4 rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-[var(--shadow-soft)]">
-          <div>
-            <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Create Backup</h2>
-            <p className="text-xs font-medium text-[color:var(--text-secondary)]">Choose format and scope before generating a backup.</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {["json", "zip"].map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setFormat(item)}
-                className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black uppercase ${
-                  format === item
-                    ? "border-emerald-500 bg-emerald-500 text-gray-50"
-                    : "border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-strong)]"
-                }`}
-              >
-                {item === "json" ? <FileJson size={17} /> : <FileArchive size={17} />}
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <select
-            value={scope}
-            onChange={(event) => setScope(event.target.value)}
-            className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none"
-          >
-            {backupScopeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              ["today", "Today"],
-              ["month", "This Month"],
-              ["lastMonth", "Last Month"],
-              ["year", "Financial Year"],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => applyPreset(value)}
-                className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-xs font-black text-[color:var(--text-strong)]"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <label className="space-y-1">
-              <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                <CalendarDays size={13} />
-                From Date
-              </span>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(event) => setFromDate(event.target.value)}
-                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none"
-              />
-            </label>
-            <label className="space-y-1">
-              <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
-                <CalendarDays size={13} />
-                To Date
-              </span>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(event) => setToDate(event.target.value)}
-                className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none"
-              />
-            </label>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setFromDate("")
-              setToDate("")
-            }}
-            className="text-left text-xs font-black text-emerald-600"
-          >
-            Clear date range
-          </button>
-
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            rows={2}
-            placeholder="Backup note, for example: Before salary update"
-            className="w-full resize-none rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none"
-          />
-
-          <input
-            type="password"
-            value={backupPassword}
-            onChange={(event) => setBackupPassword(event.target.value)}
-            placeholder="Optional backup password"
-            className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none"
-          />
-
-          <button
-            type="button"
-            onClick={handleCreateBackup}
-            disabled={busy === "create"}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-gray-50 shadow-lg shadow-emerald-600/20 disabled:opacity-60"
-          >
-            {busy === "create" ? <Loader2 size={18} className="animate-spin" /> : <DatabaseBackup size={18} />}
-            Create Backup
-          </button>
-
           <div className="border-t border-[var(--border-color)] pt-4">
             <h2 className="text-lg font-bold text-[color:var(--text-strong)]">Upload & Preview</h2>
             <p className="text-xs font-medium text-[color:var(--text-secondary)]">Upload a .json or app-created .zip backup before restoring.</p>
@@ -774,6 +669,66 @@ export default function BackupRestorePage() {
           ) : null}
         </div>
       </section>
+
+      {createModalOpen ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && busy !== "create") setCreateModalOpen(false) }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="create-backup-title" className="my-auto max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[24px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl sm:p-7">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="create-backup-title" className="text-xl font-black text-[color:var(--text-strong)]">Create Backup</h2>
+                <p className="mt-1 text-sm font-medium text-[color:var(--text-secondary)]">Choose format and scope before generating a backup.</p>
+              </div>
+              <button type="button" onClick={() => setCreateModalOpen(false)} disabled={busy === "create"} aria-label="Close create backup dialog" className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-2 text-[color:var(--text-secondary)] disabled:opacity-50">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {["json", "zip"].map((item) => (
+                  <button key={item} type="button" onClick={() => setFormat(item)} className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-black uppercase ${format === item ? "border-emerald-500 bg-emerald-500 text-white" : "border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-strong)]"}`}>
+                    {item === "json" ? <FileJson size={17} /> : <FileArchive size={17} />}
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <select value={scope} onChange={(event) => setScope(event.target.value)} className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none">
+                {backupScopeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[["today", "Today"], ["month", "This Month"], ["lastMonth", "Last Month"], ["year", "Financial Year"]].map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => applyPreset(value)} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-xs font-black text-[color:var(--text-strong)]">{label}</button>
+                ))}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1">
+                  <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--text-muted)]"><CalendarDays size={13} />From Date</span>
+                  <input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none" />
+                </label>
+                <label className="space-y-1">
+                  <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[color:var(--text-muted)]"><CalendarDays size={13} />To Date</span>
+                  <input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none" />
+                </label>
+              </div>
+
+              <button type="button" onClick={() => { setFromDate(""); setToDate("") }} className="text-xs font-black text-emerald-600">Clear date range</button>
+              <textarea value={note} onChange={(event) => setNote(event.target.value)} rows={2} placeholder="Backup note, for example: Before salary update" className="w-full resize-none rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none" />
+              <input type="password" value={backupPassword} onChange={(event) => setBackupPassword(event.target.value)} placeholder="Optional backup password" className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-bold text-[color:var(--text-strong)] outline-none" />
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setCreateModalOpen(false)} disabled={busy === "create"} className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-5 py-3 text-sm font-bold text-[color:var(--text-strong)] disabled:opacity-50">Cancel</button>
+              <button type="button" onClick={handleCreateBackup} disabled={busy === "create"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-600/20 disabled:opacity-60">
+                {busy === "create" ? <Loader2 size={18} className="animate-spin" /> : <DatabaseBackup size={18} />}
+                Create Backup
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {restoreTarget ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">

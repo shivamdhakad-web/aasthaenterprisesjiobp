@@ -26,6 +26,7 @@ const buildEmptyForm = (employeeId = "") => ({
 const buildMultipleState = (employeeId = "") => ({
   employeeId,
   date: getTodayString(),
+  autoAdvanceDate: true,
   defaultDateApplied: false,
   entries: [buildEmptyRow(employeeId)],
 })
@@ -95,7 +96,9 @@ export default function AttendanceModal({
         ...current.entries,
         buildEmptyRow(
           current.employeeId,
-          addDays(current.entries.at(-1)?.date || current.date, 1),
+          current.autoAdvanceDate
+            ? addDays(current.entries.at(-1)?.date || current.date, 1)
+            : current.date,
         ),
       ],
     }))
@@ -154,26 +157,44 @@ export default function AttendanceModal({
                 </label>
               ) : null}
 
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
-                  Default Date
-                </span>
-                <input
-                  type="date"
-                  value={bulkState.date}
-                  onChange={(event) => {
-                    setBulkState((current) => ({
-                      ...current,
-                      date: event.target.value,
-                      defaultDateApplied: true,
-                      entries: current.defaultDateApplied
-                        ? current.entries
-                        : current.entries.map((entry) => ({ ...entry, date: event.target.value })),
-                    }))
-                  }}
-                  className="input"
-                />
-              </label>
+              <div className="block">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-[color:var(--text-secondary)]">
+                    Default Date
+                  </span>
+                  <input
+                    type="date"
+                    value={bulkState.date}
+                    onChange={(event) => {
+                      setBulkState((current) => ({
+                        ...current,
+                        date: event.target.value,
+                        defaultDateApplied: true,
+                        entries: current.defaultDateApplied
+                          ? current.entries
+                          : current.entries.map((entry) => ({ ...entry, date: event.target.value })),
+                      }))
+                    }}
+                    className="input"
+                  />
+                </label>
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2">
+                  <span className="text-xs font-medium text-[color:var(--text-secondary)]">Auto-increment dates</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={bulkState.autoAdvanceDate}
+                    onClick={() => setBulkState((current) => ({ ...current, autoAdvanceDate: !current.autoAdvanceDate }))}
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${bulkState.autoAdvanceDate ? "bg-emerald-600" : "bg-slate-300"}`}
+                  >
+                    <span className="sr-only">Toggle automatic next date</span>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${bulkState.autoAdvanceDate ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                  <span className={`min-w-8 text-right text-xs font-bold ${bulkState.autoAdvanceDate ? "text-emerald-600" : "text-[color:var(--text-muted)]"}`}>
+                    {bulkState.autoAdvanceDate ? "On" : "Off"}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="max-h-[62vh] space-y-3 overflow-y-auto pr-1">
@@ -334,13 +355,6 @@ export default function AttendanceModal({
               ))}
             </div>
 
-            <button
-              type="button"
-              onClick={addBulkRow}
-              className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-600"
-            >
-              + Add Another Row
-            </button>
           </div>
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -431,10 +445,19 @@ export default function AttendanceModal({
           </div>
         )}
 
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className={`mt-6 grid items-center gap-2 sm:gap-3 ${entryMode === "multiple" && !editData ? "grid-cols-3 sm:grid-cols-[1fr_auto_auto]" : "grid-cols-2 justify-end"}`}>
+          {entryMode === "multiple" && !editData ? (
+            <button
+              type="button"
+              onClick={addBulkRow}
+              className="rounded-2xl border border-blue-200 bg-blue-50 px-2 py-3 text-xs font-medium text-blue-600 sm:justify-self-start sm:px-4 sm:text-sm"
+            >
+              + Add Another Row
+            </button>
+          ) : null}
           <button
             type="button"
-            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium text-[color:var(--text-primary)]"
+            className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-2 py-3 text-xs font-medium text-[color:var(--text-primary)] sm:px-4 sm:text-sm"
             onClick={onClose}
             disabled={saving}
           >
@@ -442,7 +465,7 @@ export default function AttendanceModal({
           </button>
           <button
             type="button"
-            className="rounded-2xl bg-green-600 px-4 py-3 font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-2xl bg-green-600 px-2 py-3 text-xs font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:text-sm"
             onClick={() =>
               onSave(
                 entryMode === "multiple" && !editData

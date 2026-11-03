@@ -56,7 +56,22 @@ res.json({message:"Deleted"})
 res.status(500).json({error:err.message})
 
 }
+}
 
+exports.deleteExpenseMonth = async(req,res)=>{
+try{
+const year = Number(req.params.year)
+const month = Number(req.params.month)
+if (!Number.isInteger(year) || year < 2000 || year > 9999 || !Number.isInteger(month) || month < 1 || month > 12){
+return res.status(400).json({message:"A valid year and month are required."})
+}
+const monthKey = `${year}-${String(month).padStart(2,"0")}`
+const nextMonth = new Date(Date.UTC(year,month,1)).toISOString().slice(0,10)
+const result = await Expense.deleteMany({date:{$gte:`${monthKey}-01`,$lt:nextMonth}})
+res.json({success:true,deletedCount:result.deletedCount})
+}catch(err){
+res.status(500).json({error:err.message})
+}
 }
 
 

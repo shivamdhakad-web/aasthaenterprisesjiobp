@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
-import { CircleAlert, Pencil, Plus, Trash2, Wallet, X } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import { BarChart3, CircleAlert, FileText, Pencil, Plus, Trash2, Wallet, X } from "lucide-react"
 import { useAuth } from "../../contexts/AuthContext"
 import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings"
-import { addManualFinanceEntry, deleteManualFinanceEntry, getManualFinanceEntries, requestManualFinanceEntry, requestManualFinanceEntryChange, updateManualFinanceEntry } from "../../services/manualFinanceEntryApi"
+import { addManualFinanceEntries, addManualFinanceEntry, deleteManualFinanceEntry, deleteManualFinanceMonth, getManualFinanceEntries, requestManualFinanceEntry, requestManualFinanceEntryChange, requestManualFinanceMonthDelete, updateManualFinanceEntry } from "../../services/manualFinanceEntryApi"
 
 const today = () => {
   const date = new Date()
@@ -12,10 +15,20 @@ const currentMonth = () => today().slice(0, 7)
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
 const dateLabel = (value) => value ? new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString("en-IN") : "-"
 const emptyForm = () => ({ date: today(), type: "income", category: "", description: "", amount: "", paymentMode: "Cash" })
+const nextDate = (value, offset) => {
+  const date = new Date(`${value}T00:00:00`)
+  date.setDate(date.getDate() + offset)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
+const monthLabel = (value) => {
+  const [year, month] = value.split("-").map(Number)
+  return new Date(year, month - 1, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+}
 const inputClass = "input w-full"
 
 export default function ManualFinanceEntriesPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const isManager = user?.role === "Manager"
   const { canUse } = useManagerDashboardSettings("manualFinanceEntries", isManager)
   const canManagerUse = (key) => !isManager || canUse(key)
@@ -30,6 +43,11 @@ export default function ManualFinanceEntriesPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [open, setOpen] = useState(false)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkRows, setBulkRows] = useState([emptyForm()])
+  const [bulkSaving, setBulkSaving] = useState(false)
+  const [confirmMonthDelete, setConfirmMonthDelete] = useState(false)
+  const [entryModePrompt, setEntryModePrompt] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
   const [deletingEntry, setDeletingEntry] = useState(null)
   const [notice, setNotice] = useState({ type: "", text: "" })
@@ -147,6 +165,78 @@ export default function ManualFinanceEntriesPage() {
     }
   }
 
+  const addBulkRow = () => setBulkRows((rows) => [...rows, { ...emptyForm(), date: nextDate(rows[rows.length - 1]?.date || today(), 1) }])
+  const updateBulkRow = (index, key, value) => setBulkRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [key]: value } : row))
+  const saveBulkRows = async (event) => {
+    event.preventDefault()
+    setBulkSaving(true)
+    setNotice({ type: "", text: "" })
+    try {
+      const payload = bulkRows.map((row) => ({ ...row, amount: Number(row.amount), addedBy: user?.name || "" }))
+      if (isManager) {
+        for (const entry of payload) await requestManualFinanceEntry(entry)
+        setNotice({ type: "success", text: `${payload.length} entries sent for Admin approval.` })
+      } else {
+        const result = await addManualFinanceEntries(payload)
+        setNotice({ type: "success", text: `${result.createdCount} financial entries saved.` })
+        await load()
+      }
+      setBulkOpen(false)
+      setBulkRows([emptyForm()])
+    } catch (error) {
+      setNotice({ type: "error", text: error?.response?.data?.message || "Unable to save multiple entries." })
+    } finally {
+      setBulkSaving(false)
+    }
+  }
+
+  const deleteSelectedMonth = async () => {
+    const [year, selectedMonth] = month.split("-")
+    try {
+      if (isManager) {
+        await requestManualFinanceMonthDelete({ year, month: selectedMonth })
+        setNotice({ type: "success", text: `Delete request for ${monthLabel(month)} sent for Admin approval.` })
+      } else {
+        const result = await deleteManualFinanceMonth(year, selectedMonth)
+        setNotice({ type: "success", text: `${result.deletedCount} entries from ${monthLabel(month)} deleted.` })
+        await load()
+      }
+    } catch (error) {
+      setNotice({ type: "error", text: error?.response?.data?.message || "Unable to delete this month's entries." })
+    } finally {
+      setConfirmMonthDelete(false)
+    }
+  }
+
+  const generateReport = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    doc.setFillColor(0, 150, 105)
+    doc.rect(0, 0, 210, 31, "F")
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(18)
+    doc.setFont("helvetica", "bold")
+    doc.text("Income & Expenses Report", 14, 15)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
+    doc.text(`Aastha Enterprises  |  ${month ? monthLabel(month) : "All dates"}`, 14, 23)
+    const income = filteredEntries.filter((entry) => entry.type === "income").reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
+    const expense = filteredEntries.filter((entry) => entry.type === "expense").reduce((sum, entry) => sum + Number(entry.amount || 0), 0)
+    autoTable(doc, {
+      startY: 38,
+      head: [["Date", "Type", "Category", "Description", "Amount", "Payment"]],
+      body: filteredEntries.map((entry) => [dateLabel(entry.date), entry.type === "income" ? "Income" : "Expense", entry.category, entry.description || "-", money(entry.amount), entry.paymentMode || "Cash"]),
+      styles: { fontSize: 8, cellPadding: 2.5 },
+      headStyles: { fillColor: [0, 150, 105] },
+      alternateRowStyles: { fillColor: [242, 248, 245] },
+      margin: { left: 14, right: 14 },
+    })
+    const summaryY = (doc.lastAutoTable?.finalY || 42) + 9
+    doc.setTextColor(25, 40, 35)
+    doc.setFont("helvetica", "bold")
+    doc.text(`Income: ${money(income)}     Expenses: ${money(expense)}     Net: ${money(income - expense)}`, 14, Math.min(summaryY, 280))
+    doc.save(`Income_Expenses_${month || "All"}.pdf`)
+  }
+
   const clearFilters = () => {
     setSearch("")
     setTypeFilter("")
@@ -173,7 +263,12 @@ export default function ManualFinanceEntriesPage() {
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <input placeholder="Search income and expenses..." value={search} onChange={(event) => setSearch(event.target.value)} className="input w-full lg:max-w-[420px]" />
-        {canManagerUse("addEntry") ? <button type="button" onClick={() => { setEditingEntry(null); setForm(emptyForm()); setOpen(true) }} className="ml-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-medium text-white shadow-sm hover:bg-blue-700"><Plus size={17} />Add Entry</button> : null}
+        <div className="flex flex-wrap gap-2 lg:ml-auto">
+          <button type="button" onClick={() => navigate(isManager ? "/manager/income-expenses-dashboard" : "/admin/income-expenses-dashboard")} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 font-medium text-emerald-700"><BarChart3 size={17} />Dashboard</button>
+          {canManagerUse("addEntry") ? <button type="button" onClick={() => setEntryModePrompt(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-medium text-white"><Plus size={17} />Add Entry</button> : null}
+          {canManagerUse("generateReport") ? <button type="button" onClick={generateReport} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 font-medium text-amber-50"><FileText size={17} />Generate Report</button> : null}
+          {canManagerUse("deleteMonth") ? <button type="button" disabled={!month} onClick={() => setConfirmMonthDelete(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 font-medium text-amber-50 disabled:cursor-not-allowed disabled:opacity-50"><Trash2 size={17} />Delete Month</button> : null}
+        </div>
       </div>
 
       {notice.text ? <div role="status" className={`mb-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${notice.type === "error" ? "border-rose-300 bg-rose-50 text-rose-700" : "border-emerald-300 bg-emerald-50 text-emerald-700"}`}><CircleAlert size={17} />{notice.text}</div> : null}
@@ -223,6 +318,21 @@ export default function ManualFinanceEntriesPage() {
         </form>
       </div> : null}
       {deletingEntry ? <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-3" onMouseDown={(event) => { if (event.target === event.currentTarget) setDeletingEntry(null) }}><div role="dialog" aria-modal="true" aria-labelledby="delete-entry-title" className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl"><h2 id="delete-entry-title" className="text-lg font-extrabold text-[color:var(--text-strong)]">Delete financial entry?</h2><p className="mt-2 text-sm text-[color:var(--text-secondary)]">{user?.role === "Manager" ? "This delete request will be sent to Admin for approval." : `Delete ${deletingEntry.category} entry of ${money(deletingEntry.amount)}? This cannot be undone.`}</p><div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setDeletingEntry(null)} className="rounded-xl border border-[var(--border-color)] px-4 py-2 text-sm font-semibold">Cancel</button><button type="button" onClick={confirmDelete} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white">{user?.role === "Manager" ? "Request Delete" : "Delete"}</button></div></div></div> : null}
+      {bulkOpen ? <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-3" onMouseDown={(event) => { if (event.target === event.currentTarget && !bulkSaving) setBulkOpen(false) }}><form onSubmit={saveBulkRows} className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="text-xl font-extrabold text-[color:var(--text-strong)]">Add Multiple Income & Expense Entries</h2><p className="mt-1 text-sm text-[color:var(--text-secondary)]">Each new row starts one day after the previous row.</p></div><button type="button" aria-label="Close" disabled={bulkSaving} onClick={() => setBulkOpen(false)} className="rounded-xl p-2 text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)]"><X size={19} /></button></div>
+        <label className="mb-4 block max-w-xs space-y-1.5 text-xs font-semibold text-[color:var(--text-secondary)]">Default Date<input type="date" value={bulkRows[0]?.date || today()} onChange={(event) => setBulkRows((rows) => rows.map((row, index) => ({ ...row, date: nextDate(event.target.value, index) })))} className={inputClass} /></label>
+        <div className="space-y-3">{bulkRows.map((row, index) => <section key={index} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4"><div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">Entry {index + 1}</h3>{bulkRows.length > 1 ? <button type="button" onClick={() => setBulkRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))} className="text-rose-600" aria-label={`Remove entry ${index + 1}`}><Trash2 size={17} /></button> : null}</div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="space-y-1 text-xs font-semibold text-[color:var(--text-secondary)]">Date<input required type="date" value={row.date} onChange={(event) => updateBulkRow(index, "date", event.target.value)} className={inputClass} /></label>
+          <label className="space-y-1 text-xs font-semibold text-[color:var(--text-secondary)]">Type<select value={row.type} onChange={(event) => updateBulkRow(index, "type", event.target.value)} className={inputClass}><option value="income">Income</option><option value="expense">Expense</option></select></label>
+          <label className="space-y-1 text-xs font-semibold text-[color:var(--text-secondary)]">Amount<input required type="number" min="0.01" step="0.01" value={row.amount} onChange={(event) => updateBulkRow(index, "amount", event.target.value)} className={inputClass} /></label>
+          <label className="space-y-1 text-xs font-semibold text-[color:var(--text-secondary)]">Category<input required maxLength={60} value={row.category} onChange={(event) => updateBulkRow(index, "category", event.target.value)} className={inputClass} /></label>
+          <label className="space-y-1 text-xs font-semibold text-[color:var(--text-secondary)]">Payment Mode<select value={row.paymentMode} onChange={(event) => updateBulkRow(index, "paymentMode", event.target.value)} className={inputClass}><option>Cash</option><option>UPI</option><option>Bank</option><option>Card</option><option>Other</option></select></label>
+          <label className="space-y-1 text-xs font-semibold text-[color:var(--text-secondary)]">Description<input maxLength={300} value={row.description} onChange={(event) => updateBulkRow(index, "description", event.target.value)} className={inputClass} /></label>
+        </div></section>)}</div>
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between"><button type="button" onClick={addBulkRow} className="rounded-xl border border-blue-300 px-4 py-2.5 text-sm font-semibold text-blue-600">+ Add Another Row</button><div className="flex flex-col-reverse gap-2 sm:flex-row"><button type="button" disabled={bulkSaving} onClick={() => setBulkOpen(false)} className="rounded-xl border border-[var(--border-color)] px-5 py-2.5 text-sm font-semibold">Cancel</button><button disabled={bulkSaving} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">{bulkSaving ? "Saving..." : isManager ? "Send Entries for Approval" : "Save Entries"}</button></div></div>
+      </form></div> : null}
+      {confirmMonthDelete ? <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-3"><div role="dialog" aria-modal="true" aria-labelledby="delete-month-title" className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl"><h2 id="delete-month-title" className="text-lg font-extrabold text-[color:var(--text-strong)]">Delete selected month?</h2><p className="mt-2 text-sm text-[color:var(--text-secondary)]">{isManager ? `This will request Admin approval to delete all entries for ${monthLabel(month)}.` : `This permanently deletes all ${entries.filter((entry) => String(entry.date || "").slice(0, 7) === month).length} entries for ${monthLabel(month)}.`}</p><div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => setConfirmMonthDelete(false)} className="rounded-xl border border-[var(--border-color)] px-4 py-2 text-sm font-semibold">Cancel</button><button type="button" onClick={deleteSelectedMonth} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white">{isManager ? "Request Delete" : "Delete Month"}</button></div></div></div> : null}
+      {entryModePrompt ? <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-labelledby="entry-mode-title" className="w-full max-w-md rounded-3xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-5 shadow-2xl"><div className="mb-4 flex items-center justify-between"><div><h2 id="entry-mode-title" className="text-lg font-bold text-[color:var(--text-strong)]">Add Income & Expense Entry</h2><p className="mt-1 text-sm text-[color:var(--text-secondary)]">Choose how you want to add entries.</p></div><button type="button" onClick={() => setEntryModePrompt(false)} className="rounded-xl p-2 text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)]" aria-label="Close"><X size={18} /></button></div><div className="grid gap-3"><button type="button" onClick={() => { setEntryModePrompt(false); setEditingEntry(null); setForm(emptyForm()); setOpen(true) }} className="rounded-2xl bg-blue-600 px-4 py-4 text-center font-semibold text-white">Single Entry</button><button type="button" onClick={() => { setEntryModePrompt(false); setBulkRows([emptyForm()]); setBulkOpen(true) }} className="rounded-2xl bg-emerald-600 px-4 py-4 text-center font-semibold text-white">Multiple Entries</button><button type="button" onClick={() => setEntryModePrompt(false)} className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-4 py-3 font-medium text-[color:var(--text-primary)]">Cancel</button></div></section></div> : null}
     </div>
   )
 }

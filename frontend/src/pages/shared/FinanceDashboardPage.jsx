@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Fuel,
   Droplets,
+  ChevronDown,
   ChevronRight,
   Calendar,
   Wallet,
@@ -350,6 +351,7 @@ export default function FinanceDashboardPage() {
   const [chartTab, setChartTab] = useState("all")
   const [cashflowPeriod, setCashflowPeriod] = useState("monthly")
   const [pnlPeriod, setPnlPeriod] = useState("monthly")
+  const [pnlOpen, setPnlOpen] = useState(true)
   const [legacySearch, setLegacySearch] = useState("")
 
   const [data, setData] = useState({
@@ -953,25 +955,36 @@ export default function FinanceDashboardPage() {
             </p>
           </div>
 
-          <div className="flex w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1 sm:w-auto">
-            {["monthly", "yearly"].map((period) => (
-              <button
-                key={period}
-                type="button"
-                onClick={() => setPnlPeriod(period)}
-                className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold capitalize transition-all sm:flex-none ${
-                  pnlPeriod === period
-                    ? "bg-emerald-600 text-gray-50 shadow-sm"
-                    : "text-[color:var(--text-secondary)] hover:bg-[var(--bg-panel)]"
-                }`}
-              >
-                {period}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className={`w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1 sm:w-auto ${pnlOpen ? "flex" : "hidden sm:flex"}`}>
+              {["monthly", "yearly"].map((period) => (
+                <button
+                  key={period}
+                  type="button"
+                  onClick={() => setPnlPeriod(period)}
+                  className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold capitalize transition-all sm:flex-none ${
+                    pnlPeriod === period
+                      ? "bg-emerald-600 text-gray-50 shadow-sm"
+                      : "text-[color:var(--text-secondary)] hover:bg-[var(--bg-panel)]"
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-label={pnlOpen ? "Collapse Profit & Loss Statement" : "Expand Profit & Loss Statement"}
+              aria-expanded={pnlOpen}
+              onClick={() => setPnlOpen((open) => !open)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)]"
+            >
+              <ChevronDown size={19} className={`transition-transform duration-200 ${pnlOpen ? "rotate-180" : "rotate-0"}`} />
+            </button>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_0.9fr]">
+        {pnlOpen ? <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_0.9fr]">
           <div className="relative overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-4 shadow-[var(--shadow-soft)]">
             <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
             <div className="mb-3 flex items-center justify-between">
@@ -1102,7 +1115,7 @@ export default function FinanceDashboardPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> : null}
       </section>
 
       {/* Row 1: Executive Station Performance Hub + Stacked Metrics + Cash Flow Bar Chart */}

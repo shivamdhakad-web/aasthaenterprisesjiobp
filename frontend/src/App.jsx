@@ -66,6 +66,7 @@ import DailySalesDashboardPage from "./pages/finance/DailySalesDashboardPage"
 import MduDashboardPage from "./pages/finance/MduDashboardPage"
 import InvoiceDetailsDashboardPage from "./pages/finance/InvoiceDetailsDashboardPage"
 import DcdDashboardPage from "./pages/finance/DcdDashboardPage"
+import IncomeExpensesDashboardPage from "./pages/finance/IncomeExpensesDashboardPage"
 import StationDocumentsPage from "./pages/admin/StationDocumentsPage"
 
 export default function App() {
@@ -130,6 +131,7 @@ export default function App() {
             <Route path="daily-sales-dashboard" element={<DailySalesDashboardPage />} />
             <Route path="finance-dashboard" element={<FinanceDashboardPage />} />
             <Route path="income-expenses" element={<ManualFinanceEntriesPage />} />
+            <Route path="income-expenses-dashboard" element={<IncomeExpensesDashboardPage />} />
             <Route path="smart-calculator" element={<SmartCalculatorPage />} />
             <Route path="density-calculator" element={<DensityCalculatorPage />} />
             <Route path="ttdrivers" element={<TTDrivers />} />
@@ -293,6 +295,10 @@ export default function App() {
                   <ManualFinanceEntriesPage />
                 </ApprovalWrappedPage>,
               )}
+            />
+            <Route
+              path="income-expenses-dashboard"
+              element={managerPage("manualFinanceEntries", <IncomeExpensesDashboardPage />)}
             />
             <Route path="smart-calculator" element={managerPage("smartCalculator", <SmartCalculatorPage />)} />
             <Route path="density-calculator" element={managerPage("densityCalculator", <DensityCalculatorPage />)} />

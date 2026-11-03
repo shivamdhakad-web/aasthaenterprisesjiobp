@@ -60,3 +60,16 @@ request:()=>api.delete(`/expenses/${id}`)
 })
 
 }
+
+export const deleteExpenseMonth = async(year,month)=>{
+return executeOrRequestApproval({
+approval:{
+moduleKey:"expenses",
+moduleLabel:"Expenses",
+operation:"deleteMonth",
+meta:{year,month},
+summary:`Delete expenses for ${month}/${year}`
+},
+request:()=>api.delete(`/expenses/month/${year}/${month}`)
+})
+}

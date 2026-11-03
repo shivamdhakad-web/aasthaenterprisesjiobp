@@ -10,6 +10,16 @@ export const addManualFinanceEntry = async (entry) => {
   return data
 }
 
+export const addManualFinanceEntries = async (entries) => {
+  const { data } = await api.post("/manual-finance-entries/bulk", { entries })
+  return data
+}
+
+export const deleteManualFinanceMonth = async (year, month) => {
+  const { data } = await api.delete(`/manual-finance-entries/month/${year}/${month}`)
+  return data
+}
+
 export const updateManualFinanceEntry = async (id, entry) => {
   const { data } = await api.put(`/manual-finance-entries/${id}`, entry)
   return data
@@ -46,5 +56,17 @@ export const requestManualFinanceEntry = async (entry) => {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("approval:created", { detail: data }))
   }
+  return data
+}
+
+export const requestManualFinanceMonthDelete = async ({ year, month }) => {
+  const { data } = await api.post("/approvals", {
+    moduleKey: "manual-finance-entries",
+    moduleLabel: "Income & Expenses",
+    operation: "deleteMonth",
+    meta: { year, month },
+    summary: `Delete Income & Expenses entries for ${month}/${year}`,
+  })
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("approval:created", { detail: data }))
   return data
 }

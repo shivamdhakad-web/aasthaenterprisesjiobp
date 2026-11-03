@@ -138,6 +138,7 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addExpense", label: "Add Expense", enabled: true },
       { key: "editExpense", label: "Edit Expense", enabled: true },
       { key: "deleteExpense", label: "Delete Expense", enabled: true },
+      { key: "deleteMonth", label: "Delete Month", enabled: true },
       { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
@@ -326,6 +327,8 @@ const DEFAULT_MANAGER_DASHBOARD_PAGES = [
       { key: "addEntry", label: "Add Entry", enabled: true },
       { key: "editEntry", label: "Edit Entry", enabled: true },
       { key: "deleteEntry", label: "Delete Entry", enabled: true },
+      { key: "deleteMonth", label: "Delete Month", enabled: true },
+      { key: "generateReport", label: "Generate Report", enabled: true },
     ],
   },
   {

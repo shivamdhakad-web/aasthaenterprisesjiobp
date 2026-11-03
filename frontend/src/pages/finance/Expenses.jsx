@@ -50,6 +50,7 @@ import useManagerDashboardSettings from "../../hooks/useManagerDashboardSettings
 import {
   addExpense,
   deleteExpense,
+  deleteExpenseMonth,
   getExpenses,
   updateExpense,
 } from "../../services/expenseApi"
@@ -422,6 +423,41 @@ export default function Expenses() {
         await deleteExpense(expense._id)
         await load()
         setNotice({ type: "success", text: "Expense deleted successfully." })
+      },
+    })
+  }
+
+  const askDeleteMonth = () => {
+    if (!canManagerUse("deleteMonth")) {
+      setNotice({ type: "error", text: "You do not have access to delete month records." })
+      return
+    }
+
+    if (!/^\d{4}-\d{2}$/.test(monthFilter || "")) {
+      setNotice({ type: "error", text: "Please select a month first." })
+      return
+    }
+
+    const [year, selectedMonth] = monthFilter.split("-")
+    const count = data.filter((expense) => String(expense.date || "").slice(0, 7) === monthFilter).length
+    if (!count) {
+      setNotice({ type: "error", text: `No expense records found for ${selectedMonth}/${year}.` })
+      return
+    }
+
+    setConfirmState({
+      title: "Delete Month Records",
+      description: `Delete all ${count} expense record(s) for ${selectedMonth}/${year}? This cannot be undone.`,
+      actionLabel: "Delete Month",
+      variant: "danger",
+      onConfirm: async () => {
+        const result = await deleteExpenseMonth(year, selectedMonth)
+        if (result?.pending) {
+          setNotice({ type: "success", text: `Delete request for ${selectedMonth}/${year} sent for admin approval.` })
+        } else {
+          await load()
+          setNotice({ type: "success", text: `${result?.deletedCount ?? count} expense record(s) for ${selectedMonth}/${year} deleted.` })
+        }
       },
     })
   }
@@ -1227,6 +1263,16 @@ return (
               Generate Report
             </button>
           ) : null}
+
+          {canManagerUse("deleteMonth") ? (
+            <button
+              type="button"
+              onClick={askDeleteMonth}
+              className="hidden items-center gap-2 rounded-2xl bg-rose-600 px-5 py-3 font-medium shadow-sm hover:bg-rose-700 lg:inline-flex text-amber-50"
+            >
+              <Trash2 size={17} /> Delete Month
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -1474,6 +1520,18 @@ return (
               Apply Filters
             </button>
           </div>
+          {canManagerUse("deleteMonth") ? (
+            <button
+              type="button"
+              onClick={() => {
+                setShowMobileFilterModal(false)
+                askDeleteMonth()
+              }}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 py-3 text-sm font-bold text-rose-700"
+            >
+              <Trash2 size={16} /> Delete Selected Month
+            </button>
+          ) : null}
         </div>
       </div>
     )}

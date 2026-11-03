@@ -18,6 +18,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
 const rupees = (value) => `Rs. ${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const numberValue = (value) => Number(value || 0)
+const quantityLabel = (value) => numberValue(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })
 const preventNumberWheel = (event) => event.currentTarget.blur()
 const UPI_ID = "paytm.s1l8b58@pty"
 const STATION_DETAILS = {
@@ -287,12 +288,12 @@ export default function BillGeneratorPage() {
         index + 1,
         item.product,
         formatInvoiceDate(item.date),
-        item.quantity,
+        quantityLabel(item.quantity),
         item.unit || "Ltr",
         rupees(item.rate),
         rupees(item.amount),
       ]),
-      foot: [["", "Total", "", totalQuantity, "", "", rupees(data.grandTotal)]],
+      foot: [["", "Total", "", quantityLabel(totalQuantity), "", "", rupees(data.grandTotal)]],
       theme: "plain",
       headStyles: { fillColor: [0, 135, 0], textColor: 255, halign: "center", fontStyle: "bold" },
       footStyles: { fillColor: [255, 255, 255], textColor: 0, fontStyle: "bold", halign: "center", lineColor: [130, 130, 130], lineWidth: { top: 0.3, bottom: 0.3 } },
@@ -563,7 +564,7 @@ function BillPreview({ bill }) {
           <p className="text-sm">GSTIN: {STATION_DETAILS.gstin}</p>
           <p className="text-sm">State: {STATION_DETAILS.state}</p>
         </div>
-        <img src="/jio-bp.png" alt="Jio bp" className="mt-2 h-16 w-24 object-contain" />
+        <img src="/jio-bp.png" alt="Jio bp" className="mt-1 h-24 w-32 object-contain" />
       </div>
       <h3 className="mt-2 text-center text-2xl font-black text-green-700">Tax Invoice</h3>
       <div className="mt-5 text-sm leading-7">
@@ -591,7 +592,7 @@ function BillPreview({ bill }) {
                 <td className="p-2">{index + 1}</td>
                 <td className="p-2">{item.product || "-"}</td>
                 <td className="p-2 font-semibold">{formatInvoiceDate(item.date)}</td>
-                <td className="p-2 text-right">{item.quantity || 0}</td>
+                <td className="p-2 text-right">{quantityLabel(item.quantity)}</td>
                 <td className="p-2 text-center">{item.unit || "Ltr"}</td>
                 <td className="p-2 text-right">{rupees(item.rate)}</td>
                 <td className="p-2 text-right font-semibold">{rupees(item.amount)}</td>
@@ -601,7 +602,7 @@ function BillPreview({ bill }) {
               <td className="p-2" />
               <td className="p-2">Total</td>
               <td />
-              <td className="p-2 text-right">{bill.items.reduce((sum, item) => sum + numberValue(item.quantity), 0)}</td>
+              <td className="p-2 text-right">{quantityLabel(bill.items.reduce((sum, item) => sum + numberValue(item.quantity), 0))}</td>
               <td />
               <td />
               <td className="p-2 text-right">{rupees(bill.grandTotal)}</td>
@@ -627,9 +628,9 @@ function BillPreview({ bill }) {
         </div>
       </div>
       <div className="mt-8 grid gap-5 text-sm sm:grid-cols-2">
-        <div className="flex gap-3">
-          <img src={qrUrl(bill.grandTotal, 140)} alt="UPI QR" className="h-28 w-28" />
-          <div>
+        <div className="flex items-center gap-3">
+          <img src={qrUrl(bill.grandTotal, 140)} alt="UPI QR" className="h-28 w-28 shrink-0" />
+          <div className="text-[10px] leading-[1.35]">
             <p className="font-bold">Pay To:</p>
             <p>Bank Name: {STATION_DETAILS.bankName}</p>
             <p>Bank Account No.: {STATION_DETAILS.accountNo}</p>
@@ -638,10 +639,10 @@ function BillPreview({ bill }) {
             <p>UPI ID: {UPI_ID}</p>
           </div>
         </div>
-        <div className="text-center">
+        <div className="self-end pt-5 text-center">
           <p>For: {STATION_DETAILS.name}</p>
-          <div className="mx-auto mt-7 h-16 w-44 border border-slate-200 bg-slate-50 p-2 text-xs font-semibold italic">AASTHA ENTERPRISES<br />PARTNERS</div>
-          <p className="mt-2 font-bold">Authorized Signatory</p>
+          <div className="mx-auto mt-9 flex h-14 w-44 items-center justify-center border border-slate-200 bg-slate-50 p-2 text-xs font-semibold italic">AASTHA ENTERPRISES</div>
+          <p className="mt-3 font-bold">Authorized Signatory</p>
         </div>
       </div>
     </div>
@@ -685,7 +686,7 @@ function drawPdfHeader(doc, data, logoDataUrl) {
   doc.text(`Email: ${STATION_DETAILS.email}`, 14, 36)
   doc.text(`GSTIN: ${STATION_DETAILS.gstin}`, 14, 41)
   doc.text(`State: ${STATION_DETAILS.state}`, 14, 46)
-  if (logoDataUrl) doc.addImage(logoDataUrl, "PNG", 164, 24, 28, 18)
+  if (logoDataUrl) doc.addImage(logoDataUrl, "PNG", 160, 10, 34, 34)
   doc.setDrawColor(0, 135, 0)
   doc.setLineWidth(0.5)
   doc.line(12, 50, 198, 50)
@@ -749,21 +750,24 @@ function drawPdfTotals(doc, data, y, qrDataUrl) {
   const payY = Math.min(totalLineY + 58, 238)
   if (qrDataUrl) doc.addImage(qrDataUrl, "PNG", 14, payY, 23, 23)
   doc.setFont("helvetica", "bold")
-  doc.text("Pay To:", 42, payY + 4)
+  doc.setFontSize(7)
+  doc.text("Pay To:", 42, payY + 3.5)
   doc.setFont("helvetica", "normal")
-  doc.text(`Bank Name: ${STATION_DETAILS.bankName}`, 42, payY + 11)
-  doc.text(`Bank Account No.: ${STATION_DETAILS.accountNo}`, 42, payY + 18)
-  doc.text(`Bank IFSC code: ${STATION_DETAILS.ifsc}`, 42, payY + 25)
-  doc.text(`Account Holder's Name: ${STATION_DETAILS.holder}`, 42, payY + 32)
-  doc.text(`UPI ID: ${UPI_ID}`, 42, payY + 39)
-  doc.text(`For: ${STATION_DETAILS.name}`, 135, payY + 6)
-  doc.rect(133, payY + 12, 43, 14)
-  doc.setFont("helvetica", "bolditalic")
+  doc.setFontSize(6.5)
+  doc.text(`Bank Name: ${STATION_DETAILS.bankName}`, 42, payY + 7.5, { maxWidth: 86 })
+  doc.text(`Bank Account No.: ${STATION_DETAILS.accountNo}`, 42, payY + 11.5)
+  doc.text(`Bank IFSC code: ${STATION_DETAILS.ifsc}`, 42, payY + 15.5)
+  doc.text(`Account Holder's Name: ${STATION_DETAILS.holder}`, 42, payY + 19.5, { maxWidth: 86 })
+  doc.text(`UPI ID: ${UPI_ID}`, 42, payY + 23)
   doc.setFontSize(9)
-  doc.text("AASTHA ENTERPRISES", 154.5, payY + 20, { align: "center" })
+  doc.text(`For: ${STATION_DETAILS.name}`, 173, payY + 10, { align: "center" })
+  doc.rect(150, payY + 16, 46, 14)
+  doc.setFont("helvetica", "bolditalic")
+  doc.setFontSize(8.5)
+  doc.text("AASTHA ENTERPRISES", 173, payY + 24.5, { align: "center" })
   doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
-  doc.text("Authorized Signatory", 154.5, payY + 33, { align: "center" })
+  doc.text("Authorized Signatory", 173, payY + 39, { align: "center" })
 }
 
 function drawImageBill(ctx, data, width, height, rowHeight, qrImage, logoImage) {
@@ -780,7 +784,7 @@ function drawImageBill(ctx, data, width, height, rowHeight, qrImage, logoImage) 
   ctx.fillText(`Email: ${STATION_DETAILS.email}`, 50, 162)
   ctx.fillText(`GSTIN: ${STATION_DETAILS.gstin}`, 50, 184)
   ctx.fillText(`State: ${STATION_DETAILS.state}`, 50, 206)
-  if (logoImage) ctx.drawImage(logoImage, 885, 116, 120, 75)
+  if (logoImage) ctx.drawImage(logoImage, 880, 42, 140, 140)
   ctx.strokeStyle = "#008700"
   ctx.lineWidth = 3
   ctx.beginPath()
@@ -818,7 +822,7 @@ function drawImageBill(ctx, data, width, height, rowHeight, qrImage, logoImage) 
     ctx.fillText(item.product || "-", 105, y + 28)
     ctx.fillText(formatInvoiceDate(item.date), 300, y + 28)
     ctx.font = "18px Arial"
-    ctx.fillText(String(item.quantity || 0), 550, y + 28)
+    ctx.fillText(quantityLabel(item.quantity), 550, y + 28)
     ctx.fillText(item.unit || "Ltr", 700, y + 28)
     ctx.fillText(rupees(item.rate), 790, y + 28)
     ctx.fillText(rupees(item.amount), 940, y + 28)
@@ -829,7 +833,7 @@ function drawImageBill(ctx, data, width, height, rowHeight, qrImage, logoImage) 
   ctx.strokeRect(40, totalY, 990, rowHeight)
   ctx.font = "bold 18px Arial"
   ctx.fillText("Total", 105, totalY + 28)
-  ctx.fillText(String(data.items.reduce((sum, item) => sum + numberValue(item.quantity), 0)), 550, totalY + 28)
+  ctx.fillText(quantityLabel(data.items.reduce((sum, item) => sum + numberValue(item.quantity), 0)), 550, totalY + 28)
   ctx.textAlign = "right"
   ctx.fillText(rupees(data.grandTotal), 1025, totalY + 28)
   ctx.textAlign = "left"
@@ -869,12 +873,14 @@ function drawImageBill(ctx, data, width, height, rowHeight, qrImage, logoImage) 
   ctx.fillText(`Bank IFSC code: ${STATION_DETAILS.ifsc}`, 175, payY + 98)
   ctx.fillText(`Account Holder's Name: ${STATION_DETAILS.holder}`, 175, payY + 124)
   ctx.fillText(`UPI ID: ${UPI_ID}`, 175, payY + 150)
-  ctx.fillText(`For: ${STATION_DETAILS.name}`, 735, payY + 20)
+  ctx.textAlign = "center"
+  ctx.fillText(`For: ${STATION_DETAILS.name}`, 790, payY + 20)
   ctx.strokeRect(700, payY + 45, 180, 70)
   ctx.font = "bold italic 16px Arial"
-  ctx.fillText("AASTHA ENTERPRISES", 715, payY + 82)
+  ctx.fillText("AASTHA ENTERPRISES", 790, payY + 82)
   ctx.font = "bold 18px Arial"
-  ctx.fillText("Authorized Signatory", 710, payY + 140)
+  ctx.fillText("Authorized Signatory", 790, payY + 140)
+  ctx.textAlign = "left"
 }
 
 function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {

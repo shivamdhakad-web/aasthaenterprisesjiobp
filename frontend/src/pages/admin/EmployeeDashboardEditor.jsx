@@ -21,7 +21,7 @@ export default function EmployeeDashboardEditor() {
 
     try {
       const data = await getEmployeeDashboardSettings()
-      setPages(sortPages(Array.isArray(data?.pages) ? data.pages : []))
+      setPages(sortPages(Array.isArray(data?.pages) ? data.pages : []).map((page, index) => ({ ...page, order: index + 1 })))
       setNotice({ type: "", text: "" })
     } catch (error) {
       setNotice({
@@ -58,6 +58,20 @@ export default function EmployeeDashboardEditor() {
     setPages((current) =>
       sortPages(current.map((page) => (page.key === key ? { ...page, ...patch } : page))),
     )
+  }
+
+  const movePage = (key, requestedOrder) => {
+    setPages((current) => {
+      const orderedPages = sortPages(current)
+      const currentIndex = orderedPages.findIndex((page) => page.key === key)
+      const targetIndex = Math.max(0, Math.min(orderedPages.length - 1, requestedOrder - 1))
+
+      if (currentIndex < 0 || currentIndex === targetIndex) return current
+
+      const [selectedPage] = orderedPages.splice(currentIndex, 1)
+      orderedPages.splice(targetIndex, 0, selectedPage)
+      return orderedPages.map((page, index) => ({ ...page, order: index + 1 }))
+    })
   }
 
   const updateButton = (pageKey, buttonKey, enabled) => {
@@ -171,13 +185,14 @@ export default function EmployeeDashboardEditor() {
                 {filteredPages.map((page) => (
                   <tr key={page.key}>
                     <td>
-                      <input
-                        type="number"
-                        min="1"
+                      <select
                         value={page.order}
-                        onChange={(event) => updatePage(page.key, { order: Number(event.target.value || 0) })}
-                        className="input mx-auto max-w-[90px] text-center"
-                      />
+                        onChange={(event) => movePage(page.key, Number(event.target.value))}
+                        aria-label={`Order for ${page.label}`}
+                        className="input mx-auto w-20 min-w-[72px] cursor-pointer bg-[var(--bg-soft)] text-center text-[color:var(--text-strong)]"
+                      >
+                        {pages.map((_, index) => <option key={index + 1} value={index + 1}>{index + 1}</option>)}
+                      </select>
                     </td>
                     <td>
                       <input
@@ -223,13 +238,14 @@ export default function EmployeeDashboardEditor() {
                 <div className="mt-4 grid gap-3">
                   <label className="text-sm font-medium text-[color:var(--text-secondary)]">
                     Order Number
-                    <input
-                      type="number"
-                      min="1"
+                    <select
                       value={page.order}
-                      onChange={(event) => updatePage(page.key, { order: Number(event.target.value || 0) })}
-                      className="input mt-2"
-                    />
+                      onChange={(event) => movePage(page.key, Number(event.target.value))}
+                      aria-label={`Order for ${page.label}`}
+                      className="input mt-2 cursor-pointer bg-[var(--bg-soft)] text-[color:var(--text-strong)]"
+                    >
+                      {pages.map((_, index) => <option key={index + 1} value={index + 1}>{index + 1}</option>)}
+                    </select>
                   </label>
                   <label className="text-sm font-medium text-[color:var(--text-secondary)]">
                     Display Name
