@@ -8,7 +8,9 @@ import {
   Filter,
   Home,
   LayoutGrid,
+  Layers,
   MoreVertical,
+  Plus,
   Phone,
   Edit2,
   Pencil,
@@ -333,6 +335,7 @@ export default function Employees() {
   const [employeeStatusFilter, setEmployeeStatusFilter] = useState("Active")
   const [modalOpen, setModalOpen] = useState(false)
   const [editEmployee, setEditEmployee] = useState(null)
+  const [mobileEmployeeMenuId, setMobileEmployeeMenuId] = useState(null)
   const [attendance, setAttendance] = useState([])
   const [allAttendanceByEmployee, setAllAttendanceByEmployee] = useState({})
   const [selectedEmployee, setSelectedEmployee] = useState(null)
@@ -1082,6 +1085,17 @@ export default function Employees() {
     })
   }
 
+  const openEmployeeEditor = (employee) => {
+    if (!canManagerUse("editEmployee")) {
+      setNotice({ type: "error", message: "You do not have access to edit employees." })
+      return
+    }
+
+    setMobileEmployeeMenuId(null)
+    setEditEmployee(employee)
+    setModalOpen(true)
+  }
+
   const requestDeleteAttendance = (entry) => {
     if (!canManagerUse("deleteEntry")) {
       setNotice({ type: "error", message: "You do not have access to delete attendance entries." })
@@ -1354,18 +1368,22 @@ export default function Employees() {
       </div>
 
       <section className={selectedEmployee ? "hidden" : "space-y-3 sm:hidden"}>
-        <div className="flex items-center gap-4 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[15px] bg-emerald-500/10 text-emerald-600">
-            <Home size={21} />
+        <div className="relative isolate flex min-h-[52px] items-center gap-2 overflow-hidden rounded-[17px] border border-emerald-100 bg-gradient-to-r from-[var(--bg-panel)] to-emerald-50/70 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)]">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-700/20">
+            <Home size={17} strokeWidth={2.4} />
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-lime-300" />
           </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">Employees</h1>
-            <p className="text-[11px] font-semibold text-[color:var(--text-secondary)]">Attendance & workforce</p>
+          <div className="relative min-w-0 flex-1">
+            <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">Employees</h1>
+            <p className="mt-0.5 truncate text-[9px] font-semibold tracking-wide text-[color:var(--text-secondary)]">Attendance & workforce</p>
           </div>
-          <div className="ml-auto h-1.5 w-14 rounded-full bg-emerald-400/70" />
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] border border-emerald-100 bg-emerald-50/90 text-emerald-600 shadow-sm">
+            <UsersIcon size={17} strokeWidth={2.2} />
+          </div>
+          <div className="pointer-events-none absolute -right-8 -top-10 h-20 w-20 rounded-full bg-emerald-300/10 blur-xl" />
         </div>
 
-        <div className="relative min-h-[142px] overflow-hidden rounded-[26px] bg-gradient-to-br from-[#087b5a] via-[#079968] to-[#08c38b] px-5 pt-5 text-white shadow-xl shadow-emerald-900/10">
+        <div className="relative min-h-[116px] overflow-hidden rounded-[26px] bg-gradient-to-br from-[#087b5a] via-[#079968] to-[#08c38b] px-4 py-4 text-white shadow-xl shadow-emerald-900/10">
           <div className="relative z-10 flex items-start justify-between gap-3">
             <div>
               <p className="text-[15px] font-semibold text-white/90">Total Employees</p>
@@ -1381,21 +1399,16 @@ export default function Employees() {
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="min-h-[104px] rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600"><UsersIcon /></div>
-            <p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Earned</p>
-            <p className="mt-1 truncate text-[12px] font-extrabold text-emerald-600">{formatCurrency(allEmployeeSalarySummary.earned)}</p>
-          </div>
-          <div className="min-h-[104px] rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-violet-500/10 text-violet-600"><CalendarDays size={18} /></div>
-            <p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Bonus</p>
-            <p className="mt-1 truncate text-[12px] font-extrabold text-violet-600">{formatCurrency(allEmployeeSalarySummary.bonus)}</p>
-          </div>
-          <div className="min-h-[104px] rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 text-blue-600"><BriefcaseBusiness size={18} /></div>
-            <p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Balance</p>
-            <p className={`mt-1 truncate text-[12px] font-extrabold ${allEmployeeSalarySummary.final >= 0 ? "text-blue-600" : "text-rose-600"}`}>{formatCurrency(allEmployeeSalarySummary.final)}</p>
-          </div>
+          {visibleAllEmployeeSalaryCards.map((card) => (
+            <SummaryCard
+              key={card.key}
+              label={card.label}
+              value={card.value}
+              accent={card.accent}
+              ring={card.ring}
+              compact
+            />
+          ))}
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -1408,6 +1421,13 @@ export default function Employees() {
               className="h-[45px] w-full rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-11 pr-3 text-[14px] font-medium text-[color:var(--text-primary)] shadow-sm outline-none placeholder:text-[color:var(--text-secondary)] focus:border-emerald-500"
             />
           </label>
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="inline-flex h-[45px] shrink-0 items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 text-[13px] font-bold text-emerald-600 shadow-sm"
+          >
+            <span>Clear</span>
+          </button>
           <select
             value={employeeStatusFilter}
             onChange={(event) => setEmployeeStatusFilter(event.target.value)}
@@ -1418,14 +1438,6 @@ export default function Employees() {
             <option value="Not Active">Not Active ({employees.length - activeEmployees.length})</option>
             <option value="All">All ({employees.length})</option>
           </select>
-          <button
-            type="button"
-            onClick={() => setSearch("")}
-            className="inline-flex h-[45px] items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 text-[13px] font-bold text-emerald-600 shadow-sm"
-          >
-            <Filter size={18} />
-            <span>Clear</span>
-          </button>
         </div>
 
         <div className="flex items-center justify-between px-1 pt-1">
@@ -1443,7 +1455,7 @@ export default function Employees() {
               tabIndex={0}
               onClick={() => openLedger(employee, { toggle: true })}
               onKeyDown={(event) => event.key === "Enter" && openLedger(employee, { toggle: true })}
-              className="flex min-h-[70px] cursor-pointer items-center justify-between gap-2 rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 shadow-sm active:scale-[0.985]"
+              className="relative flex min-h-[70px] cursor-pointer items-center justify-between gap-2 rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 shadow-sm active:scale-[0.985]"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-sm font-black text-emerald-600">{(employee.name || "E").slice(0, 1).toUpperCase()}</div>
@@ -1458,11 +1470,70 @@ export default function Employees() {
                   <p className="text-[13px] font-extrabold text-blue-600">{formatCurrency(getEmployeeAllFinalBalance(employee))}</p>
                   <span className="mt-1 inline-block rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-extrabold text-emerald-600">{employee.phone || "No phone"}</span>
                 </div>
-                <MoreVertical size={18} className="text-[color:var(--text-secondary)]" />
+                <button
+                  type="button"
+                  aria-label={`Actions for ${employee.name}`}
+                  aria-expanded={mobileEmployeeMenuId === employee._id}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setMobileEmployeeMenuId((current) => current === employee._id ? null : employee._id)
+                  }}
+                  onKeyDown={(event) => event.stopPropagation()}
+                  className="flex h-9 w-8 shrink-0 items-center justify-center rounded-xl text-[color:var(--text-secondary)] active:bg-[var(--bg-soft)]"
+                >
+                  <MoreVertical size={18} />
+                </button>
               </div>
             </div>
           ))}
         </div>
+
+        {mobileEmployeeMenuId ? (() => {
+          const menuEmployee = filteredEmployees.find((employee) => employee._id === mobileEmployeeMenuId)
+          if (!menuEmployee) return null
+
+          return (
+            <div className="fixed inset-0 z-[60]" onClick={() => setMobileEmployeeMenuId(null)}>
+              <div
+                role="menu"
+                onClick={(event) => event.stopPropagation()}
+                className="absolute bottom-24 right-4 w-52 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-1.5 shadow-xl"
+              >
+                {canManagerUse("editEmployee") ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => openEmployeeEditor(menuEmployee)}
+                    className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[color:var(--text-primary)] active:bg-[var(--bg-soft)]"
+                  >
+                    <Pencil size={17} className="text-blue-600" /> Edit
+                  </button>
+                ) : null}
+                {canManagerUse("deleteEmployee") ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setMobileEmployeeMenuId(null)
+                      requestDeleteEmployee(menuEmployee)
+                    }}
+                    className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-rose-600 active:bg-rose-50"
+                  >
+                    <Trash2 size={17} /> Delete
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => setMobileEmployeeMenuId(null)}
+                  className="mt-1 flex min-h-12 w-full items-center justify-center rounded-xl border-t border-[var(--border-color)] px-3 py-3 text-sm font-semibold text-[color:var(--text-secondary)]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )
+        })() : null}
 
         <nav className="fixed bottom-0 left-0 right-0 z-40 mx-3 mb-2 flex h-[72px] items-center justify-around rounded-[25px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-2 shadow-lg">
           <button type="button" className="flex min-w-[58px] flex-col items-center gap-1 font-extrabold text-emerald-600"><Home size={21} /><span className="text-[10px]">Directory</span><span className="mt-0.5 h-[3px] w-8 rounded-full bg-emerald-600" /></button>
@@ -1533,8 +1604,7 @@ export default function Employees() {
                         aria-label="Edit employee"
                         onClick={(event) => {
                           event.stopPropagation()
-                          setEditEmployee(employee)
-                          setModalOpen(true)
+                          openEmployeeEditor(employee)
                         }}
                       >
                         <Edit2 size={15} />
@@ -1548,6 +1618,7 @@ export default function Employees() {
                         aria-label="Delete employee"
                         onClick={(event) => {
                           event.stopPropagation()
+                          setMobileEmployeeMenuId(null)
                           requestDeleteEmployee(employee)
                         }}
                       >
@@ -1720,10 +1791,14 @@ export default function Employees() {
 
           <div className="mb-2 grid grid-cols-3 gap-2">
             {mobileOverviewCards.map((card) => (
-              <div key={card.key} className="relative flex min-h-[76px] flex-col justify-between overflow-hidden rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
-                <div><p className="text-[10px] font-semibold text-[color:var(--text-secondary)]">{card.label}</p><p className={`mt-2 truncate text-[13px] font-extrabold ${card.accent}`}>{card.value}</p></div>
-                <span className={`h-1 w-full rounded-full ${card.barClass}`} />
-              </div>
+              <SummaryCard
+                key={card.key}
+                label={card.label}
+                value={card.value}
+                accent={card.accent}
+                ring={card.ring}
+                compact
+              />
             ))}
           </div>
 
@@ -1739,6 +1814,9 @@ export default function Employees() {
             {sortedAttendance.length === 0 ? <div className="rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-center text-sm font-bold text-[color:var(--text-secondary)]">No attendance records for this month.</div> : sortedAttendance.map((entry) => {
               const isExpanded = expandedAttendanceId === entry._id
               const entryStatus = statusMeta[entry.status] || {}
+              const isBonusEntry = entry.status === "bonus"
+              const displayAmount = isBonusEntry ? Number(entry.bonusAmount || 0) : Number(entry.shortage || 0)
+              const displayAmountClass = displayAmount < 0 ? "text-rose-600" : entryStatus.numberClass || "text-[color:var(--text-strong)]"
               const statusTone = {
                 present: "bg-emerald-50 text-emerald-700 ring-emerald-200",
                 present_half: "bg-teal-50 text-teal-700 ring-teal-200",
@@ -1754,7 +1832,16 @@ export default function Employees() {
                       <span className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[17px] border ${statusTone}`}><CalendarDays size={19} /></span>
                       <div className="min-w-0"><p className="truncate text-[13px] font-extrabold leading-tight text-[color:var(--text-strong)]">{entryStatus.label || entry.status || "Attendance"}</p><div className="mt-1 flex items-center gap-2"><span className="h-1 w-1 rounded-full bg-emerald-500" /><p className="truncate text-[11px] font-semibold text-[color:var(--text-secondary)]">{entry.date ? String(entry.date).slice(0, 10) : "-"}</p></div></div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1"><div className="text-right"><p className={`text-[13px] font-extrabold tracking-tight ${entryStatus.numberClass || "text-[color:var(--text-strong)]"}`}>{formatCurrency(entry.shortage)}</p><span className="mt-1 inline-block rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-extrabold text-emerald-600">Cash {formatCurrency(entry.advanceCash)}</span></div><ChevronDown size={17} className={`text-[color:var(--text-secondary)] transition-transform ${isExpanded ? "rotate-180" : ""}`} /></div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <div className="flex min-w-0 flex-col items-end text-right">
+                        <p className={`text-[13px] font-extrabold tracking-tight ${displayAmountClass}`}>{formatCurrency(displayAmount)}</p>
+                        <div className="mt-1 flex items-center justify-end gap-1">
+                          <span className="whitespace-nowrap rounded-full bg-sky-500/10 px-1.5 py-1 text-[8px] font-extrabold text-sky-700">Petrol {formatCurrency(entry.advancePetrol)}</span>
+                          <span className="whitespace-nowrap rounded-full bg-emerald-500/10 px-1.5 py-1 text-[8px] font-extrabold text-emerald-600">Cash {formatCurrency(entry.advanceCash)}</span>
+                        </div>
+                      </div>
+                      <ChevronDown size={17} className={`text-[color:var(--text-secondary)] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                    </div>
                   </button>
                   {isExpanded ? <div className="mx-3 mb-3 space-y-2 rounded-[14px] bg-[var(--bg-soft)] p-2.5 text-[11px] text-[color:var(--text-secondary)]"><p className="leading-5">Remark: <span className="font-semibold text-[color:var(--text-primary)]">{entry.remark || "No remark added"}</span></p><p>Edited by: <span className="font-semibold text-[color:var(--text-primary)]">{entry.lastEditedBy || "Not edited yet"}</span></p><div className="flex gap-2 pt-0.5">{canManagerUse("editEntry") ? <button type="button" title="Edit attendance" onClick={() => { setAttendanceEntryMode("single"); setEditAttendance(entry); setAttendanceContext({ employeeId: selectedEmployee._id, allowEmployeeSelect: false }); setAttendanceModalOpen(true) }} className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[11px] bg-blue-600 text-[11px] font-extrabold text-white"><Pencil size={14} /> Edit</button> : null}{canManagerUse("deleteEntry") ? <button type="button" title="Delete attendance" onClick={() => requestDeleteAttendance(entry)} className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[11px] bg-rose-50 text-[11px] font-extrabold text-rose-600"><Trash2 size={14} /> Delete</button> : null}</div></div> : null}
                 </div>
@@ -2204,16 +2291,78 @@ export default function Employees() {
       />
 
       {attendanceModePrompt ? (
-        <ConfirmDialog
-          title="Choose Attendance Entry Mode"
-          description="Select whether you want to create a single attendance entry or save multiple entries at once."
-          confirmLabel="Single Entry"
-          secondaryLabel="Multiple Entry"
-          tone="primary"
-          onCancel={() => setAttendanceModePrompt(null)}
-          onConfirm={() => confirmAttendanceMode("single")}
-          onSecondaryAction={() => confirmAttendanceMode("multiple")}
-        />
+        <>
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm sm:hidden"
+          onClick={() => setAttendanceModePrompt(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="attendance-entry-mode-title"
+            aria-describedby="attendance-entry-mode-description"
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-[430px] rounded-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-6 text-center shadow-[0_28px_80px_rgba(15,23,42,0.24)] sm:px-7 sm:py-8"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-emerald-500/10 text-emerald-600">
+              <ChartNoAxesCombined size={27} strokeWidth={2.2} />
+            </div>
+
+            <h2 id="attendance-entry-mode-title" className="mt-4 text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
+              Choose Attendance Entry Mode
+            </h2>
+            <p id="attendance-entry-mode-description" className="mx-auto mt-2 max-w-[310px] text-[13px] leading-5 text-[color:var(--text-secondary)]">
+              Select whether you want to create a single attendance entry or save multiple entries at once.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => confirmAttendanceMode("single")}
+                className="flex min-h-[170px] flex-col items-center justify-center rounded-[20px] border-2 border-emerald-500/40 bg-emerald-500/10 px-3 py-4 transition active:scale-[0.98]"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                  <Plus size={25} stroke="white" strokeWidth={2.5} />
+                </span>
+                <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Single Entry</span>
+                <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add one attendance entry</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmAttendanceMode("multiple")}
+                className="flex min-h-[170px] flex-col items-center justify-center rounded-[20px] border-2 border-teal-500/25 bg-emerald-500/5 px-3 py-4 transition active:scale-[0.98]"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-teal-700 text-white shadow-md shadow-teal-700/20">
+                  <Layers size={23} stroke="white" strokeWidth={2.2} />
+                </span>
+                <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Multiple Entry</span>
+                <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add multiple attendance records</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAttendanceModePrompt(null)}
+              className="mt-5 min-h-10 px-6 text-[14px] font-semibold text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+            >
+              Cancel
+            </button>
+          </section>
+        </div>
+        <div className="hidden sm:block">
+          <ConfirmDialog
+            title="Choose Attendance Entry Mode"
+            description="Select whether you want to create a single attendance entry or save multiple entries at once."
+            confirmLabel="Single Entry"
+            secondaryLabel="Multiple Entry"
+            tone="primary"
+            onCancel={() => setAttendanceModePrompt(null)}
+            onConfirm={() => confirmAttendanceMode("single")}
+            onSecondaryAction={() => confirmAttendanceMode("multiple")}
+          />
+        </div>
+        </>
       ) : null}
 
       {confirmModal ? (
@@ -2304,16 +2453,13 @@ export default function Employees() {
 function SummaryCard({ label, value, accent, ring, compact = false }) {
   if (compact) {
     return (
-      <div className={`flex min-h-[76px] flex-col justify-between rounded-[20px] border p-3 shadow-sm ${ring}`}>
-        <div className="min-w-0">
-          <p className="line-clamp-2 text-[9px] font-semibold leading-3 text-[color:var(--text-secondary)]">
-            {label}
-          </p>
-          <p className={`mt-2 truncate text-[12px] font-extrabold leading-none ${accent}`}>
-            {value}
-          </p>
-        </div>
-        <span className={`h-1 w-full rounded-full ${accent.replace("text-", "bg-")}`} />
+      <div className="flex min-h-[68px] min-w-0 flex-col justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-2.5 py-2 shadow-[0_3px_10px_rgba(15,23,42,0.07)]">
+        <p className="line-clamp-2 text-[9px] font-semibold leading-3 text-[color:var(--text-secondary)]">
+          {label}
+        </p>
+        <p className={`mt-1.5 truncate text-[13px] font-extrabold leading-tight ${accent}`}>
+          {value}
+        </p>
       </div>
     )
   }

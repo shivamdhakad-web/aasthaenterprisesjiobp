@@ -20,7 +20,7 @@ export default function MobileActionFab({ actions = [], onClick }) {
                 setOpen(false)
                 action.onClick?.()
               }}
-              className={`min-w-[148px] rounded-2xl px-4 py-3 text-sm font-medium text-white shadow-lg ${
+              className={`min-w-[148px] rounded-2xl px-4 py-3 text-sm font-medium !text-white shadow-lg ${
                 action.className || "bg-blue-600"
               }`}
             >

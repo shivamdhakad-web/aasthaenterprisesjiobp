@@ -3,7 +3,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   BarChart3,
-  Bell,
   Boxes,
   Calendar,
   ChartNoAxesCombined,
@@ -223,7 +222,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
 
   // Mobile-specific state
   const [mobileActiveTab, setMobileActiveTab] = useState("sales") // "sales" | "stock" | "profit"
-  const [mobileTimeframe, setMobileTimeframe] = useState("month") // "today" | "week" | "month" | "all"
+  const [mobileSelectedMetric, setMobileSelectedMetric] = useState("monthSales")
   const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
   const [mobileActionItem, setMobileActionItem] = useState(null)
@@ -352,40 +351,6 @@ export default function Lubricants({ businessType = "lubricant" }) {
     }
   }, [filtered, monthFilter])
 
-  const mobileHeroAmount = useMemo(() => {
-    switch (mobileTimeframe) {
-      case "today":
-        return {
-          label: "Today",
-          value: formatCurrency(summary.todaySales),
-          profit: formatCurrency(summary.todayProfit),
-          qty: summary.todayQuantity,
-        }
-      case "week":
-        return {
-          label: "This Week",
-          value: formatCurrency(summary.weekSales),
-          profit: formatCurrency(summary.weekProfit),
-          qty: null,
-        }
-      case "all":
-        return {
-          label: "All Time",
-          value: formatCurrency(summary.totalSales),
-          profit: formatCurrency(summary.totalProfit),
-          qty: summary.totalQuantity,
-        }
-      case "month":
-      default:
-        return {
-          label: "This Month",
-          value: formatCurrency(summary.monthSales),
-          profit: formatCurrency(summary.monthProfit),
-          qty: summary.monthQuantity,
-        }
-    }
-  }, [mobileTimeframe, summary])
-
   const summaryCards = [
     { key: "todaySales", label: "Today Sales", value: formatCurrency(summary.todaySales), tone: "blue" },
     { key: "weekSales", label: "Week Sales", value: formatCurrency(summary.weekSales), tone: "amber" },
@@ -395,6 +360,18 @@ export default function Lubricants({ businessType = "lubricant" }) {
     { key: "totalProfit", label: "Total Profit", value: formatCurrency(summary.totalProfit), tone: "violet" },
   ]
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
+  const mobileMetricCards = ["weekSales", "monthSales", "totalSales", "monthProfit", "totalProfit"]
+    .map((key) => visibleSummaryCards.find((card) => card.key === key))
+    .filter(Boolean)
+  const selectedMobileMetric = mobileMetricCards.find((card) => card.key === mobileSelectedMetric) || mobileMetricCards[0]
+  const mobileProfitBySalesMetric = {
+    weekSales: { profit: formatCurrency(summary.weekProfit), profitLabel: "Week Profit" },
+    monthSales: { profit: formatCurrency(summary.monthProfit), profitLabel: "Month Profit" },
+    totalSales: { profit: formatCurrency(summary.totalProfit), profitLabel: "Total Profit" },
+  }
+  const mobileHeroAmount = selectedMobileMetric
+    ? { ...selectedMobileMetric, ...mobileProfitBySalesMetric[selectedMobileMetric.key] }
+    : { label: "Lubricant Sales", value: formatCurrency(0) }
 
   const profitRows = useMemo(
     () =>
@@ -954,45 +931,19 @@ export default function Lubricants({ businessType = "lubricant" }) {
       ========================================================================= */}
       <div className="lg:hidden space-y-3">
         {/* 1. Mobile Header Card */}
-        <div className="flex items-center justify-between gap-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${isCampa ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"}`}>
-              <Droplets size={22} />
-            </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-[color:var(--text-strong)] leading-tight">
-                {pluralBrandName}
-              </h1>
-              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">{isCampa ? "Campa sales & inventory" : "Oil sales & inventory"}</p>
-            </div>
+        <div className={`mb-2 flex min-h-[52px] items-center gap-2.5 rounded-[17px] border px-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${isCampa ? "border-red-100 bg-gradient-to-r from-[var(--bg-panel)] to-red-50/70" : "border-amber-100 bg-gradient-to-r from-[var(--bg-panel)] to-amber-50/70"}`}>
+          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-gradient-to-br text-white shadow-sm ${isCampa ? "from-red-500 to-red-700 shadow-red-700/20" : "from-amber-500 to-orange-600 shadow-amber-700/20"}`}>
+            <Droplets size={16} strokeWidth={2.3} />
           </div>
-
-          <div className="flex items-center gap-2">
-            {canManagerUse("addSale") ? (
-              <button
-                type="button"
-                onClick={openEntryModePrompt}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 active:scale-95 transition-all"
-                title="Add Sale"
-              >
-                <Plus size={19} strokeWidth={2.5} />
-              </button>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={() => navigate(user?.role === "Admin" ? "/admin/notifications" : "/notifications")}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)] transition-colors"
-              title="Notifications"
-            >
-              <Bell size={19} />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-[var(--bg-panel)]" />
-            </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">{pluralBrandName}</h1>
+            <p className="mt-0.5 truncate text-[8px] font-semibold tracking-wide text-[color:var(--text-secondary)]">{isCampa ? "Campa sales & inventory" : "Oil sales & inventory"}</p>
           </div>
+          <span className={`ml-auto h-2 w-2 shrink-0 rounded-full ring-4 ${isCampa ? "bg-red-500 ring-red-500/10" : "bg-amber-500 ring-amber-500/10"}`} />
         </div>
 
         {/* 2. Premium Amber/Golden Hero Gradient Card with Liquid Wave */}
-        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#78350f] via-[#b45309] to-[#d97706] p-5 text-white shadow-xl shadow-amber-900/15">
+        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#78350f] via-[#b45309] to-[#d97706] p-4 text-white shadow-xl shadow-amber-900/15">
           {/* Clipped background wave vector */}
           <div className="absolute inset-0 overflow-hidden rounded-[26px] pointer-events-none">
             <svg
@@ -1025,7 +976,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-amber-100/90 tracking-wide flex items-center gap-1.5">
                 <Flame size={14} className="text-amber-300" />
-                Total {brandName} Sales
+                {mobileHeroAmount.label}
               </span>
               {!isManager ? (
                 <button
@@ -1040,7 +991,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
             </div>
 
             {/* Large Bold Amount */}
-            <div className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm mb-3">
+            <div className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm mb-2">
               {mobileHeroAmount.value}
             </div>
 
@@ -1062,22 +1013,17 @@ export default function Lubricants({ businessType = "lubricant" }) {
                       className="fixed inset-0 z-[70]"
                       onClick={() => setShowMobileTimeDropdown(false)}
                     />
-                    <div className="absolute left-0 top-full mt-2 w-36 rounded-2xl border border-amber-500/40 bg-[#5c2807] p-1.5 shadow-2xl backdrop-blur-xl z-[80] text-xs font-bold text-white">
-                      {[
-                        { key: "today", label: "Today" },
-                        { key: "week", label: "This Week" },
-                        { key: "month", label: "This Month" },
-                        { key: "all", label: "All Time" },
-                      ].map((item) => (
+                    <div className="absolute left-0 top-full mt-2 w-44 rounded-2xl border border-amber-500/40 bg-[#5c2807] p-1.5 shadow-2xl backdrop-blur-xl z-[80] text-xs font-bold text-white">
+                      {mobileMetricCards.map((item) => (
                         <button
                           key={item.key}
                           type="button"
                           onClick={() => {
-                            setMobileTimeframe(item.key)
+                            setMobileSelectedMetric(item.key)
                             setShowMobileTimeDropdown(false)
                           }}
                           className={`w-full text-left px-3 py-2 rounded-xl transition-colors ${
-                            mobileTimeframe === item.key ? "bg-amber-500 text-white" : "hover:bg-white/10"
+                            selectedMobileMetric?.key === item.key ? "bg-amber-500 text-white" : "hover:bg-white/10"
                           }`}
                         >
                           {item.label}
@@ -1089,24 +1035,22 @@ export default function Lubricants({ businessType = "lubricant" }) {
               </div>
 
               {/* Profit Pill Badge */}
-              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 px-3 py-1 text-xs font-extrabold text-emerald-300 backdrop-blur-md">
-                <ArrowUpRight size={13} />
-                <span>{mobileHeroAmount.profit} Profit</span>
-              </div>
+              {mobileHeroAmount.profit ? (
+                <div className="inline-flex items-center gap-1 rounded-full bg-emerald-950/60 border border-emerald-400/40 px-3 py-1 text-xs font-extrabold text-emerald-300 backdrop-blur-md">
+                  <ArrowUpRight size={13} />
+                  <span>{mobileHeroAmount.profitLabel}: {mobileHeroAmount.profit}</span>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
 
         {/* 4. Interactive Mobile Segmented Control (Tabs) */}
-        <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-1 shadow-sm">
+        <div className="flex items-center gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-1.5 shadow-sm">
           <button
             type="button"
             onClick={() => setMobileActiveTab("sales")}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all ${
-              mobileActiveTab === "sales"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
-            }`}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-colors ${mobileActiveTab === "sales" ? "bg-amber-600 !text-white shadow-sm hover:bg-amber-700" : "bg-transparent !text-black hover:bg-amber-50"}`}
           >
             <Droplets size={14} />
             <span>Sales ({filtered.length})</span>
@@ -1115,11 +1059,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
           <button
             type="button"
             onClick={() => setMobileActiveTab("stock")}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all ${
-              mobileActiveTab === "stock"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
-            }`}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-colors ${mobileActiveTab === "stock" ? "bg-amber-600 !text-white shadow-sm hover:bg-amber-700" : "bg-transparent !text-black hover:bg-amber-50"}`}
           >
             <Package size={14} />
             <span>Stock ({products.length})</span>
@@ -1128,11 +1068,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
           <button
             type="button"
             onClick={() => setMobileActiveTab("profit")}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-all ${
-              mobileActiveTab === "profit"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
-            }`}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition-colors ${mobileActiveTab === "profit" ? "bg-amber-600 !text-white shadow-sm hover:bg-amber-700" : "bg-transparent !text-black hover:bg-amber-50"}`}
           >
             <BarChart3 size={14} />
             <span>Profits</span>
@@ -1141,7 +1077,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
 
         {/* 5. Search & Filter Bar */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative min-w-0 flex-1">
             <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--text-secondary)] pointer-events-none" />
             <input
               placeholder={
@@ -1157,14 +1093,29 @@ export default function Lubricants({ businessType = "lubricant" }) {
             />
           </div>
 
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("")
+              setProductFilter("")
+              setFromDateFilter("")
+              setToDateFilter("")
+              setMonthFilter(getCurrentMonth())
+              setShowMobileFilterModal(false)
+            }}
+            className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 text-xs font-bold text-amber-700 shadow-sm transition active:scale-95 dark:text-amber-300"
+          >
+            Clear
+          </button>
+
           {mobileActiveTab === "sales" ? (
             <button
               type="button"
               onClick={() => setShowMobileFilterModal(true)}
-              className={`inline-flex h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold shadow-sm active:scale-95 transition-all ${
+              className={`inline-flex h-11 shrink-0 items-center gap-1.5 rounded-2xl border px-3 text-xs font-bold !text-white shadow-sm active:scale-95 transition-all ${
                 productFilter || fromDateFilter || toDateFilter
-                  ? "border-amber-500 bg-amber-500 text-white"
-                  : "border-amber-200 dark:border-amber-800/80 bg-amber-50/80 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                  ? "border-amber-800 bg-amber-800 hover:bg-amber-900"
+                  : "border-amber-600 bg-amber-600 hover:bg-amber-700"
               }`}
             >
               <Filter size={15} />
@@ -1174,12 +1125,25 @@ export default function Lubricants({ businessType = "lubricant" }) {
             <button
               type="button"
               onClick={openCreateProductModal}
-              className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-blue-600 px-3.5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-2xl bg-blue-600 px-3 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
             >
               <Plus size={15} />
               <span>Add</span>
             </button>
           ) : null}
+        </div>
+
+        <div className="flex items-center justify-between px-1 pt-1">
+          <h2 className="text-sm font-black text-[color:var(--text-strong)]">
+            {mobileActiveTab === "sales" ? `${brandName} Sales` : mobileActiveTab === "stock" ? "Product Stock" : "Profit by Product"}
+          </h2>
+          <span className="text-xs font-semibold text-[color:var(--text-secondary)]">
+            {mobileActiveTab === "sales"
+              ? `${filtered.length} ${filtered.length === 1 ? "entry" : "entries"}`
+              : mobileActiveTab === "stock"
+              ? `${filteredProducts.length} ${filteredProducts.length === 1 ? "product" : "products"}`
+              : `${profitRows.length} ${profitRows.length === 1 ? "product" : "products"}`}
+          </span>
         </div>
 
         {/* 6. TAB 1: SALES LIST */}
@@ -2495,22 +2459,91 @@ export default function Lubricants({ businessType = "lubricant" }) {
       ) : null}
 
       {entryModePrompt ? (
-        <ConfirmDialog
-          title={`Add ${brandName} Sale`}
-          description="Choose whether you want to save one sale entry or add multiple sale entries together."
-          actionLabel="Single Entry"
-          secondaryLabel="Multiple Entry"
-          variant="primary"
-          onCancel={() => setEntryModePrompt(false)}
-          onConfirm={() => {
-            setEntryModePrompt(false)
-            openSaleModal()
-          }}
-          onSecondaryAction={() => {
-            setEntryModePrompt(false)
-            openBulkSaleModal()
-          }}
-        />
+        <>
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm lg:hidden"
+            onClick={() => setEntryModePrompt(false)}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="lubricant-entry-mode-title"
+              aria-describedby="lubricant-entry-mode-description"
+              onClick={(event) => event.stopPropagation()}
+              className="w-full max-w-[430px] rounded-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-6 text-center shadow-[0_28px_80px_rgba(15,23,42,0.24)] sm:px-7 sm:py-8"
+            >
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-amber-500/10 text-amber-600">
+                <ChartNoAxesCombined size={27} strokeWidth={2.2} />
+              </div>
+
+              <h2 id="lubricant-entry-mode-title" className="mt-4 text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
+                Choose Entry Mode
+              </h2>
+              <p id="lubricant-entry-mode-description" className="mx-auto mt-2 max-w-[310px] text-[13px] leading-5 text-[color:var(--text-secondary)]">
+                Choose how you would like to record your {brandName.toLowerCase()} sales.
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryModePrompt(false)
+                    openSaleModal()
+                  }}
+                  className="flex min-h-[160px] flex-col items-center justify-center rounded-[20px] border-2 border-amber-500/40 bg-amber-500/10 px-3 py-4 transition active:scale-[0.98]"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-amber-600 text-white shadow-md shadow-amber-600/20">
+                    <Plus size={25} stroke="white" strokeWidth={2.5} />
+                  </span>
+                  <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Single Entry</span>
+                  <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add one sale at a time</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryModePrompt(false)
+                    openBulkSaleModal()
+                  }}
+                  className="flex min-h-[160px] flex-col items-center justify-center rounded-[20px] border-2 border-orange-500/30 bg-orange-500/5 px-3 py-4 transition active:scale-[0.98]"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-orange-700 text-white shadow-md shadow-orange-700/20">
+                    <Layers size={23} stroke="white" strokeWidth={2.2} />
+                  </span>
+                  <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Multiple Entry</span>
+                  <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add several sales together</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEntryModePrompt(false)}
+                className="mt-5 min-h-10 px-6 text-[14px] font-semibold text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+            </section>
+          </div>
+
+          <div className="hidden lg:block">
+            <ConfirmDialog
+              title={`Add ${brandName} Sale`}
+              description="Choose whether you want to save one sale entry or add multiple sale entries together."
+              actionLabel="Single Entry"
+              secondaryLabel="Multiple Entry"
+              variant="primary"
+              onCancel={() => setEntryModePrompt(false)}
+              onConfirm={() => {
+                setEntryModePrompt(false)
+                openSaleModal()
+              }}
+              onSecondaryAction={() => {
+                setEntryModePrompt(false)
+                openBulkSaleModal()
+              }}
+            />
+          </div>
+        </>
       ) : null}
 
       {/* Mobile Floating Action Button (+ FAB) for Add Sale */}
@@ -2521,7 +2554,7 @@ export default function Lubricants({ businessType = "lubricant" }) {
           className="lg:hidden fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-amber-600 hover:bg-amber-700 text-white shadow-xl shadow-amber-900/30 active:scale-95 transition-all"
           title={`Add ${brandName} Sale`}
         >
-          <Plus size={28} strokeWidth={2.5} />
+          <Plus size={28} stroke="white" strokeWidth={2.5} className="!text-white" />
         </button>
       ) : null}
     </div>

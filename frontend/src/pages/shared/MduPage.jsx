@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowUpRight,
   BarChart3,
-  Bell,
   Calendar,
   ChartNoAxesCombined,
   Check,
@@ -123,7 +122,7 @@ export default function MduPage() {
   const [deleteMonthValue, setDeleteMonthValue] = useState(currentMonth())
 
   // Mobile-specific state
-  const [mobileTimeframe, setMobileTimeframe] = useState("month")
+  const [mobileSelectedMetric, setMobileSelectedMetric] = useState("totalSale")
   const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
   const [expandedCardId, setExpandedCardId] = useState(null)
@@ -197,62 +196,6 @@ export default function MduPage() {
     }
   }, [filteredEntries])
 
-  const mobileHeroAmount = useMemo(() => {
-    const todayStr = today()
-    let filteredSales = 0
-    let filteredLossGain = 0
-    let count = 0
-
-    filteredEntries.forEach((entry) => {
-      const entryDate = String(entry.date || "").slice(0, 10)
-      const saleVal = numberValue(entry.sale)
-      const lgVal = getLossGain(entry)
-
-      if (mobileTimeframe === "today") {
-        if (entryDate === todayStr) {
-          filteredSales += saleVal
-          filteredLossGain += lgVal
-          count++
-        }
-      } else if (mobileTimeframe === "week") {
-        const diffDays = (new Date() - new Date(entry.date)) / (1000 * 60 * 60 * 24)
-        if (diffDays >= 0 && diffDays <= 7) {
-          filteredSales += saleVal
-          filteredLossGain += lgVal
-          count++
-        }
-      } else if (mobileTimeframe === "all") {
-        filteredSales += saleVal
-        filteredLossGain += lgVal
-        count++
-      } else {
-        // month
-        if (entryDate.slice(0, 7) === (monthFilter || currentMonth())) {
-          filteredSales += saleVal
-          filteredLossGain += lgVal
-          count++
-        }
-      }
-    })
-
-    return {
-      label:
-        mobileTimeframe === "today"
-          ? "Today"
-          : mobileTimeframe === "week"
-          ? "This Week"
-          : mobileTimeframe === "all"
-          ? "All Time"
-          : "This Month",
-      sale: `${formatNumber(filteredSales)} L`,
-      lossGain: filteredLossGain,
-      lossGainText: `${filteredLossGain >= 0 ? "+" : ""}${formatNumber(filteredLossGain)} L ${
-        filteredLossGain >= 0 ? "Gain" : "Loss"
-      }`,
-      count,
-    }
-  }, [filteredEntries, mobileTimeframe, monthFilter])
-
   const summaryCards = [
     { key: "totalDecant", label: "Total Decant", value: `${formatNumber(summary.totalDecant)} L`, tone: "sky" },
     { key: "totalSale", label: "Total Sale", value: `${formatNumber(summary.totalSale)} L`, tone: "emerald" },
@@ -272,6 +215,27 @@ export default function MduPage() {
     },
   ]
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
+  const mobileMetricOptions = ["totalSale", "revenue", "netVariance"]
+    .map((key) => visibleSummaryCards.find((card) => card.key === key))
+    .filter(Boolean)
+  const selectedMobileMetric = mobileMetricOptions.find((card) => card.key === mobileSelectedMetric) || mobileMetricOptions[0]
+  const mobileHeroAmount = selectedMobileMetric
+    ? {
+        ...selectedMobileMetric,
+        badgeLabel: selectedMobileMetric.key === "netVariance" ? "Variance Value" : "Net Variance",
+        badgeValue:
+          selectedMobileMetric.key === "netVariance"
+            ? formatCurrency(summary.impact)
+            : `${summary.totalLossGain >= 0 ? "+" : ""}${formatNumber(summary.totalLossGain)} L ${summary.totalLossGain >= 0 ? "Gain" : "Loss"}`,
+      }
+    : {
+        key: "totalSale",
+        label: "Total Sale",
+        value: `${formatNumber(summary.totalSale)} L`,
+        badgeLabel: "Net Variance",
+        badgeValue: `${summary.totalLossGain >= 0 ? "+" : ""}${formatNumber(summary.totalLossGain)} L ${summary.totalLossGain >= 0 ? "Gain" : "Loss"}`,
+      }
+  const mobileBadgePositive = mobileHeroAmount.key === "netVariance" ? summary.impact >= 0 : summary.totalLossGain >= 0
 
   const openCreateModal = () => {
     if (!canManagerUse("addEntry")) {
@@ -561,45 +525,19 @@ export default function MduPage() {
       ========================================================================= */}
       <div className="lg:hidden space-y-3">
         {/* 1. Mobile Top Header */}
-        <div className="flex items-center justify-between gap-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <Truck size={22} />
-            </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-[color:var(--text-strong)] leading-tight">
-                M.D.U
-              </h1>
-              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">Mobile Dispenser Unit</p>
-            </div>
+        <div className="flex min-h-[52px] items-center gap-2.5 rounded-[17px] border border-emerald-100 bg-gradient-to-r from-[var(--bg-panel)] to-emerald-50/70 px-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-700/20">
+            <Truck size={16} strokeWidth={2.3} />
           </div>
-
-          <div className="flex items-center gap-2">
-            {canManagerUse("addEntry") ? (
-              <button
-                type="button"
-                onClick={openEntryMode}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
-                title="Add Entry"
-              >
-                <Plus size={19} strokeWidth={2.5} />
-              </button>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={() => navigate(user?.role === "Admin" ? "/admin/notifications" : "/notifications")}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)] transition-colors"
-              title="Notifications"
-            >
-              <Bell size={19} />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-[var(--bg-panel)]" />
-            </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">M.D.U</h1>
+            <p className="mt-0.5 truncate text-[8px] font-semibold tracking-wide text-[color:var(--text-secondary)]">Mobile Dispenser Unit</p>
           </div>
+          <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10" />
         </div>
 
         {/* 2. Premium Emerald Hero Gradient Card with Liquid Wave */}
-        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#0d9488] p-5 text-white shadow-xl shadow-emerald-950/20">
+        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#0d9488] p-4 text-white shadow-xl shadow-emerald-950/20">
           {/* Clipped background wave vector */}
           <div className="absolute inset-0 overflow-hidden rounded-[26px] pointer-events-none">
             <svg
@@ -632,7 +570,7 @@ export default function MduPage() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-emerald-100/90 tracking-wide flex items-center gap-1.5">
                 <Fuel size={14} className="text-emerald-300" />
-                Total Dispensed (Sale)
+                {mobileHeroAmount.label}
               </span>
               <button
                 type="button"
@@ -645,8 +583,8 @@ export default function MduPage() {
             </div>
 
             {/* Large Bold Amount */}
-            <div className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm mb-3">
-              {mobileHeroAmount.sale}
+            <div className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm mb-2">
+              {mobileHeroAmount.value}
             </div>
 
             {/* Middle metrics row: Loss/Gain tag & Timeframe dropdown */}
@@ -670,22 +608,17 @@ export default function MduPage() {
                       className="fixed inset-0 z-[70]"
                       onClick={() => setShowMobileTimeDropdown(false)}
                     />
-                    <div className="absolute left-0 top-full mt-2 w-36 rounded-2xl border border-emerald-500/40 bg-[#064e3b] p-1.5 shadow-2xl backdrop-blur-xl z-[80] text-xs font-bold text-white">
-                      {[
-                        { key: "today", label: "Today" },
-                        { key: "week", label: "This Week" },
-                        { key: "month", label: "This Month" },
-                        { key: "all", label: "All Time" },
-                      ].map((item) => (
+                    <div className="absolute left-0 top-full mt-2 w-48 rounded-2xl border border-emerald-500/40 bg-[#064e3b] p-1.5 shadow-2xl backdrop-blur-xl z-[80] text-xs font-bold text-white">
+                      {mobileMetricOptions.map((item) => (
                         <button
                           key={item.key}
                           type="button"
                           onClick={() => {
-                            setMobileTimeframe(item.key)
+                            setMobileSelectedMetric(item.key)
                             setShowMobileTimeDropdown(false)
                           }}
                           className={`w-full text-left px-3 py-2 rounded-xl transition-colors ${
-                            mobileTimeframe === item.key ? "bg-emerald-600 text-white" : "hover:bg-white/10"
+                            selectedMobileMetric?.key === item.key ? "bg-emerald-600 text-white" : "hover:bg-white/10"
                           }`}
                         >
                           {item.label}
@@ -697,15 +630,9 @@ export default function MduPage() {
               </div>
 
               {/* Loss/Gain Pill Badge */}
-              <div
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-extrabold backdrop-blur-md ${
-                  mobileHeroAmount.lossGain >= 0
-                    ? "bg-emerald-950/60 border-emerald-400/40 text-emerald-300"
-                    : "bg-rose-950/60 border-rose-400/40 text-rose-300"
-                }`}
-              >
-                {mobileHeroAmount.lossGain >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                <span>{mobileHeroAmount.lossGainText}</span>
+              <div className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-extrabold backdrop-blur-md ${mobileBadgePositive ? "border-emerald-400/40 bg-emerald-950/60 text-emerald-200" : "border-rose-400/40 bg-rose-950/60 text-rose-200"}`}>
+                {mobileBadgePositive ? <ArrowUpRight size={13} /> : <TrendingDown size={13} />}
+                <span>{mobileHeroAmount.badgeLabel}: {mobileHeroAmount.badgeValue}</span>
               </div>
             </div>
           </div>
@@ -739,7 +666,7 @@ export default function MduPage() {
 
         {/* 4. Search & Filter Bar */}
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative min-w-0 flex-1">
             <Search
               size={17}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--text-secondary)] pointer-events-none"
@@ -754,16 +681,24 @@ export default function MduPage() {
 
           <button
             type="button"
-            onClick={() => setShowMobileFilterModal(true)}
-            className={`inline-flex h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold shadow-sm active:scale-95 transition-all ${
-              fromDate || toDate || monthFilter !== currentMonth()
-                ? "border-emerald-500 bg-emerald-500 text-white"
-                : "border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
-            }`}
+            onClick={() => {
+              setSearch("")
+              setFromDate("")
+              setToDate("")
+              setMonthFilter(currentMonth())
+              setShowMobileFilterModal(false)
+            }}
+            className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 text-xs font-bold text-emerald-700 shadow-sm transition active:scale-95 dark:text-emerald-300"
           >
-            <Filter size={15} />
-            <span>Filter</span>
+            Clear
           </button>
+        </div>
+
+        <div className="flex items-center justify-between px-1 pt-1">
+          <h2 className="text-sm font-black text-[color:var(--text-strong)]">M.D.U Entries</h2>
+          <span className="text-xs font-semibold text-[color:var(--text-secondary)]">
+            {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
+          </span>
         </div>
 
         {/* 5. Mobile M.D.U Entries Card List */}
@@ -925,7 +860,7 @@ export default function MduPage() {
             className="lg:hidden fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#008744] hover:bg-[#007038] text-white shadow-xl shadow-emerald-900/30 active:scale-95 transition-all"
             title="Add M.D.U Entry"
           >
-            <Plus size={28} strokeWidth={2.5} />
+            <Plus size={28} stroke="white" strokeWidth={2.5} className="!text-white" style={{ color: "#fff", stroke: "#fff" }} />
           </button>
         ) : null}
 
@@ -946,11 +881,11 @@ export default function MduPage() {
 
           <button
             type="button"
-            onClick={() => navigate("/admin/mdu-dashboard")}
+            onClick={() => setShowMobileFilterModal(true)}
             className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"
           >
-            <ChartNoAxesCombined size={19} />
-            <span className="text-[10px]">Analytics</span>
+            <Filter size={19} />
+            <span className="text-[10px]">Filters</span>
           </button>
 
           <button
@@ -968,11 +903,11 @@ export default function MduPage() {
 
           <button
             type="button"
-            onClick={() => setShowMobileFilterModal(true)}
+            onClick={() => navigate("/admin/mdu-dashboard")}
             className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)]"
           >
-            <Filter size={19} />
-            <span className="text-[10px]">Filters</span>
+            <ChartNoAxesCombined size={19} />
+            <span className="text-[10px]">Analytics</span>
           </button>
         </nav>
       </div>
@@ -1243,7 +1178,7 @@ export default function MduPage() {
               <button
                 type="button"
                 onClick={() => setShowMobileFilterModal(false)}
-                className="flex-1 rounded-2xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/30"
+                className="flex-1 rounded-2xl bg-emerald-600 py-3 text-sm font-bold !text-white shadow-md shadow-emerald-600/30"
               >
                 Apply Filters
               </button>
@@ -1489,22 +1424,91 @@ export default function MduPage() {
 
       {/* Entry Mode Prompt Dialog */}
       {entryModePrompt ? (
-        <ConfirmDialog
-          title="Add M.D.U Entry"
-          description="Choose whether you want to save one entry or add multiple entries together."
-          actionLabel="Single Entry"
-          secondaryLabel="Multiple Entry"
-          variant="primary"
-          onCancel={() => setEntryModePrompt(false)}
-          onConfirm={() => {
-            setEntryModePrompt(false)
-            openCreateModal()
-          }}
-          onSecondaryAction={() => {
-            setEntryModePrompt(false)
-            openBulkModal()
-          }}
-        />
+        <>
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm lg:hidden"
+            onClick={() => setEntryModePrompt(false)}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mdu-entry-mode-title"
+              aria-describedby="mdu-entry-mode-description"
+              onClick={(event) => event.stopPropagation()}
+              className="w-full max-w-[430px] rounded-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-6 text-center shadow-[0_28px_80px_rgba(15,23,42,0.24)] sm:px-7 sm:py-8"
+            >
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-emerald-500/10 text-emerald-600">
+                <ChartNoAxesCombined size={27} strokeWidth={2.2} />
+              </div>
+
+              <h2 id="mdu-entry-mode-title" className="mt-4 text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
+                Choose Entry Mode
+              </h2>
+              <p id="mdu-entry-mode-description" className="mx-auto mt-2 max-w-[310px] text-[13px] leading-5 text-[color:var(--text-secondary)]">
+                Choose how you would like to record your M.D.U entries.
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryModePrompt(false)
+                    openCreateModal()
+                  }}
+                  className="flex min-h-[160px] flex-col items-center justify-center rounded-[20px] border-2 border-emerald-500/40 bg-emerald-500/10 px-3 py-4 transition active:scale-[0.98]"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                    <Plus size={25} stroke="white" strokeWidth={2.5} />
+                  </span>
+                  <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Single Entry</span>
+                  <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add one M.D.U entry</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntryModePrompt(false)
+                    openBulkModal()
+                  }}
+                  className="flex min-h-[160px] flex-col items-center justify-center rounded-[20px] border-2 border-teal-500/30 bg-teal-500/5 px-3 py-4 transition active:scale-[0.98]"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-teal-700 text-white shadow-md shadow-teal-700/20">
+                    <Layers size={23} stroke="white" strokeWidth={2.2} />
+                  </span>
+                  <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Multiple Entry</span>
+                  <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add several entries together</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEntryModePrompt(false)}
+                className="mt-5 min-h-10 px-6 text-[14px] font-semibold text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+              >
+                Cancel
+              </button>
+            </section>
+          </div>
+
+          <div className="hidden lg:block">
+            <ConfirmDialog
+              title="Add M.D.U Entry"
+              description="Choose whether you want to save one entry or add multiple entries together."
+              actionLabel="Single Entry"
+              secondaryLabel="Multiple Entry"
+              variant="primary"
+              onCancel={() => setEntryModePrompt(false)}
+              onConfirm={() => {
+                setEntryModePrompt(false)
+                openCreateModal()
+              }}
+              onSecondaryAction={() => {
+                setEntryModePrompt(false)
+                openBulkModal()
+              }}
+            />
+          </div>
+        </>
       ) : null}
 
       {/* Generate Report Modal */}
@@ -1553,7 +1557,7 @@ export default function MduPage() {
             <button
               type="button"
               onClick={exportReport}
-              className="rounded-xl bg-emerald-600 px-5 py-2 text-white font-bold"
+              className="rounded-xl bg-emerald-600 px-5 py-2 !text-white font-bold"
             >
               Download
             </button>

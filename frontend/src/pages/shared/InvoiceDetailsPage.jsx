@@ -2,10 +2,7 @@ import {
   Activity,
   AlertTriangle,
   ArrowLeft,
-  ArrowUpRight,
   BarChart3,
-  Bell,
-  Calendar,
   ChartNoAxesCombined,
   Check,
   ChevronDown,
@@ -321,10 +318,8 @@ function InvoiceDetailsMobileView() {
   const [reportFormat, setReportFormat] = useState("pdf")
 
   // Mobile layout state
-  const [mobileTimeframe, setMobileTimeframe] = useState("month") // "today" | "week" | "month" | "all"
-  const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
-  const [expandedCardId, setExpandedCardId] = useState(null)
+  const [selectedEntry, setSelectedEntry] = useState(null)
 
   useEffect(() => {
     loadInvoices()
@@ -381,108 +376,6 @@ function InvoiceDetailsMobileView() {
       return matchesSearch && matchesFrom && matchesTo && matchesMonth && matchesProduct
     })
   }, [data, fromDate, hasDateRange, monthFilter, productCategory, search, toDate])
-
-  // Summary calculation for 3-metric KPI cards
-  const summary = useMemo(() => {
-    const totalQty = filteredEntries.reduce((sum, e) => sum + numberValue(e.qty), 0)
-    const totalInvoiceAmount = filteredEntries.reduce((sum, e) => sum + numberValue(e.invoiceAmount), 0)
-    const totalTransport = filteredEntries.reduce((sum, e) => sum + numberValue(e.transportCost), 0)
-    const totalLfrAmount = filteredEntries.reduce((sum, e) => sum + getLfrAmount(e), 0)
-
-    const avgPurchaseRate = totalQty
-      ? (totalInvoiceAmount + totalTransport + totalLfrAmount) / totalQty
-      : 0
-
-    const totalMarginAmount = filteredEntries.reduce(
-      (sum, e) => sum + getMargin(e) * numberValue(e.qty),
-      0
-    )
-    const avgMarginRate = totalQty ? totalMarginAmount / totalQty : 0
-
-    const hsdEntries = filteredEntries.filter(
-      (e) => String(e.product || "").toUpperCase() === "HSD"
-    )
-    const msEntries = filteredEntries.filter(
-      (e) => String(e.product || "").toUpperCase() === "MS"
-    )
-    const hsdQty = hsdEntries.reduce((sum, e) => sum + numberValue(e.qty), 0)
-    const msQty = msEntries.reduce((sum, e) => sum + numberValue(e.qty), 0)
-
-    return {
-      totalQty,
-      totalInvoiceAmount,
-      totalTransport,
-      totalLfrAmount,
-      avgPurchaseRate,
-      totalMarginAmount,
-      avgMarginRate,
-      hsdQty,
-      msQty,
-      records: filteredEntries.length,
-    }
-  }, [filteredEntries])
-
-  // Hero Card timeframe calculation
-  const mobileHeroStats = useMemo(() => {
-    const todayStr = getToday()
-    let filteredInvoiceAmount = 0
-    let filteredQty = 0
-    let hsdVol = 0
-    let msVol = 0
-    let totalMarginSum = 0
-    let count = 0
-
-    data.forEach((entry) => {
-      const entryDate = String(entry.date || "").slice(0, 10)
-      const invVal = Number(entry.invoiceAmount || 0)
-      const qtyVal = Number(entry.qty || 0)
-      const marginVal = getMargin(entry) * qtyVal
-      const prodUpper = String(entry.product || "").toUpperCase()
-
-      let match = false
-      if (mobileTimeframe === "today") {
-        match = entryDate === todayStr
-      } else if (mobileTimeframe === "week") {
-        const diffDays = (new Date() - new Date(entry.date)) / (1000 * 60 * 60 * 24)
-        match = diffDays >= 0 && diffDays <= 7
-      } else if (mobileTimeframe === "all") {
-        match = true
-      } else {
-        match = entryDate.slice(0, 7) === (monthFilter || getCurrentMonth())
-      }
-
-      if (match) {
-        filteredInvoiceAmount += invVal
-        filteredQty += qtyVal
-        totalMarginSum += marginVal
-        if (prodUpper === "HSD") hsdVol += qtyVal
-        if (prodUpper === "MS") msVol += qtyVal
-        count++
-      }
-    })
-
-    const label =
-      mobileTimeframe === "today"
-        ? "Today"
-        : mobileTimeframe === "week"
-          ? "This Week"
-          : mobileTimeframe === "all"
-            ? "All Time"
-            : "This Month"
-
-    const avgMarginPerL = filteredQty ? totalMarginSum / filteredQty : 0
-
-    return {
-      label,
-      totalInvoiceAmount: filteredInvoiceAmount,
-      totalQty: filteredQty,
-      hsdVol,
-      msVol,
-      totalMarginSum,
-      avgMarginPerL,
-      count,
-    }
-  }, [data, mobileTimeframe, monthFilter])
 
   // Entry Actions
   const openEntryMode = () => {
@@ -801,268 +694,36 @@ function InvoiceDetailsMobileView() {
     return { purchaseRate, margin, totalMargin }
   }, [form.qty, form.invoiceAmount, form.transportCost, form.lfr, form.rsp])
 
+  const selectedEntryPurchaseRate = selectedEntry ? getPurchaseAmount(selectedEntry) : 0
+  const selectedEntryMargin = selectedEntry ? getMargin(selectedEntry) : 0
+  const selectedEntryTotalMargin = selectedEntry
+    ? selectedEntryMargin * numberValue(selectedEntry.qty)
+    : 0
+
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden p-3 text-[color:var(--text-primary)] sm:p-6 pb-32 lg:pb-6">
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
       <div className="space-y-3">
-        {/* 1. MOBILE HEADER CARD (Matching Lubricants & Daily Sales) */}
-        <div className="flex items-center justify-between gap-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
-              <Receipt size={20} className="stroke-[2.5]" />
+        {/* Compact mobile page header */}
+        <div className="flex min-h-[62px] items-center justify-between gap-3 rounded-[18px] border border-violet-100 bg-gradient-to-r from-[var(--bg-panel)] to-violet-50/70 px-3 shadow-sm">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-600/20">
+              <Receipt size={18} strokeWidth={2.5} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-[color:var(--text-strong)] leading-tight">
-                  Invoice Details
-                </h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 dark:bg-violet-950/80 px-2 py-0.5 text-[10px] font-bold text-violet-700 dark:text-violet-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
-                  Fuel Invoices
-                </span>
-              </div>
-              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">
-                Fuel Purchase & Margin Register
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-black leading-tight tracking-tight text-[color:var(--text-strong)]">
+                Invoice Details
+              </h1>
+              <p className="truncate text-[10px] font-medium text-[color:var(--text-secondary)]">
+                Fuel Purchase &amp; Margin Register
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            {canManagerUse("addInvoice") ? (
-              <button
-                type="button"
-                onClick={openEntryMode}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-600/20 active:scale-95 transition-all"
-                title="Add Invoice Entry"
-              >
-                <Plus size={19} strokeWidth={2.5} />
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => navigate(user?.role === "Admin" ? "/admin/notifications" : "/notifications")}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)] transition-colors"
-              title="Notifications"
-            >
-              <Bell size={19} />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-violet-500 ring-2 ring-[var(--bg-panel)]" />
-            </button>
-          </div>
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-400 ring-4 ring-violet-100" aria-label="Active page" />
         </div>
 
-        {/* 2. PREMIUM VIOLET / INDIGO HERO GRADIENT CARD WITH LIQUID WAVE */}
-        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#2e1065] via-[#4c1d95] to-[#6d28d9] p-5 text-white shadow-xl shadow-violet-950/20">
-          {/* Clipped background wave vector */}
-          <div className="absolute inset-0 overflow-hidden rounded-[26px] pointer-events-none">
-            <svg
-              viewBox="0 0 280 80"
-              className="absolute bottom-0 right-0 w-3/5 h-20 text-violet-300 opacity-70"
-            >
-              <defs>
-                <linearGradient id="mobileInvoiceHeroGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,60 Q70,75 140,38 T280,28"
-                fill="none"
-                stroke="#c4b5fd"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-              />
-              <circle cx="190" cy="32" r="4" fill="#ffffff" />
-              <path
-                d="M0,60 Q70,75 140,38 T280,28 L280,80 L0,80 Z"
-                fill="url(#mobileInvoiceHeroGrad)"
-              />
-            </svg>
-          </div>
-
-          <div className="relative z-10">
-            {/* Top row: Title and Timeframe Dropdown */}
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 backdrop-blur-md">
-                  <Receipt size={14} className="text-white" />
-                </div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-violet-100">
-                  Total Invoice Purchase
-                </span>
-              </div>
-
-              {/* Timeframe Dropdown Pill */}
-              <div className="relative z-40">
-                <button
-                  type="button"
-                  onClick={() => setShowMobileTimeDropdown((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-black/25 px-3 py-1.5 text-xs font-bold text-violet-100 backdrop-blur-md active:scale-95 transition-all"
-                >
-                  <Calendar size={12} />
-                  <span>{mobileHeroStats.label}</span>
-                  <ChevronDown
-                    size={12}
-                    className={`transition-transform duration-200 ${
-                      showMobileTimeDropdown ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Dropdown Options Menu with Backdrop */}
-                {showMobileTimeDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-[1px]"
-                      onClick={() => setShowMobileTimeDropdown(false)}
-                    />
-                    <div className="absolute right-0 top-full mt-2 w-36 rounded-2xl border border-violet-500/40 bg-[#1e1b4b] p-1.5 shadow-2xl backdrop-blur-xl z-[80] text-xs font-bold text-white animate-in fade-in zoom-in-95 duration-150">
-                      {[
-                        { key: "today", label: "Today" },
-                        { key: "week", label: "This Week" },
-                        { key: "month", label: "This Month" },
-                        { key: "all", label: "All Time" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.key}
-                          type="button"
-                          onClick={() => {
-                            setMobileTimeframe(opt.key)
-                            setShowMobileTimeDropdown(false)
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl text-left transition-colors ${
-                            mobileTimeframe === opt.key
-                              ? "bg-violet-600 text-white"
-                              : "hover:bg-white/10"
-                          }`}
-                        >
-                          <span>{opt.label}</span>
-                          {mobileTimeframe === opt.key && <Check size={13} />}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Main Stats: Total Invoiced Spend & Qty */}
-            <div className="mb-3">
-              <div className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm">
-                {formatCurrency(mobileHeroStats.totalInvoiceAmount)}
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="text-sm font-bold text-violet-100">
-                  {formatNumber(mobileHeroStats.totalQty)} LTR
-                </span>
-                <span className="text-[11px] text-violet-200 font-medium">
-                  • {mobileHeroStats.count} {mobileHeroStats.count === 1 ? "invoice" : "invoices"}
-                </span>
-              </div>
-            </div>
-
-            {/* Bottom Row inside Hero: HSD vs MS breakdown & Net Margin */}
-            <div className="pt-3 border-t border-white/15 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-cyan-300" />
-                  <span className="text-[11px] text-violet-100 font-medium">HSD:</span>
-                  <span className="text-[11px] text-white font-bold">
-                    {formatNumber(mobileHeroStats.hsdVol)} L
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-amber-300" />
-                  <span className="text-[11px] text-violet-100 font-medium">MS:</span>
-                  <span className="text-[11px] text-white font-bold">
-                    {formatNumber(mobileHeroStats.msVol)} L
-                  </span>
-                </div>
-              </div>
-
-              {/* Net Margin indicator pill */}
-              <div
-                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-extrabold backdrop-blur-md ${
-                  mobileHeroStats.avgMarginPerL >= 0
-                    ? "bg-emerald-950/60 border-emerald-400/40 text-emerald-300"
-                    : "bg-rose-950/60 border-rose-400/40 text-rose-300"
-                }`}
-              >
-                {mobileHeroStats.avgMarginPerL >= 0 ? (
-                  <TrendingUp size={13} />
-                ) : (
-                  <TrendingDown size={13} />
-                )}
-                <span>
-                  {mobileHeroStats.avgMarginPerL >= 0 ? "+" : ""}₹
-                  {mobileHeroStats.avgMarginPerL.toFixed(2)} / L
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Link to Invoice Details Dashboard */}
-            <div className="mt-3.5">
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(isManager ? "/manager/invoice-details-dashboard" : "/admin/invoice-details-dashboard")
-                }
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/20 active:scale-[0.98] border border-white/25 py-2 px-3 text-xs font-bold text-white transition-all shadow-sm backdrop-blur-sm"
-              >
-                <ChartNoAxesCombined size={14} />
-                <span>Open Invoice Analytics & Trends</span>
-                <ArrowUpRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. COMPACT 3-METRICS BAR */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-[18px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">
-              Total Invoiced
-            </p>
-            <p className="mt-0.5 text-xs sm:text-sm font-extrabold text-violet-600 dark:text-violet-400 truncate">
-              {formatNumber(summary.totalQty)} L
-            </p>
-            <p className="text-[10px] font-medium text-[color:var(--text-secondary)] truncate mt-0.5">
-              Avg: ₹{summary.avgPurchaseRate.toFixed(2)}/L
-            </p>
-          </div>
-
-          <div className="rounded-[18px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">
-              Avg Margin
-            </p>
-            <p
-              className={`mt-0.5 text-xs sm:text-sm font-extrabold truncate ${
-                summary.avgMarginRate >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              {summary.avgMarginRate >= 0 ? "+" : ""}₹{summary.avgMarginRate.toFixed(2)}/L
-            </p>
-            <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 truncate mt-0.5 font-bold">
-              {formatCurrency(summary.totalMarginAmount)}
-            </p>
-          </div>
-
-          <div className="rounded-[18px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">
-              Transport & LFR
-            </p>
-            <p className="mt-0.5 text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400 truncate">
-              {formatCurrency(summary.totalTransport + summary.totalLfrAmount)}
-            </p>
-            <p className="text-[10px] font-medium text-[color:var(--text-secondary)] truncate mt-0.5">
-              Freight: {formatCurrency(summary.totalTransport)}
-            </p>
-          </div>
-        </div>
-
-        {/* 4. PRODUCT SEGMENT FILTER TABS */}
+        {/* Product segment filter tabs */}
         <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-1 shadow-sm">
           {[
             { key: "all", label: "All Invoices" },
@@ -1075,7 +736,7 @@ function InvoiceDetailsMobileView() {
               onClick={() => setProductCategory(tab.key)}
               className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition-all ${
                 productCategory === tab.key
-                  ? "bg-violet-600 text-white shadow-sm"
+                  ? "bg-violet-600 !text-white shadow-sm"
                   : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
               }`}
             >
@@ -1084,7 +745,7 @@ function InvoiceDetailsMobileView() {
           ))}
         </div>
 
-        {/* 5. SEARCH & FILTER BAR */}
+        {/* Search and clear controls */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search
@@ -1096,42 +757,22 @@ function InvoiceDetailsMobileView() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search date, product, qty, remark..."
-              className="h-11 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-10 pr-9 text-xs font-medium text-[color:var(--text-primary)] shadow-sm outline-none placeholder:text-[color:var(--text-secondary)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+              className="h-11 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-10 pr-3 text-xs font-medium text-[color:var(--text-primary)] shadow-sm outline-none placeholder:text-[color:var(--text-secondary)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
             />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] p-0.5"
-              >
-                <X size={14} />
-              </button>
-            )}
           </div>
 
           <button
             type="button"
-            onClick={() => setShowMobileFilterModal(true)}
-            className={`inline-flex h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold shadow-sm active:scale-95 transition-all ${
-              hasDateRange || monthFilter !== getCurrentMonth()
-                ? "border-violet-500 bg-violet-500 text-white"
-                : "border-violet-200 dark:border-violet-800/80 bg-violet-50/80 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300"
-            }`}
+            onClick={() => {
+              setSearch("")
+              setProductCategory("all")
+              setFromDate("")
+              setToDate("")
+              setMonthFilter(getCurrentMonth())
+            }}
+            className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-[var(--bg-panel)] px-4 text-xs font-bold text-violet-700 shadow-sm transition-all active:scale-95"
           >
-            <Filter size={15} />
-            <span>Filter</span>
-            {(hasDateRange || monthFilter !== getCurrentMonth()) && (
-              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] text-emerald-600 dark:text-emerald-400 shadow-sm active:scale-95 transition-all"
-            title="Export Excel"
-          >
-            <FileSpreadsheet size={18} />
+            Clear
           </button>
         </div>
 
@@ -1164,7 +805,6 @@ function InvoiceDetailsMobileView() {
             </div>
           ) : (
             filteredEntries.map((entry) => {
-              const isExpanded = expandedCardId === entry._id
               const isHSD = String(entry.product || "").toUpperCase() === "HSD"
               const purchaseRate = getPurchaseAmount(entry)
               const margin = getMargin(entry)
@@ -1173,12 +813,16 @@ function InvoiceDetailsMobileView() {
               return (
                 <div
                   key={entry._id}
-                  onClick={() => setExpandedCardId(isExpanded ? null : entry._id)}
-                  className={`group rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3.5 shadow-sm transition-all duration-200 cursor-pointer active:scale-[0.99] ${
-                    isExpanded
-                      ? "ring-2 ring-violet-500/20 border-violet-500/40 shadow-md"
-                      : "hover:border-violet-500/30"
-                  }`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedEntry(entry)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      setSelectedEntry(entry)
+                    }
+                  }}
+                  className="group cursor-pointer rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3.5 shadow-sm transition-all duration-200 hover:border-violet-500/30 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
                 >
                   {/* Top Row: Product badge, Tanker Qty, Date & Margin Tag */}
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -1245,7 +889,7 @@ function InvoiceDetailsMobileView() {
                   </div>
 
                   {/* Bottom row: Transport & LFR brief / Remark preview */}
-                  <div className="mt-2.5 flex items-center justify-between text-[11px] text-[color:var(--text-secondary)] border-t border-[var(--border-color)] pt-2">
+                  <div className="mt-2.5 flex items-center text-[11px] text-[color:var(--text-secondary)] border-t border-[var(--border-color)] pt-2">
                     <span className="truncate max-w-[210px]">
                       {entry.remark ? (
                         <span className="text-[color:var(--text-primary)] font-medium">
@@ -1255,135 +899,155 @@ function InvoiceDetailsMobileView() {
                         `Freight: ₹${formatNumber(entry.transportCost)} • LFR: ₹${formatNumber(entry.lfr)}/L`
                       )}
                     </span>
-                    <ChevronDown
-                      size={14}
-                      className={`transition-transform duration-200 text-[color:var(--text-secondary)] ${
-                        isExpanded ? "rotate-180 text-violet-600 dark:text-violet-400" : ""
-                      }`}
-                    />
                   </div>
-
-                  {/* EXPANDED ACCORDION: Shows technical details and EDIT / DELETE buttons */}
-                  {isExpanded && (
-                    <div
-                      className="mt-3 border-t border-[var(--border-color)] bg-[var(--bg-soft)] p-3 rounded-2xl space-y-2.5 animate-in fade-in-50 duration-150"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Grid of technical metrics */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Invoiced Volume
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            {formatNumber(entry.qty)} LTR
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Purchase Rate (₹ / L)
-                          </span>
-                          <span className="font-bold text-violet-600 dark:text-violet-400">
-                            ₹{purchaseRate.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Selling Price (RSP)
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            ₹{formatNumber(entry.rsp)} / L
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Net Load Margin
-                          </span>
-                          <span
-                            className={`font-bold ${
-                              totalMargin >= 0
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-rose-600 dark:text-rose-400"
-                            }`}
-                          >
-                            {formatCurrency(totalMargin)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Logistics & Cost details */}
-                      <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 text-xs space-y-1.5">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">
-                            Base Invoice Amount
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            {formatCurrency(entry.invoiceAmount)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">
-                            Transport Freight Cost
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            {formatCurrency(entry.transportCost)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">
-                            LFR Rate & Amount
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            ₹{formatNumber(entry.lfr)}/L ({formatCurrency(getLfrAmount(entry))})
-                          </span>
-                        </div>
-                        {entry.remark && (
-                          <div className="pt-2 border-t border-[var(--border-color)]">
-                            <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block mb-0.5">
-                              Remark
-                            </span>
-                            <span className="text-[color:var(--text-primary)]">
-                              {entry.remark}
-                            </span>
-                          </div>
-                        )}
-                        <div className="pt-2 border-t border-[var(--border-color)] flex justify-between text-[10px] text-[color:var(--text-secondary)]">
-                          <span>By: {entry.createdByName || entry.createdBy?.name || entry.user?.name || "System"}</span>
-                          <span>{formatDateTime(entry.lastEditedAt || entry.updatedAt || entry.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      {/* ACTION BUTTONS (Only visible when card is clicked!) */}
-                      <div className="flex items-center gap-2 pt-1">
-                        {canManagerUse("editInvoice") && (
-                          <button
-                            type="button"
-                            onClick={() => openEdit(entry)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 font-bold text-xs border border-violet-200 dark:border-violet-800/80 active:scale-95 transition-transform"
-                          >
-                            <Edit2 size={13} />
-                            <span>Edit Invoice</span>
-                          </button>
-                        )}
-                        {canManagerUse("deleteInvoice") && (
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(entry)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold text-xs border border-rose-200 dark:border-rose-800/80 active:scale-95 transition-transform"
-                          >
-                            <Trash2 size={13} />
-                            <span>Delete</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })
           )}
         </div>
       </div>
+
+      {selectedEntry && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setSelectedEntry(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invoice-detail-modal-title"
+            onClick={(event) => event.stopPropagation()}
+            className="max-h-[86dvh] w-full max-w-md overflow-y-auto rounded-[26px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 text-[color:var(--text-primary)] shadow-2xl animate-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                    String(selectedEntry.product || "").toUpperCase() === "HSD"
+                      ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300"
+                      : "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                  }`}
+                >
+                  <Fuel size={21} />
+                </div>
+                <div className="min-w-0">
+                  <h2 id="invoice-detail-modal-title" className="truncate text-lg font-black text-[color:var(--text-strong)]">
+                    {selectedEntry.product || "Fuel"} Invoice
+                  </h2>
+                  <p className="text-xs text-[color:var(--text-secondary)]">
+                    {formatMobileDate(selectedEntry.date)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="Close invoice details"
+                onClick={() => setSelectedEntry(null)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-violet-600 p-4 text-white shadow-lg shadow-violet-600/20">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-violet-100">Invoice Amount</p>
+                <p className="mt-1 truncate text-xl font-black">{formatCurrency(selectedEntry.invoiceAmount)}</p>
+                <p className="mt-1 text-xs font-medium text-violet-100">
+                  {formatNumber(selectedEntry.qty)} LTR
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-violet-100">Load Margin</p>
+                <p className="mt-1 text-lg font-black">{formatCurrency(selectedEntryTotalMargin)}</p>
+                <p className="text-xs font-medium text-violet-100">
+                  {selectedEntryMargin >= 0 ? "+" : "−"}₹{Math.abs(selectedEntryMargin).toFixed(2)} / L
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                <p className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">Purchase Rate (₹ / L)</p>
+                <p className="mt-1 text-sm font-black text-violet-600 dark:text-violet-400">
+                  ₹{selectedEntryPurchaseRate.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                <p className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">Selling Price (RSP)</p>
+                <p className="mt-1 text-sm font-black text-[color:var(--text-strong)]">
+                  ₹{formatNumber(selectedEntry.rsp)} / L
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3 text-xs">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[color:var(--text-secondary)]">Base Invoice Amount</span>
+                <span className="font-bold text-[color:var(--text-strong)]">{formatCurrency(selectedEntry.invoiceAmount)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[color:var(--text-secondary)]">Transport Freight Cost</span>
+                <span className="font-bold text-[color:var(--text-strong)]">{formatCurrency(selectedEntry.transportCost)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[color:var(--text-secondary)]">LFR Rate &amp; Amount</span>
+                <span className="text-right font-bold text-[color:var(--text-strong)]">
+                  ₹{formatNumber(selectedEntry.lfr)}/L ({formatCurrency(getLfrAmount(selectedEntry))})
+                </span>
+              </div>
+              {selectedEntry.remark ? (
+                <div className="border-t border-[var(--border-color)] pt-2">
+                  <p className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">Remark</p>
+                  <p className="mt-1 break-words text-[color:var(--text-primary)]">{selectedEntry.remark}</p>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between gap-3 border-t border-[var(--border-color)] pt-2 text-[10px] text-[color:var(--text-secondary)]">
+                <span>By: {selectedEntry.createdByName || selectedEntry.createdBy?.name || selectedEntry.user?.name || "System"}</span>
+                <span className="text-right">{formatDateTime(selectedEntry.lastEditedAt || selectedEntry.updatedAt || selectedEntry.createdAt)}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {canManagerUse("editInvoice") ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const entry = selectedEntry
+                    setSelectedEntry(null)
+                    openEdit(entry)
+                  }}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-violet-700"
+                >
+                  <Edit2 size={16} />
+                  Edit Invoice
+                </button>
+              ) : null}
+              {canManagerUse("deleteInvoice") ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const entry = selectedEntry
+                    setSelectedEntry(null)
+                    handleDelete(entry)
+                  }}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 text-sm font-bold text-rose-600 transition-colors hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedEntry(null)}
+              className="mt-2 min-h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-sm font-bold text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
+            >
+              Close
+            </button>
+          </section>
+        </div>
+      )}
 
       {/* 7. DIRECT FLOATING ACTION BUTTON (FAB) */}
       {canManagerUse("addInvoice") && (
@@ -1394,7 +1058,7 @@ function InvoiceDetailsMobileView() {
             className="flex h-14 w-14 items-center justify-center rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-xl shadow-violet-600/35 active:scale-90 transition-all"
             title="Add Invoice Entry"
           >
-            <Plus size={28} strokeWidth={2.5} />
+            <Plus size={28} strokeWidth={2.5} stroke="white" className="!text-white" />
           </button>
         </div>
       )}
@@ -1426,28 +1090,6 @@ function InvoiceDetailsMobileView() {
 
         <button
           type="button"
-          onClick={() =>
-            navigate(isManager ? "/manager/invoice-details-dashboard" : "/admin/invoice-details-dashboard")
-          }
-          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
-        >
-          <ChartNoAxesCombined size={20} />
-          <span className="text-[10px]">Dashboard</span>
-          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
-        >
-          <FileSpreadsheet size={20} />
-          <span className="text-[10px]">Reports</span>
-          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
-        </button>
-
-        <button
-          type="button"
           onClick={() => setShowMobileFilterModal(true)}
           className={`relative flex min-w-[54px] flex-col items-center gap-1 transition-colors ${
             hasDateRange || monthFilter !== getCurrentMonth() || productCategory !== "all"
@@ -1465,6 +1107,28 @@ function InvoiceDetailsMobileView() {
           ) : (
             <span className="mt-0.5 h-[3px] w-7 opacity-0" />
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+        >
+          <FileSpreadsheet size={20} />
+          <span className="text-[10px]">Reports</span>
+          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate(isManager ? "/manager/invoice-details-dashboard" : "/admin/invoice-details-dashboard")
+          }
+          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+        >
+          <ChartNoAxesCombined size={20} />
+          <span className="text-[10px]">Dashboard</span>
+          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
         </button>
       </nav>
 

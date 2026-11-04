@@ -16,6 +16,7 @@ import {
   Filter,
   Fuel,
   Home,
+  Layers,
   LayoutGrid,
   Menu,
   MoreHorizontal,
@@ -29,7 +30,6 @@ import {
   ShoppingBag,
   Sparkles,
   Trash2,
-  TrendingUp,
   Truck,
   UserCheck,
   Utensils,
@@ -564,6 +564,22 @@ export default function Expenses() {
     [category, data, fromDateFilter, monthFilter, search, toDateFilter],
   )
 
+  const mobileAllTimeData = useMemo(
+    () => data.filter((expense) => {
+      const target = [expense.description, expense.category, expense.paymentMode, expense.addedBy, expense.date]
+        .join(" ")
+        .toLowerCase()
+
+      return (
+        target.includes(search.toLowerCase()) &&
+        (!category || expense.category === category) &&
+        (!fromDateFilter || String(expense.date || "") >= fromDateFilter) &&
+        (!toDateFilter || String(expense.date || "") <= toDateFilter)
+      )
+    }),
+    [category, data, fromDateFilter, search, toDateFilter],
+  )
+
   const summary = useMemo(() => {
     const today = new Date()
     const todayString = today.toISOString().slice(0, 10)
@@ -572,6 +588,9 @@ export default function Expenses() {
     let weekTotal = 0
     let monthTotal = 0
     let grandTotal = 0
+    let todayCount = 0
+    let weekCount = 0
+    let monthCount = 0
 
     filteredData.forEach((expense) => {
       const amount = Number(expense.amount || 0)
@@ -581,19 +600,22 @@ export default function Expenses() {
 
       if (expense.date === todayString) {
         todayTotal += amount
+        todayCount += 1
       }
 
       const diffDays = (today - expenseDate) / (1000 * 60 * 60 * 24)
       if (diffDays >= 0 && diffDays <= 7) {
         weekTotal += amount
+        weekCount += 1
       }
 
       if (String(expense.date || "").slice(0, 7) === (monthFilter || getCurrentMonth())) {
         monthTotal += amount
+        monthCount += 1
       }
     })
 
-    return { todayTotal, weekTotal, monthTotal, grandTotal }
+    return { todayTotal, weekTotal, monthTotal, grandTotal, todayCount, weekCount, monthCount, grandCount: filteredData.length }
   }, [filteredData, monthFilter])
 
   const summaryCards = [
@@ -607,16 +629,20 @@ export default function Expenses() {
   const mobileHeroAmount = useMemo(() => {
     switch (mobileTimeframe) {
       case "today":
-        return { label: "Today", value: formatCurrency(summary.todayTotal) }
+        return { label: "Today", value: formatCurrency(summary.todayTotal), count: summary.todayCount }
       case "week":
-        return { label: "This Week", value: formatCurrency(summary.weekTotal) }
+        return { label: "This Week", value: formatCurrency(summary.weekTotal), count: summary.weekCount }
       case "all":
-        return { label: "All Time", value: formatCurrency(summary.grandTotal) }
+        return {
+          label: "All Time",
+          value: formatCurrency(mobileAllTimeData.reduce((total, expense) => total + Number(expense.amount || 0), 0)),
+          count: mobileAllTimeData.length,
+        }
       case "month":
       default:
-        return { label: "This Month", value: formatCurrency(summary.monthTotal) }
+        return { label: "This Month", value: formatCurrency(summary.monthTotal), count: summary.monthCount }
     }
-  }, [mobileTimeframe, summary])
+  }, [mobileAllTimeData, mobileTimeframe, summary])
 
   const reportData = useMemo(
     () =>
@@ -784,49 +810,33 @@ return (
     {notice.text ? <InlineNotice notice={notice} /> : null}
 
     {/* ========================= MOBILE HEADER ========================= */}
-<div className="lg:hidden mb-2">
-  <div className="flex items-center gap-4 rounded-[15px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm">
-
-
-    <div className="min-w-0">
-      <h1 className="text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
-        Expenses
-      </h1>
+    <div className="lg:hidden mb-2">
+      <div className="flex min-h-[52px] items-center gap-2.5 rounded-[17px] border border-emerald-100 bg-gradient-to-r from-[var(--bg-panel)] to-emerald-50/70 px-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-700/20">
+          <Wallet size={16} strokeWidth={2.3} />
+        </div>
+        <div className="min-w-0">
+          <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">Expenses</h1>
+          <p className="mt-0.5 truncate text-[8px] font-semibold tracking-wide text-[color:var(--text-secondary)]">Station expense register</p>
+        </div>
+        <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10" />
+      </div>
     </div>
 
-    <div className="ml-auto h-1.5 w-20 rounded-full bg-emerald-400/60" />
-  </div>
-</div>
-
     {/* ========================= HERO ========================= */}
-    <div className="lg:hidden relative mb-2 min-h-[125px] overflow-hidden rounded-[24px] bg-gradient-to-br from-[#087b5a] via-[#069f70] to-[#08c38b] px-5 pt-5 text-white shadow-xl shadow-emerald-900/10">
-      <div className="relative z-10 flex items-start justify-between">
-        <div>
-          <p className="text-[16px] font-semibold text-white/95">
-            Total Expenses
-          </p>
-
-          <div className="mt-2 text-[34px] font-black leading-none tracking-tight">
-            {mobileHeroAmount.value}
-          </div>
-
-         
+    <div className="lg:hidden relative z-20 mb-2">
+      <div className="relative min-h-[125px] overflow-hidden rounded-[24px] bg-gradient-to-br from-[#087b5a] via-[#069f70] to-[#08c38b] px-5 pb-4 pt-5 text-white shadow-xl shadow-emerald-900/10">
+        <div className="relative z-10 pr-28">
+          <p className="!text-white text-[14px] font-semibold">{mobileHeroAmount.label}</p>
+          <p className="mt-2 truncate text-[32px] font-black leading-none tracking-tight">{mobileHeroAmount.value}</p>
+          <p className="mt-2 text-[11px] font-semibold text-white/80">{mobileHeroAmount.count} filtered entries</p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate("/admin/expense-dashboard")}
-          className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-black/15 text-white shadow-inner active:scale-95"
+        <svg
+          viewBox="0 0 360 120"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute bottom-0 left-0 h-[115px] w-full"
         >
-          <TrendingUp size={26} />
-        </button>
-      </div>
-
-      <svg
-        viewBox="0 0 360 120"
-        preserveAspectRatio="none"
-        className="pointer-events-none absolute bottom-0 left-0 h-[115px] w-full"
-      >
         <defs>
           <linearGradient
             id="mobileHeroGrad"
@@ -863,101 +873,52 @@ return (
         />
 
         <circle cx="270" cy="66" r="5" fill="white" />
-      </svg>
-    </div>
-
-    {/* ========================= SUMMARY CARDS ========================= */}
-    <div className="lg:hidden mb-2 grid grid-cols-3 gap-2">
-      {/* TODAY */}
-      <div className="relative flex min-h-[122px] flex-col justify-between overflow-hidden rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm transition-colors duration-300">
-        <div>
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <CreditCard size={18} />
-          </div>
-
-          <p className="text-[11px] font-semibold text-[color:var(--text-secondary)]">
-            Today
-          </p>
-
-          <p className="mt-1 whitespace-nowrap text-[14px] font-extrabold text-emerald-600 dark:text-emerald-400">
-            {formatCurrency(summary.todayTotal)}
-          </p>
-        </div>
-
-        <svg
-          viewBox="0 0 100 24"
-          className="h-5 w-full text-emerald-400"
-        >
-          <path
-            d="M0 15 C18 22 28 5 45 14 S72 21 100 8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
         </svg>
       </div>
 
-      {/* WEEK */}
-      <div className="relative flex min-h-[122px] flex-col justify-between overflow-hidden rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm transition-colors duration-300">
-        <div>
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10 text-orange-500 dark:text-orange-400">
-            <Calendar size={18} />
-          </div>
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={showMobileTimeDropdown}
+        onClick={() => setShowMobileTimeDropdown((open) => !open)}
+        className="absolute right-4 top-4 z-30 inline-flex h-10 min-w-[116px] items-center justify-between gap-2 rounded-[14px] border border-white/20 bg-white/15 px-3 text-[13px] font-bold !text-white shadow-inner backdrop-blur-sm active:scale-[0.98]"
+      >
+        {mobileHeroAmount.label}
+        <ChevronDown size={16} className={`transition-transform ${showMobileTimeDropdown ? "rotate-180" : ""}`} />
+      </button>
 
-          <p className="text-[11px] font-semibold text-[color:var(--text-secondary)]">
-            This Week
-          </p>
-
-          <p className="mt-1 whitespace-nowrap text-[14px] font-extrabold text-orange-500 dark:text-orange-400">
-            {formatCurrency(summary.weekTotal)}
-          </p>
-        </div>
-
-        <svg
-          viewBox="0 0 100 24"
-          className="h-5 w-full text-orange-400"
-        >
-          <path
-            d="M0 15 C18 22 28 5 45 14 S72 21 100 8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
+      {showMobileTimeDropdown ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close time period options"
+            onClick={() => setShowMobileTimeDropdown(false)}
+            className="fixed inset-0 z-40 cursor-default"
           />
-        </svg>
-      </div>
-
-      {/* MONTH */}
-      <div className="relative flex min-h-[122px] flex-col justify-between overflow-hidden rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm transition-colors duration-300">
-        <div>
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <Calendar size={18} />
+          <div role="listbox" aria-label="Expense time period" className="absolute right-4 top-[62px] z-50 w-44 overflow-hidden rounded-[16px] border border-white/10 bg-[#083f34] p-1.5 text-white shadow-2xl">
+            {[
+              { key: "today", label: "Today" },
+              { key: "week", label: "This Week" },
+              { key: "month", label: "This Month" },
+              { key: "all", label: "All Time" },
+            ].map((period) => (
+              <button
+                key={period.key}
+                type="button"
+                role="option"
+                aria-selected={mobileTimeframe === period.key}
+                onClick={() => {
+                  setMobileTimeframe(period.key)
+                  setShowMobileTimeDropdown(false)
+                }}
+                className={`flex min-h-11 w-full items-center rounded-xl px-3 text-left text-[13px] font-semibold transition-colors ${mobileTimeframe === period.key ? "bg-emerald-500 text-white" : "text-white/90 hover:bg-white/10"}`}
+              >
+                {period.label}
+              </button>
+            ))}
           </div>
-
-          <p className="text-[11px] font-semibold text-[color:var(--text-secondary)]">
-            This Month
-          </p>
-
-          <p className="mt-1 whitespace-nowrap text-[14px] font-extrabold text-blue-600 dark:text-blue-400">
-            {mobileHeroAmount.value}
-          </p>
-        </div>
-
-        <svg
-          viewBox="0 0 100 24"
-          className="h-5 w-full text-blue-400"
-        >
-          <path
-            d="M0 15 C18 22 28 5 45 14 S72 21 100 8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-
+        </>
+      ) : null}
     </div>
 
     {/* ========================= SEARCH ========================= */}
@@ -978,15 +939,27 @@ return (
 
       <button
         type="button"
-        onClick={() => setShowMobileFilterModal(true)}
+        onClick={() => {
+          setSearch("")
+          setCategory("")
+          setFromDateFilter("")
+          setToDateFilter("")
+          setMonthFilter(getCurrentMonth())
+        }}
         className="inline-flex h-[45px] items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 text-[14px] font-bold text-emerald-600 shadow-sm transition-colors dark:text-emerald-400 active:scale-95"
       >
-        <Filter size={18} />
-        <span>Filter</span>
+        <span>Clear</span>
       </button>
     </div>
 
     {/* ========================= EXPENSE LIST ========================= */}
+    <div className="lg:hidden mb-2 flex items-center justify-between px-1 pt-1">
+      <h2 className="text-sm font-black text-[color:var(--text-strong)]">Expense Entries</h2>
+      <span className="text-xs font-semibold text-[color:var(--text-secondary)]">
+        {filteredData.length} {filteredData.length === 1 ? "entry" : "entries"}
+      </span>
+    </div>
+
     <div className="lg:hidden mb-24 space-y-3">
       {filteredData.length === 0 ? (
         <div className="rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-6 text-center shadow-sm">
@@ -1515,7 +1488,8 @@ return (
             <button
               type="button"
               onClick={() => setShowMobileFilterModal(false)}
-              className="flex-1 rounded-2xl bg-emerald-600 py-3 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/20"
+              className="flex-1 rounded-2xl bg-emerald-600 py-3 text-sm font-extrabold !text-white shadow-lg shadow-emerald-600/20"
+              style={{ color: "#fff" }}
             >
               Apply Filters
             </button>
@@ -2102,7 +2076,8 @@ return (
 
           <button
             onClick={handleGenerateReport}
-            className="rounded-xl bg-emerald-600 px-4 py-2 text-white"
+            className="rounded-xl bg-emerald-600 px-4 py-2 !text-white"
+            style={{ color: "#fff" }}
           >
             Download
           </button>
@@ -2137,22 +2112,69 @@ return (
 
     {/* ========================= ENTRY MODE ========================= */}
     {entryModePrompt ? (
-      <ConfirmDialog
-        title="Choose Expense Entry Mode"
-        description="Select whether you want to add one expense or save multiple expense rows in one action."
-        actionLabel="Single Entry"
-        secondaryLabel="Multiple Entry"
-        variant="primary"
-        onCancel={() => setEntryModePrompt(false)}
-        onConfirm={() => {
-          setEntryModePrompt(false);
-          openCreateModal();
-        }}
-        onSecondaryAction={() => {
-          setEntryModePrompt(false);
-          openBulkModal();
-        }}
-      />
+      <div
+        className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm"
+        onClick={() => setEntryModePrompt(false)}
+      >
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="expense-entry-mode-title"
+          onClick={(event) => event.stopPropagation()}
+          className="w-full max-w-[430px] rounded-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-6 text-center shadow-[0_28px_80px_rgba(15,23,42,0.24)] sm:px-7 sm:py-8"
+        >
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-emerald-500/10 text-emerald-600">
+            <ChartNoAxesCombined size={27} strokeWidth={2.2} />
+          </div>
+
+          <h2 id="expense-entry-mode-title" className="mt-4 text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
+            Choose Entry Mode
+          </h2>
+          <p className="mx-auto mt-2 max-w-[310px] text-[13px] leading-5 text-[color:var(--text-secondary)]">
+            Choose how you would like to record your expenses.
+          </p>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setEntryModePrompt(false)
+                openCreateModal()
+              }}
+              className="flex min-h-[170px] flex-col items-center justify-center rounded-[20px] border-2 border-emerald-500/40 bg-emerald-500/10 px-3 py-4 transition active:scale-[0.98]"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                <Plus size={25} stroke="white" strokeWidth={2.5} />
+              </span>
+              <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Single Entry</span>
+              <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add one expense at a time</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEntryModePrompt(false)
+                openBulkModal()
+              }}
+              className="flex min-h-[170px] flex-col items-center justify-center rounded-[20px] border-2 border-teal-500/25 bg-emerald-500/5 px-3 py-4 transition active:scale-[0.98]"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-teal-700 text-white shadow-md shadow-teal-700/20">
+                <Layers size={23} stroke="white" strokeWidth={2.2} />
+              </span>
+              <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Multiple Entry</span>
+              <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add several expenses together</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setEntryModePrompt(false)}
+            className="mt-5 min-h-10 px-6 text-[14px] font-semibold text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+          >
+            Cancel
+          </button>
+        </section>
+      </div>
     ) : null}
   </div>
 );

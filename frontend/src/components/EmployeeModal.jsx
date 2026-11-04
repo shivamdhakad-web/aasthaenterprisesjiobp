@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function EmployeeModal({open,onClose,onSave,editData}){
 
@@ -19,6 +19,10 @@ const [form,setForm] = useState(() =>
   editData ? { ...emptyForm, ...editData, status: editData.status || "Active" } : emptyForm,
 )
 
+useEffect(() => {
+  setForm(editData ? { ...emptyForm, ...editData, status: editData.status || "Active" } : emptyForm)
+}, [editData])
+
 
 if(!open) return null
 
@@ -32,9 +36,9 @@ setForm({...form,[e.target.name]:e.target.value})
 
 return(
 
-<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+<div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/50 p-3 sm:p-6">
 
-<div className="bg-[#0B0F17] border border-[#1F2937] p-6 rounded-lg w-[420px] shadow-xl">
+<div className="my-auto max-h-[calc(100dvh-1.5rem)] w-[min(420px,calc(100vw-1.5rem))] overflow-y-auto rounded-2xl border border-[#1F2937] bg-[#0B0F17] p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6">
 
 <h2 className="text-lg font-semibold mb-4">
 
@@ -43,7 +47,7 @@ return(
 </h2>
 
 
-<div className="grid grid-cols-2 gap-3">
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
 <input
 name="name"
@@ -134,10 +138,11 @@ className="input"
 </div>
 
 
-<div className="flex justify-end gap-3 mt-5">
+<div className="mt-5 flex flex-col-reverse justify-end gap-3 sm:flex-row">
 
 <button
 className="px-4 py-1 bg-gray-600 rounded"
+type="button"
 onClick={onClose}
 >
 Cancel
@@ -145,6 +150,7 @@ Cancel
 
 <button
 className="px-4 py-1 bg-blue-500 rounded"
+type="button"
 onClick={()=>onSave(form)}
 >
 Save

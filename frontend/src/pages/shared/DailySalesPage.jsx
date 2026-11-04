@@ -2,9 +2,7 @@ import {
   Activity,
   AlertTriangle,
   ArrowLeft,
-  ArrowUpRight,
   BarChart3,
-  Bell,
   Calendar,
   ChartNoAxesCombined,
   Check,
@@ -307,10 +305,10 @@ function DailySalesMobileView() {
   const [reportFormat, setReportFormat] = useState("pdf")
 
   // Mobile layout state
-  const [mobileTimeframe, setMobileTimeframe] = useState("month") // "today" | "week" | "month" | "all"
+  const [mobileHeroMetric, setMobileHeroMetric] = useState("hsdProfit")
   const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
-  const [expandedCardId, setExpandedCardId] = useState(null)
+  const [selectedMobileEntry, setSelectedMobileEntry] = useState(null)
 
   useEffect(() => {
     loadSales()
@@ -382,16 +380,13 @@ function DailySalesMobileView() {
     const hsdLossGain = hsdEntries.reduce((s, e) => s + numberValue(e.lossGain), 0)
     const msLossGain = msEntries.reduce((s, e) => s + numberValue(e.lossGain), 0)
 
-    const avgHsdRate = hsdSale ? hsdProfit / hsdSale : 0
-    const avgMsRate = msSale ? msProfit / msSale : 0
-
     return {
       hsdSale,
       msSale,
       hsdProfit,
       msProfit,
-      avgHsdRate,
-      avgMsRate,
+      hsdLossGain,
+      msLossGain,
       totalSale: hsdSale + msSale,
       totalProfit: hsdProfit + msProfit,
       totalLossGain: hsdLossGain + msLossGain,
@@ -399,64 +394,25 @@ function DailySalesMobileView() {
     }
   }, [filteredEntries])
 
-  // Hero Card timeframe calculation
+  // The mobile hero dropdown switches between the four filtered fuel metrics.
   const mobileHeroStats = useMemo(() => {
-    const todayStr = getToday()
-    let filteredSales = 0
-    let filteredProfit = 0
-    let hsdVol = 0
-    let msVol = 0
-    let totalLossGain = 0
-    let count = 0
-
-    data.forEach((entry) => {
-      const entryDate = String(entry.date || "").slice(0, 10)
-      const saleVal = Number(entry.sale || 0)
-      const profitVal = getProfit(entry)
-      const lgVal = Number(entry.lossGain || 0)
-      const prodUpper = String(entry.product || "").toUpperCase()
-
-      let match = false
-      if (mobileTimeframe === "today") {
-        match = entryDate === todayStr
-      } else if (mobileTimeframe === "week") {
-        const diffDays = (new Date() - new Date(entry.date)) / (1000 * 60 * 60 * 24)
-        match = diffDays >= 0 && diffDays <= 7
-      } else if (mobileTimeframe === "all") {
-        match = true
-      } else {
-        match = entryDate.slice(0, 7) === (monthFilter || getCurrentMonth())
-      }
-
-      if (match) {
-        filteredSales += saleVal
-        filteredProfit += profitVal
-        totalLossGain += lgVal
-        if (prodUpper === "HSD") hsdVol += saleVal
-        if (prodUpper === "MS") msVol += saleVal
-        count++
-      }
-    })
-
-    const label =
-      mobileTimeframe === "today"
-        ? "Today"
-        : mobileTimeframe === "week"
-          ? "This Week"
-          : mobileTimeframe === "all"
-            ? "All Time"
-            : "This Month"
+    const metrics = {
+      hsdProfit: { label: "HSD Profit", value: summary.hsdProfit, currency: true },
+      msProfit: { label: "MS Profit", value: summary.msProfit, currency: true },
+      hsdLossGain: { label: "HSD Loss / Gain", value: summary.hsdLossGain, currency: false },
+      msLossGain: { label: "MS Loss / Gain", value: summary.msLossGain, currency: false },
+    }
+    const selectedMetric = metrics[mobileHeroMetric] || metrics.hsdProfit
 
     return {
-      label,
-      totalSale: filteredSales,
-      totalProfit: filteredProfit,
-      hsdVol,
-      msVol,
-      totalLossGain,
-      count,
+      ...selectedMetric,
+      hsdVol: summary.hsdSale,
+      msVol: summary.msSale,
+      totalLossGain: summary.totalLossGain,
+      totalSale: summary.totalSale,
+      count: summary.records,
     }
-  }, [data, mobileTimeframe, monthFilter])
+  }, [mobileHeroMetric, summary])
 
   // Entry Actions
   const openEntryMode = () => {
@@ -736,53 +692,24 @@ function DailySalesMobileView() {
       {notice.text ? <InlineNotice notice={notice} /> : null}
 
       <div className="space-y-3">
-        {/* 1. MOBILE HEADER CARD (Consistent with Lubricants & Expenses) */}
-        <div className="flex items-center justify-between gap-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              <TrendingUp size={20} className="stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-[color:var(--text-strong)] leading-tight">
-                  Daily Sales
-                </h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 dark:bg-blue-950/80 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-                  Live Fuel
-                </span>
-              </div>
-              <p className="text-[11px] font-medium text-[color:var(--text-secondary)]">
-                HSD & MS Dispensing Register
-              </p>
-            </div>
+        {/* 1. MOBILE HEADER (matching the compact register headers on other pages) */}
+        <div className="flex min-h-[52px] items-center gap-2.5 rounded-[17px] border border-blue-100 bg-gradient-to-r from-[var(--bg-panel)] to-blue-50/70 px-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-gradient-to-br from-blue-500 to-sky-600 text-white shadow-sm shadow-blue-700/20">
+            <TrendingUp size={16} strokeWidth={2.3} />
           </div>
-
-          <div className="flex items-center gap-2">
-            {canManagerUse("addSale") ? (
-              <button
-                type="button"
-                onClick={openEntryMode}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 active:scale-95 transition-all"
-                title="Add Sale Entry"
-              >
-                <Plus size={19} strokeWidth={2.5} />
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => navigate(user?.role === "Admin" ? "/admin/notifications" : "/notifications")}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl text-[color:var(--text-secondary)] hover:bg-[var(--bg-soft)] transition-colors"
-              title="Notifications"
-            >
-              <Bell size={19} />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-[var(--bg-panel)]" />
-            </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">
+              Daily Sales
+            </h1>
+            <p className="mt-0.5 truncate text-[8px] font-semibold tracking-wide text-[color:var(--text-secondary)]">
+              HSD & MS Dispensing Register
+            </p>
           </div>
+          <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-blue-500 ring-4 ring-blue-500/10" />
         </div>
 
         {/* 2. PREMIUM OCEAN BLUE HERO GRADIENT CARD WITH LIQUID WAVE */}
-        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#0c4a6e] via-[#0284c7] to-[#0369a1] p-5 text-white shadow-xl shadow-sky-950/20">
+        <div className="relative z-30 overflow-visible rounded-[26px] bg-gradient-to-br from-[#0c4a6e] via-[#0284c7] to-[#0369a1] p-4 text-white shadow-xl shadow-sky-950/20">
           {/* Clipped background wave vector */}
           <div className="absolute inset-0 overflow-hidden rounded-[26px] pointer-events-none">
             <svg
@@ -818,7 +745,7 @@ function DailySalesMobileView() {
                   <Fuel size={14} className="text-white" />
                 </div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-sky-100">
-                  Total Dispensed Sales
+                  Selected Metric
                 </span>
               </div>
 
@@ -848,26 +775,26 @@ function DailySalesMobileView() {
                     />
                     <div className="absolute right-0 top-full mt-2 w-36 rounded-2xl border border-sky-500/40 bg-[#082f49] p-1.5 shadow-2xl backdrop-blur-xl z-[80] text-xs font-bold text-white animate-in fade-in zoom-in-95 duration-150">
                       {[
-                        { key: "today", label: "Today" },
-                        { key: "week", label: "This Week" },
-                        { key: "month", label: "This Month" },
-                        { key: "all", label: "All Time" },
+                        { key: "hsdProfit", label: "HSD Profit" },
+                        { key: "msProfit", label: "MS Profit" },
+                        { key: "hsdLossGain", label: "HSD Loss / Gain" },
+                        { key: "msLossGain", label: "MS Loss / Gain" },
                       ].map((opt) => (
                         <button
                           key={opt.key}
                           type="button"
                           onClick={() => {
-                            setMobileTimeframe(opt.key)
+                            setMobileHeroMetric(opt.key)
                             setShowMobileTimeDropdown(false)
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl text-left transition-colors ${
-                            mobileTimeframe === opt.key
+                            mobileHeroMetric === opt.key
                               ? "bg-sky-500 text-white"
                               : "hover:bg-white/10"
                           }`}
                         >
                           <span>{opt.label}</span>
-                          {mobileTimeframe === opt.key && <Check size={13} />}
+                          {mobileHeroMetric === opt.key && <Check size={13} />}
                         </button>
                       ))}
                     </div>
@@ -880,13 +807,17 @@ function DailySalesMobileView() {
             <div className="mb-3">
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm">
-                  {formatNumber(mobileHeroStats.totalSale)}
+                  {mobileHeroStats.currency
+                    ? formatCurrency(mobileHeroStats.value)
+                    : formatNumber(mobileHeroStats.value)}
                 </span>
-                <span className="text-sm font-bold text-sky-200">LTR</span>
+                {!mobileHeroStats.currency ? (
+                  <span className="text-sm font-bold text-sky-200">L</span>
+                ) : null}
               </div>
               <div className="mt-1 flex items-center gap-2">
                 <span className="text-base font-bold text-sky-100">
-                  {formatCurrency(mobileHeroStats.totalProfit)}
+                  {formatNumber(mobileHeroStats.totalSale)} L dispensed
                 </span>
                 <span className="text-[11px] text-sky-200 font-medium">
                   • {mobileHeroStats.count} {mobileHeroStats.count === 1 ? "entry" : "entries"}
@@ -933,70 +864,10 @@ function DailySalesMobileView() {
               </div>
             </div>
 
-            {/* Quick Link to Daily Sales Dashboard */}
-            <div className="mt-3.5">
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(isManager ? "/manager/daily-sales-dashboard" : "/admin/daily-sales-dashboard")
-                }
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/20 active:scale-[0.98] border border-white/25 py-2 px-3 text-xs font-bold text-white transition-all shadow-sm backdrop-blur-sm"
-              >
-                <ChartNoAxesCombined size={14} />
-                <span>Open Sales Analytics & Trends</span>
-                <ArrowUpRight size={14} />
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* 3. COMPACT 3-METRICS BAR (Matching M.D.U & Lubricants style) */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-[18px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">
-              HSD Sales
-            </p>
-            <p className="mt-0.5 text-xs sm:text-sm font-extrabold text-cyan-600 dark:text-cyan-400 truncate">
-              {formatNumber(summary.hsdSale)} L
-            </p>
-            <p className="text-[10px] font-medium text-[color:var(--text-secondary)] truncate mt-0.5">
-              Avg: ₹{summary.avgHsdRate ? summary.avgHsdRate.toFixed(2) : "0"}
-            </p>
-          </div>
-
-          <div className="rounded-[18px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">
-              MS Sales
-            </p>
-            <p className="mt-0.5 text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400 truncate">
-              {formatNumber(summary.msSale)} L
-            </p>
-            <p className="text-[10px] font-medium text-[color:var(--text-secondary)] truncate mt-0.5">
-              Avg: ₹{summary.avgMsRate ? summary.avgMsRate.toFixed(2) : "0"}
-            </p>
-          </div>
-
-          <div className="rounded-[18px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--text-secondary)]">
-              Net Loss/Gain
-            </p>
-            <p
-              className={`mt-0.5 text-xs sm:text-sm font-extrabold truncate ${
-                summary.totalLossGain >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              {summary.totalLossGain >= 0 ? "+" : ""}
-              {formatNumber(summary.totalLossGain)} L
-            </p>
-            <p className="text-[10px] font-medium text-[color:var(--text-secondary)] truncate mt-0.5">
-              {summary.records} entries
-            </p>
-          </div>
-        </div>
-
-        {/* 4. PRODUCT SEGMENT FILTER TABS */}
+        {/* 3. PRODUCT SEGMENT FILTER TABS */}
         <div className="flex items-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-1 shadow-sm">
           {[
             { key: "all", label: "All Fuel" },
@@ -1018,7 +889,7 @@ function DailySalesMobileView() {
           ))}
         </div>
 
-        {/* 5. SEARCH & FILTER BAR */}
+        {/* 4. SEARCH & CLEAR BAR */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search
@@ -1045,31 +916,27 @@ function DailySalesMobileView() {
 
           <button
             type="button"
-            onClick={() => setShowMobileFilterModal(true)}
-            className={`inline-flex h-11 items-center gap-1.5 rounded-2xl border px-3.5 text-xs font-bold shadow-sm active:scale-95 transition-all ${
-              hasDateRange || monthFilter !== getCurrentMonth()
-                ? "border-blue-500 bg-blue-500 text-white"
-                : "border-blue-200 dark:border-blue-800/80 bg-blue-50/80 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300"
-            }`}
+            onClick={() => {
+              setSearch("")
+              setMonthFilter(getCurrentMonth())
+              setFromDate("")
+              setToDate("")
+              setProductCategory("all")
+            }}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-blue-200 bg-[var(--bg-panel)] px-3.5 text-xs font-bold text-blue-600 shadow-sm transition-all active:scale-95 dark:border-blue-800/80 dark:text-blue-300"
           >
-            <Filter size={15} />
-            <span>Filter</span>
-            {(hasDateRange || monthFilter !== getCurrentMonth()) && (
-              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] text-emerald-600 dark:text-emerald-400 shadow-sm active:scale-95 transition-all"
-            title="Export Excel"
-          >
-            <FileSpreadsheet size={18} />
+            <span>Clear</span>
           </button>
         </div>
 
-        {/* 6. DAILY SALES ENTRY CARDS LIST */}
+        <div className="flex items-center justify-between px-1 pt-0.5">
+          <h2 className="text-sm font-black text-[color:var(--text-strong)]">Daily Sales Entries</h2>
+          <span className="text-xs font-medium text-[color:var(--text-secondary)]">
+            {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
+          </span>
+        </div>
+
+        {/* 5. DAILY SALES ENTRY CARDS LIST */}
         <div className="space-y-2.5 mb-28">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 text-[color:var(--text-secondary)]">
@@ -1098,7 +965,6 @@ function DailySalesMobileView() {
             </div>
           ) : (
             filteredEntries.map((entry) => {
-              const isExpanded = expandedCardId === entry._id
               const isHSD = String(entry.product || "").toUpperCase() === "HSD"
               const entryProfit = getProfit(entry)
               const lgVal = numberValue(entry.lossGain)
@@ -1106,12 +972,17 @@ function DailySalesMobileView() {
               return (
                 <div
                   key={entry._id}
-                  onClick={() => setExpandedCardId(isExpanded ? null : entry._id)}
-                  className={`group rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3.5 shadow-sm transition-all duration-200 cursor-pointer active:scale-[0.99] ${
-                    isExpanded
-                      ? "ring-2 ring-blue-500/20 border-blue-500/40 shadow-md"
-                      : "hover:border-blue-500/30"
-                  }`}
+                  onClick={() => setSelectedMobileEntry(entry)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      setSelectedMobileEntry(entry)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${entry.product || "HSD"} sale entry for ${formatMobileDate(entry.date)}`}
+                  className="group cursor-pointer rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] p-3.5 text-left shadow-sm transition-all duration-200 hover:border-blue-500/30 active:scale-[0.99]"
                 >
                   {/* Top Row: Product badge, Date & Loss/Gain indicator */}
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -1175,129 +1046,146 @@ function DailySalesMobileView() {
                     </div>
                   </div>
 
-                  {/* Expand indicator hint */}
-                  <div className="mt-2.5 flex items-center justify-between text-[11px] text-[color:var(--text-secondary)] border-t border-[var(--border-color)] pt-2">
-                    <span className="truncate max-w-[200px]">
-                      {entry.remark ? (
-                        <span className="text-[color:var(--text-primary)] font-medium">
-                          {entry.remark}
-                        </span>
-                      ) : (
-                        "Tap to view details"
-                      )}
-                    </span>
-                    <ChevronDown
-                      size={14}
-                      className={`transition-transform duration-200 text-[color:var(--text-secondary)] ${
-                        isExpanded ? "rotate-180 text-blue-600 dark:text-blue-400" : ""
-                      }`}
-                    />
-                  </div>
-
-                  {/* EXPANDED ACCORDION: Shows technical details and EDIT / DELETE buttons */}
-                  {isExpanded && (
-                    <div
-                      className="mt-3 border-t border-[var(--border-color)] bg-[var(--bg-soft)] p-3 rounded-2xl space-y-2.5 animate-in fade-in-50 duration-150"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Grid of technical metrics */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Product
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            {entry.product || "HSD"}
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Rate (₹ / L)
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            ₹{formatNumber(entry.rate)}
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Dispensed Fuel
-                          </span>
-                          <span className="font-bold text-[color:var(--text-strong)]">
-                            {formatNumber(entry.sale)} LTR
-                          </span>
-                        </div>
-                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block">
-                            Calculated Turnover
-                          </span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                            {formatCurrency(entryProfit)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Loss / Gain & Remark details */}
-                      <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 text-xs">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)]">
-                            Loss / Gain Variance
-                          </span>
-                          <span
-                            className={`font-bold ${
-                              lgVal >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                            }`}
-                          >
-                            {lgVal >= 0 ? "+" : ""}
-                            {formatNumber(lgVal)} LTR
-                          </span>
-                        </div>
-                        {entry.remark && (
-                          <div className="mt-2 pt-2 border-t border-[var(--border-color)]">
-                            <span className="text-[10px] font-bold uppercase text-[color:var(--text-secondary)] block mb-0.5">
-                              Remark
-                            </span>
-                            <span className="text-[color:var(--text-primary)]">
-                              {entry.remark}
-                            </span>
-                          </div>
-                        )}
-                        <div className="mt-2 pt-2 border-t border-[var(--border-color)] flex justify-between text-[10px] text-[color:var(--text-secondary)]">
-                          <span>By: {entry.createdByName || entry.createdBy?.name || entry.user?.name || "System"}</span>
-                          <span>{formatDateTime(entry.lastEditedAt || entry.updatedAt || entry.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      {/* ACTION BUTTONS (Only visible when card is clicked!) */}
-                      <div className="flex items-center gap-2 pt-1">
-                        {canManagerUse("editSale") && (
-                          <button
-                            type="button"
-                            onClick={() => openEdit(entry)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-blue-800/80 active:scale-95 transition-transform"
-                          >
-                            <Edit2 size={13} />
-                            <span>Edit Entry</span>
-                          </button>
-                        )}
-                        {canManagerUse("deleteSale") && (
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(entry)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold text-xs border border-rose-200 dark:border-rose-800/80 active:scale-95 transition-transform"
-                          >
-                            <Trash2 size={13} />
-                            <span>Delete</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })
           )}
         </div>
       </div>
+
+      {selectedMobileEntry ? (
+        <div
+          className="lg:hidden fixed inset-0 z-[55] flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm animate-in fade-in duration-150 sm:items-center"
+          onClick={() => setSelectedMobileEntry(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="daily-sale-detail-title"
+            className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-[26px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-4 text-[color:var(--text-primary)] shadow-2xl animate-in slide-in-from-bottom-3 duration-200 sm:slide-in-from-bottom-0"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                    String(selectedMobileEntry.product || "").toUpperCase() === "HSD"
+                      ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  }`}
+                >
+                  <Fuel size={19} />
+                </span>
+                <div className="min-w-0">
+                  <h3 id="daily-sale-detail-title" className="truncate text-base font-black text-[color:var(--text-strong)]">
+                    {selectedMobileEntry.product || "HSD"} Sale Entry
+                  </h3>
+                  <p className="mt-0.5 text-xs font-medium text-[color:var(--text-secondary)]">
+                    {formatMobileDate(selectedMobileEntry.date)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMobileEntry(null)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-soft)] text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+                aria-label="Close sale details"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mb-3 rounded-2xl bg-blue-600 p-4 text-white">
+              <p className="text-[11px] font-semibold text-blue-100">Dispensed Fuel</p>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <span className="text-2xl font-black tracking-tight">
+                  {formatNumber(selectedMobileEntry.sale)} LTR
+                </span>
+                <span className="text-right text-sm font-extrabold">
+                  {formatCurrency(getProfit(selectedMobileEntry))}
+                  <span className="block text-[10px] font-semibold text-blue-100">Turnover</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--text-secondary)]">Product</p>
+                <p className="mt-1 text-sm font-extrabold text-[color:var(--text-strong)]">
+                  {selectedMobileEntry.product || "HSD"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--text-secondary)]">Rate (₹ / L)</p>
+                <p className="mt-1 text-sm font-extrabold text-[color:var(--text-strong)]">₹{formatNumber(selectedMobileEntry.rate)}</p>
+              </div>
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--text-secondary)]">Calculated Turnover</p>
+                <p className="mt-1 text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(getProfit(selectedMobileEntry))}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--text-secondary)]">Loss / Gain Variance</p>
+                <p className={`mt-1 text-sm font-extrabold ${
+                  numberValue(selectedMobileEntry.lossGain) >= 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400"
+                }`}>
+                  {numberValue(selectedMobileEntry.lossGain) > 0 ? "+" : ""}
+                  {formatNumber(selectedMobileEntry.lossGain)} LTR
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-2.5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3 text-xs">
+              {selectedMobileEntry.remark ? (
+                <div className="mb-2 border-b border-[var(--border-color)] pb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--text-secondary)]">Remark</p>
+                  <p className="mt-1 whitespace-pre-wrap text-[color:var(--text-primary)]">{selectedMobileEntry.remark}</p>
+                </div>
+              ) : null}
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] text-[color:var(--text-secondary)]">
+                <span>By: {selectedMobileEntry.createdByName || selectedMobileEntry.createdBy?.name || selectedMobileEntry.user?.name || "System"}</span>
+                <span>{formatDateTime(selectedMobileEntry.lastEditedAt || selectedMobileEntry.updatedAt || selectedMobileEntry.createdAt)}</span>
+              </div>
+            </div>
+
+            {(canManagerUse("editSale") || canManagerUse("deleteSale")) ? (
+              <div className="mt-3 flex gap-2">
+                {canManagerUse("editSale") ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const entry = selectedMobileEntry
+                      setSelectedMobileEntry(null)
+                      openEdit(entry)
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-xs font-bold text-blue-700 transition active:scale-95 dark:border-blue-800/80 dark:bg-blue-950/60 dark:text-blue-300"
+                  >
+                    <Edit2 size={14} />
+                    <span>Edit Entry</span>
+                  </button>
+                ) : null}
+                {canManagerUse("deleteSale") ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const entry = selectedMobileEntry
+                      setSelectedMobileEntry(null)
+                      handleDelete(entry)
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 py-2.5 text-xs font-bold text-rose-600 transition active:scale-95 dark:border-rose-800/80 dark:bg-rose-950/60 dark:text-rose-400"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete</span>
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {/* 7. DIRECT FLOATING ACTION BUTTON (FAB) */}
       {canManagerUse("addSale") && (
@@ -1340,28 +1228,6 @@ function DailySalesMobileView() {
 
         <button
           type="button"
-          onClick={() =>
-            navigate(isManager ? "/manager/daily-sales-dashboard" : "/admin/daily-sales-dashboard")
-          }
-          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          <ChartNoAxesCombined size={20} />
-          <span className="text-[10px]">Dashboard</span>
-          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          <FileText size={20} />
-          <span className="text-[10px]">Reports</span>
-          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
-        </button>
-
-        <button
-          type="button"
           onClick={() => setShowMobileFilterModal(true)}
           className={`relative flex min-w-[54px] flex-col items-center gap-1 transition-colors ${
             hasDateRange || monthFilter !== getCurrentMonth() || productCategory !== "all"
@@ -1379,6 +1245,28 @@ function DailySalesMobileView() {
           ) : (
             <span className="mt-0.5 h-[3px] w-7 opacity-0" />
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setReportOpen(true)}
+          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        >
+          <FileText size={20} />
+          <span className="text-[10px]">Reports</span>
+          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate(isManager ? "/manager/daily-sales-dashboard" : "/admin/daily-sales-dashboard")
+          }
+          className="flex min-w-[54px] flex-col items-center gap-1 text-[color:var(--text-secondary)] hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        >
+          <ChartNoAxesCombined size={20} />
+          <span className="text-[10px]">Dashboard</span>
+          <span className="mt-0.5 h-[3px] w-7 opacity-0" />
         </button>
       </nav>
 

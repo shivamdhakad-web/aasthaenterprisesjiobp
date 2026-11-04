@@ -4,9 +4,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Bell,
-  Calendar,
   ChartNoAxesCombined,
-  Check,
   ChevronDown,
   Clock,
   Droplets,
@@ -29,8 +27,6 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
-  TrendingDown,
-  TrendingUp,
   Truck,
   X,
 } from "lucide-react"
@@ -259,18 +255,14 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
   // Data State
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState("")
 
   // Navigation Bottom Dock
   const [activeTab, setActiveTab] = useState("register")
 
-  // Timeframe filter for Hero Card: "today" | "week" | "month" | "all"
-  const [timeframe, setTimeframe] = useState("month")
-  const [showTimeframeDropdown, setShowTimeframeDropdown] = useState(false)
-
   // Filters & Search
   const [search, setSearch] = useState("")
+  const [monthFilter, setMonthFilter] = useState(getCurrentMonth())
   const [selectedProduct, setSelectedProduct] = useState("all")
   const [selectedShift, setSelectedShift] = useState("all")
   const [profitFilter, setProfitFilter] = useState("all") // "all" | "profit" | "loss"
@@ -310,9 +302,8 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
   const [deleteTarget, setDeleteTarget] = useState(null)
 
   // Load Entries from API
-  const loadEntries = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true)
-    else setLoading(true)
+  const loadEntries = async () => {
+    setLoading(true)
     setError("")
     try {
       const data = await getDcdEntries()
@@ -322,7 +313,6 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
       setError(err?.response?.data?.message || "Failed to load D.C.D records.")
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
@@ -330,76 +320,24 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
     loadEntries()
   }, [])
 
-  // Timeframe calculation for Hero Analytics
-  const heroEntries = useMemo(() => {
-    const todayStr = getToday()
-    const monthStr = getCurrentMonth()
-
-    if (timeframe === "today") {
-      return entries.filter((e) => String(e.date || "").slice(0, 10) === todayStr)
-    }
-    if (timeframe === "week") {
-      const now = new Date()
-      const dayOfWeek = now.getDay() || 7
-      const startOfWeek = new Date(now)
-      startOfWeek.setDate(now.getDate() - dayOfWeek + 1)
-      const startStr = startOfWeek.toISOString().slice(0, 10)
-      return entries.filter((e) => {
-        const d = String(e.date || "").slice(0, 10)
-        return d >= startStr && d <= todayStr
-      })
-    }
-    if (timeframe === "month") {
-      return entries.filter((e) => String(e.date || "").slice(0, 7) === monthStr)
-    }
-    return entries
-  }, [entries, timeframe])
-
-  // Hero Card Summary Metrics
-  const heroMetrics = useMemo(() => {
-    let totalVolume = 0
-    let totalProfit = 0
-    let totalSaleValue = 0
-    let totalPurchaseCost = 0
-    let hsdVolume = 0
-    let hsdPcVolume = 0
-
-    heroEntries.forEach((entry) => {
-      const vol = numberValue(entry.volume)
-      const prcSale = numberValue(entry.salePrice)
-      const prcPur = numberValue(entry.purchasePrice)
-      const profit = getProfit(entry)
-
-      totalVolume += vol
-      totalProfit += profit
-      totalSaleValue += vol * prcSale
-      totalPurchaseCost += vol * prcPur
-
-      const prod = String(entry.product || "").toLowerCase()
-      if (prod.includes("pc")) {
-        hsdPcVolume += vol
-      } else {
-        hsdVolume += vol
-      }
-    })
-
-    const avgMargin = totalVolume > 0 ? totalProfit / totalVolume : 0
-
-    return {
-      totalVolume,
-      totalProfit,
-      totalSaleValue,
-      totalPurchaseCost,
-      avgMargin,
-      hsdVolume,
-      hsdPcVolume,
-      count: heroEntries.length,
-    }
-  }, [heroEntries])
-
-  // Filtered List of Entries
-  const filteredEntries = useMemo(() => {
+  // Month or explicit date-range scope for the mobile register.
+  const periodEntries = useMemo(() => {
+    const hasDateRange = Boolean(fromDate || toDate)
     return entries.filter((entry) => {
+      const entryDate = entry.date ? String(entry.date).slice(0, 10) : ""
+      if (hasDateRange) {
+        if (fromDate && entryDate < fromDate) return false
+        if (toDate && entryDate > toDate) return false
+      } else if (monthFilter && entryDate.slice(0, 7) !== monthFilter) {
+        return false
+      }
+      return true
+    })
+  }, [entries, monthFilter, fromDate, toDate])
+
+  // Other active mobile filters applied inside the selected period.
+  const filteredEntries = useMemo(() => {
+    return periodEntries.filter((entry) => {
       // Search
       if (search.trim()) {
         const q = search.toLowerCase()
@@ -433,14 +371,9 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
         if (getProfit(entry) >= 0) return false
       }
 
-      // Date Range
-      const entryDate = entry.date ? String(entry.date).slice(0, 10) : ""
-      if (fromDate && entryDate < fromDate) return false
-      if (toDate && entryDate > toDate) return false
-
       return true
     })
-  }, [entries, search, selectedProduct, selectedShift, profitFilter, fromDate, toDate])
+  }, [periodEntries, search, selectedProduct, selectedShift, profitFilter])
 
   // Overall Quick Stats Bar for currently filtered entries
   const listStats = useMemo(() => {
@@ -474,10 +407,11 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
     if (selectedProduct !== "all") count++
     if (selectedShift !== "all") count++
     if (profitFilter !== "all") count++
+    if (!fromDate && !toDate && monthFilter !== getCurrentMonth()) count++
     if (fromDate) count++
     if (toDate) count++
     return count
-  }, [selectedProduct, selectedShift, profitFilter, fromDate, toDate])
+  }, [monthFilter, selectedProduct, selectedShift, profitFilter, fromDate, toDate])
 
   // Shifts unique set
   const availableShifts = useMemo(() => {
@@ -698,6 +632,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
     setSelectedProduct("all")
     setSelectedShift("all")
     setProfitFilter("all")
+    setMonthFilter(getCurrentMonth())
     setFromDate("")
     setToDate("")
     setSearch("")
@@ -709,229 +644,45 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
       {/* =========================================================
           TOP MOBILE HEADER
           ========================================================= */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--bg-panel)]/95 px-4 py-3 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20 shadow-sm">
-            <Fuel className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold tracking-tight text-[color:var(--text-strong)]">D.C.D</h1>
-              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-                Diesel Register
-              </span>
-            </div>
-            <p className="text-xs text-[color:var(--text-secondary)]">
-              {entries.length} {entries.length === 1 ? "Record" : "Records"} recorded
-            </p>
-          </div>
+      <header className="mx-3 mt-3 flex min-h-[52px] items-center gap-2.5 rounded-[17px] border border-amber-100 bg-gradient-to-r from-[var(--bg-panel)] to-amber-50/70 px-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)] dark:border-amber-900/40 dark:to-amber-950/20">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm shadow-amber-700/20">
+          <Fuel size={16} strokeWidth={2.3} />
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => loadEntries(true)}
-            disabled={refreshing}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)] transition-transform active:scale-95 disabled:opacity-50"
-            title="Refresh"
-          >
-            <RefreshCw size={16} className={refreshing ? "animate-spin text-amber-500" : ""} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowChoiceModal(true)}
-            className="flex h-9 items-center gap-1.5 rounded-xl bg-amber-600 px-3 text-xs font-semibold text-white shadow-sm shadow-amber-600/30 transition-transform active:scale-95 hover:bg-amber-500"
-          >
-            <Plus size={16} />
-            <span>Add</span>
-          </button>
+        <div className="min-w-0">
+          <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">D.C.D</h1>
+          <p className="mt-0.5 truncate text-[8px] font-semibold tracking-wide text-[color:var(--text-secondary)]">Diesel Credit &amp; Delivery Register</p>
         </div>
+        <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-amber-500 ring-4 ring-amber-500/10" />
       </header>
 
       {/* MAIN MOBILE SCROLL CONTAINER */}
-      <div className="px-3 pt-3 space-y-3">
-        {/* =========================================================
-            HERO CARD (AMBER / BRONZE GRADIENT WITH STATS & TIMEFRAME)
-            ========================================================= */}
-        <section className="relative overflow-visible rounded-3xl bg-gradient-to-br from-[#451a03] via-[#78350f] to-[#b45309] p-4 text-white shadow-xl shadow-amber-950/20">
-          {/* Subtle Decorative Wave Background */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl opacity-15">
-            <svg viewBox="0 0 400 200" className="h-full w-full object-cover">
-              <path
-                d="M0 100 C 150 150, 250 50, 400 120 L 400 200 L 0 200 Z"
-                fill="currentColor"
-                className="text-white"
-              />
-            </svg>
-          </div>
-
-          <div className="relative z-10 space-y-3">
-            {/* Top Bar inside Hero: Timeframe Selector + Dashboard Button */}
-            <div className="flex items-center justify-between gap-2">
-              {/* Timeframe Dropdown (Non-clipping, absolute popover) */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowTimeframeDropdown(!showTimeframeDropdown)}
-                  className="flex items-center gap-1.5 rounded-xl bg-black/30 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-amber-100 ring-1 ring-white/20 transition-all hover:bg-black/40 active:scale-95"
-                >
-                  <Calendar size={13} className="text-amber-300" />
-                  <span className="capitalize">
-                    {timeframe === "today"
-                      ? "Today"
-                      : timeframe === "week"
-                      ? "This Week"
-                      : timeframe === "month"
-                      ? "This Month"
-                      : "All Time"}
-                  </span>
-                  <ChevronDown
-                    size={13}
-                    className={`transition-transform duration-200 ${showTimeframeDropdown ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {showTimeframeDropdown && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setShowTimeframeDropdown(false)}
-                    />
-                    <div className="absolute left-0 top-full mt-1.5 z-50 w-36 rounded-2xl border border-white/20 bg-[#291104] p-1 shadow-2xl backdrop-blur-xl">
-                      {[
-                        { id: "today", label: "Today" },
-                        { id: "week", label: "This Week" },
-                        { id: "month", label: "This Month" },
-                        { id: "all", label: "All Time" },
-                      ].map((t) => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => {
-                            setTimeframe(t.id)
-                            setShowTimeframeDropdown(false)
-                          }}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-colors ${
-                            timeframe === t.id
-                              ? "bg-amber-600 text-white font-semibold"
-                              : "text-amber-100 hover:bg-white/10"
-                          }`}
-                        >
-                          <span>{t.label}</span>
-                          {timeframe === t.id && <Check size={12} />}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* DCD Dashboard Shortcut Button */}
-              <button
-                type="button"
-                onClick={() => navigate("/admin/dcd-dashboard")}
-                className="flex items-center gap-1.5 rounded-xl bg-white/15 backdrop-blur-md px-2.5 py-1.5 text-xs font-semibold text-white ring-1 ring-white/25 hover:bg-white/25 active:scale-95 transition-all"
-              >
-                <ChartNoAxesCombined size={14} className="text-amber-200" />
-                <span>Dashboard</span>
-              </button>
-            </div>
-
-            {/* Main Profit Display */}
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-200/90">
-                  Total Net Profit
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
-                    heroMetrics.totalProfit >= 0
-                      ? "bg-emerald-500/20 text-emerald-200 ring-emerald-400/40"
-                      : "bg-rose-500/20 text-rose-200 ring-rose-400/40"
-                  }`}
-                >
-                  {heroMetrics.totalProfit >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                  {heroMetrics.avgMargin >= 0 ? `+${formatNumber(heroMetrics.avgMargin)}/L` : `${formatNumber(heroMetrics.avgMargin)}/L`}
-                </span>
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-3xl font-black tracking-tight text-white">
-                  {formatCurrency(heroMetrics.totalProfit)}
-                </span>
-              </div>
-            </div>
-
-            {/* Bottom 2-stat row in Hero: Volume & Revenue */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/15">
-              <div className="rounded-2xl bg-black/20 p-2.5 backdrop-blur-sm">
-                <p className="text-[10px] font-medium text-amber-200/80">Total Volume</p>
-                <p className="mt-0.5 text-sm font-bold text-white">
-                  {formatNumber(heroMetrics.totalVolume)} <span className="text-[11px] font-normal text-amber-200/80">L</span>
-                </p>
-                <p className="text-[10px] text-amber-200/70">
-                  {heroMetrics.count} {heroMetrics.count === 1 ? "delivery" : "deliveries"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-black/20 p-2.5 backdrop-blur-sm">
-                <p className="text-[10px] font-medium text-amber-200/80">Total Sale Value</p>
-                <p className="mt-0.5 text-sm font-bold text-white">
-                  {formatCurrency(heroMetrics.totalSaleValue)}
-                </p>
-                <p className="text-[10px] text-amber-200/70 truncate">
-                  Pur: {formatCurrency(heroMetrics.totalPurchaseCost)}
-                </p>
-              </div>
-            </div>
-
-            {/* Product breakdown pills */}
-            <div className="flex flex-wrap items-center gap-2 pt-0.5">
-              <div className="inline-flex items-center gap-1.5 rounded-xl bg-black/25 px-2.5 py-1 text-[11px] font-medium text-amber-100">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
-                <span>HSD:</span>
-                <span className="font-bold text-white">{formatNumber(heroMetrics.hsdVolume)} L</span>
-              </div>
-              {heroMetrics.hsdPcVolume > 0 && (
-                <div className="inline-flex items-center gap-1.5 rounded-xl bg-black/25 px-2.5 py-1 text-[11px] font-medium text-amber-100">
-                  <span className="h-2 w-2 rounded-full bg-orange-400" />
-                  <span>HSD PC:</span>
-                  <span className="font-bold text-white">{formatNumber(heroMetrics.hsdPcVolume)} L</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
+      <div className="space-y-3 px-3 pt-2">
         {/* =========================================================
             3-METRIC SUMMARY BAR (FOR CURRENT FILTER SELECTION)
             ========================================================= */}
         <section className="grid grid-cols-3 gap-2">
           <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <span className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Volume</span>
+            <span className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Total Volume</span>
             <p className="mt-0.5 text-sm font-bold text-[color:var(--text-strong)]">
               {formatNumber(listStats.vol)} <span className="text-[10px] font-normal text-[color:var(--text-muted)]">L</span>
             </p>
-            <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium">Diesel Dispensed</span>
+            <span className="text-[9px] font-medium text-[color:var(--text-secondary)]">Delivered</span>
           </div>
 
           <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <span className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Avg Sale Rate</span>
+            <span className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Total Profit</span>
+            <p className={`mt-0.5 text-sm font-bold ${listStats.profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+              {formatCurrency(listStats.profit)}
+            </p>
+            <span className="text-[9px] font-medium text-[color:var(--text-secondary)]">Selected month</span>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
+            <span className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Avg Sale Price</span>
             <p className="mt-0.5 text-sm font-bold text-[color:var(--text-strong)]">
-              ₹{formatNumber(listStats.avgSale)}
+              {formatCurrency(listStats.avgSale)}
             </p>
-            <span className="text-[9px] text-[color:var(--text-secondary)] font-medium">Per Litre</span>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5 shadow-sm">
-            <span className="text-[10px] font-semibold text-[color:var(--text-secondary)]">Avg Margin</span>
-            <p
-              className={`mt-0.5 text-sm font-bold ${
-                listStats.avgMargin >= 0 ? "text-emerald-500" : "text-rose-500"
-              }`}
-            >
-              {listStats.avgMargin >= 0 ? `+₹${formatNumber(listStats.avgMargin)}` : `₹${formatNumber(listStats.avgMargin)}`}
-            </p>
-            <span className="text-[9px] text-[color:var(--text-secondary)] font-medium">Profit / L</span>
+            <span className="text-[9px] font-medium text-[color:var(--text-secondary)]">Per Litre</span>
           </div>
         </section>
 
@@ -944,7 +695,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
             onClick={() => setSelectedProduct("all")}
             className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
               selectedProduct === "all"
-                ? "bg-amber-600 text-white shadow-sm shadow-amber-600/30"
+                ? "bg-amber-600 !text-white shadow-sm shadow-amber-600/30"
                 : "border border-[var(--border-color)] bg-[var(--bg-panel)] text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)]"
             }`}
           >
@@ -954,12 +705,12 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                 selectedProduct === "all" ? "bg-white/20 text-white" : "bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
               }`}
             >
-              {entries.length}
+                {periodEntries.length}
             </span>
           </button>
 
           {productOptions.map((prod) => {
-            const count = entries.filter(
+            const count = periodEntries.filter(
               (e) => String(e.product || "").trim().toLowerCase() === prod.trim().toLowerCase()
             ).length
             return (
@@ -969,7 +720,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                 onClick={() => setSelectedProduct(prod)}
                 className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                   selectedProduct === prod
-                    ? "bg-amber-600 text-white shadow-sm shadow-amber-600/30"
+                    ? "bg-amber-600 !text-white shadow-sm shadow-amber-600/30"
                     : "border border-[var(--border-color)] bg-[var(--bg-panel)] text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)]"
                 }`}
               >
@@ -1003,7 +754,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search product, shift, volume, remark..."
-              className="w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-9 pr-8 text-xs text-[color:var(--text-strong)] placeholder:text-[color:var(--text-muted)] focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="h-11 w-full rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] py-2 pl-9 pr-8 text-xs text-[color:var(--text-strong)] placeholder:text-[color:var(--text-muted)] focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
             />
             {search && (
               <button
@@ -1016,33 +767,14 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
             )}
           </div>
 
-          {/* Filter Modal Trigger Button */}
+          {/* Clear search and applied filters */}
           <button
             type="button"
-            onClick={() => setShowFiltersModal(true)}
-            className={`relative flex h-9 w-9 items-center justify-center rounded-2xl border transition-colors ${
-              activeFiltersCount > 0
-                ? "border-amber-500 bg-amber-500/10 text-amber-500"
-                : "border-[var(--border-color)] bg-[var(--bg-panel)] text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)]"
-            }`}
-            title="Filters"
+            onClick={handleResetFilters}
+            className="flex h-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 text-xs font-semibold text-[color:var(--text-secondary)] shadow-sm transition-colors hover:border-amber-500/40 hover:text-amber-600 dark:hover:text-amber-400"
+            title="Clear search and filters"
           >
-            <Filter size={15} />
-            {activeFiltersCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-[9px] font-bold text-white">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-
-          {/* Excel Export Button */}
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] text-[color:var(--text-secondary)] hover:text-emerald-500 transition-colors"
-            title="Export to Excel"
-          >
-            <FileSpreadsheet size={16} />
+            Clear
           </button>
         </section>
 
@@ -1050,6 +782,12 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
         {activeFiltersCount > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] text-[color:var(--text-muted)] font-medium">Filters:</span>
+            {!fromDate && !toDate && monthFilter !== getCurrentMonth() && (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                Month: {monthFilter}
+                <X size={10} className="cursor-pointer" onClick={() => setMonthFilter(getCurrentMonth())} />
+              </span>
+            )}
             {selectedProduct !== "all" && (
               <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
                 Product: {selectedProduct}
@@ -1091,6 +829,13 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
           </div>
         )}
 
+        <div className="flex items-center justify-between px-1 pt-1">
+          <h2 className="text-sm font-black text-[color:var(--text-strong)]">D.C.D Entries</h2>
+          <span className="text-xs font-semibold text-[color:var(--text-secondary)]">
+            {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
+          </span>
+        </div>
+
         {/* =========================================================
             DCD ENTRY FEED / CARDS
             ========================================================= */}
@@ -1108,8 +853,8 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
               <h3 className="mt-3 text-sm font-bold text-[color:var(--text-strong)]">No D.C.D Records Found</h3>
               <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
                 {search || activeFiltersCount > 0
-                  ? "Try resetting your search or active filters."
-                  : "Start recording diesel credit delivery entries."}
+                  ? "No D.C.D records match this month and your current filters. Try another month or clear the filters."
+                  : "No D.C.D records found for this month. Choose another month or add a delivery entry."}
               </p>
               <button
                 type="button"
@@ -1305,7 +1050,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
         className="fixed bottom-[82px] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-amber-600 text-white shadow-[0_8px_25px_rgba(217,119,6,0.45)] transition-transform active:scale-95 hover:bg-amber-500"
         title="Add DCD Entry"
       >
-        <Plus size={26} strokeWidth={2.5} />
+        <Plus size={26} strokeWidth={2.5} className="text-white" style={{ color: "#fff", stroke: "#fff" }} />
       </button>
 
       {/* =========================================================
@@ -1330,26 +1075,6 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
             <span className="text-[11px] font-medium">Register</span>
           </button>
 
-          {/* DCD Dashboard Tab */}
-          <button
-            type="button"
-            onClick={() => navigate("/admin/dcd-dashboard")}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)] transition-colors"
-          >
-            <ChartNoAxesCombined size={20} />
-            <span className="text-[11px] font-medium">Dashboard</span>
-          </button>
-
-          {/* Reports Tab */}
-          <button
-            type="button"
-            onClick={() => setShowReportsModal(true)}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)] transition-colors"
-          >
-            <FileText size={20} />
-            <span className="text-[11px] font-medium">Reports</span>
-          </button>
-
           {/* Filters Tab */}
           <button
             type="button"
@@ -1366,59 +1091,91 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
               <span className="absolute top-1 right-5 flex h-2 w-2 rounded-full bg-amber-500 ring-2 ring-[var(--bg-panel)]" />
             )}
           </button>
+
+          {/* Reports Tab */}
+          <button
+            type="button"
+            onClick={() => setShowReportsModal(true)}
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 text-[color:var(--text-secondary)] hover:text-[color:var(--text-strong)] transition-colors"
+          >
+            <FileText size={20} />
+            <span className="text-[11px] font-medium">Reports</span>
+          </button>
+
+          {/* DCD Dashboard Tab */}
+          <button
+            type="button"
+            onClick={() => navigate("/admin/dcd-dashboard")}
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-strong)]"
+          >
+            <ChartNoAxesCombined size={20} />
+            <span className="text-[11px] font-medium">Dashboard</span>
+          </button>
         </div>
       </nav>
 
       {/* =========================================================
-          MODAL 1: ADD ENTRY CHOICE BOTTOM SHEET
+          MODAL 1: ADD ENTRY CHOICE POPUP
           ========================================================= */}
       {showChoiceModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div
-            className="fixed inset-0"
+            className="absolute inset-0"
             onClick={() => setShowChoiceModal(false)}
           />
-          <div className="relative z-10 w-full max-w-lg rounded-t-3xl border-t border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-2xl animate-in slide-in-from-bottom duration-200">
-            <div className="mx-auto h-1 w-12 rounded-full bg-[var(--border-strong)] mb-4" />
-            <div className="flex items-center justify-between pb-3">
-              <div>
-                <h3 className="text-base font-bold text-[color:var(--text-strong)]">New D.C.D Entry</h3>
-                <p className="text-xs text-[color:var(--text-secondary)]">Choose entry method to continue</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowChoiceModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
-              >
-                <X size={16} />
-              </button>
+          <div className="relative z-10 w-full max-w-md rounded-[28px] border border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => setShowChoiceModal(false)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--bg-soft)] text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-strong)]"
+              aria-label="Close entry mode"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20 dark:text-amber-400">
+              <Fuel size={26} />
+            </div>
+            <div className="mt-4 text-center">
+              <h3 className="text-lg font-extrabold text-[color:var(--text-strong)]">Choose Entry Mode</h3>
+              <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-[color:var(--text-secondary)]">
+                Choose how you would like to record your D.C.D entries.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={openSingleAddModal}
-                className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 text-center hover:border-amber-500 hover:bg-amber-500/5 transition-all"
+                className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-amber-500/35 bg-amber-500/5 p-3 text-center transition-all hover:border-amber-500 hover:bg-amber-500/10 active:scale-[0.98]"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  <Fuel size={24} />
-                </div>
-                <span className="mt-3 text-sm font-bold text-[color:var(--text-strong)]">Single Delivery</span>
-                <span className="mt-1 text-[11px] text-[color:var(--text-secondary)]">One delivery at a time</span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-600 text-white shadow-md shadow-amber-600/25">
+                  <Plus size={25} strokeWidth={2.5} />
+                </span>
+                <span className="mt-3 text-sm font-bold text-[color:var(--text-strong)]">Single Entry</span>
+                <span className="mt-1 text-[10px] leading-4 text-[color:var(--text-secondary)]">Record one delivery</span>
               </button>
 
               <button
                 type="button"
                 onClick={openBulkAddModal}
-                className="flex flex-col items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-4 text-center hover:border-amber-500 hover:bg-amber-500/5 transition-all"
+                className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3 text-center transition-all hover:border-amber-500/50 hover:bg-amber-500/5 active:scale-[0.98]"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--bg-panel)] text-amber-700 ring-1 ring-amber-500/20 dark:text-amber-300">
                   <Layers size={24} />
-                </div>
-                <span className="mt-3 text-sm font-bold text-[color:var(--text-strong)]">Multiple Deliveries</span>
-                <span className="mt-1 text-[11px] text-[color:var(--text-secondary)]">Bulk add in one shift</span>
+                </span>
+                <span className="mt-3 text-sm font-bold text-[color:var(--text-strong)]">Multiple Entry</span>
+                <span className="mt-1 text-[10px] leading-4 text-[color:var(--text-secondary)]">Add several deliveries</span>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowChoiceModal(false)}
+              className="mt-4 w-full rounded-xl py-2.5 text-sm font-medium text-[color:var(--text-secondary)] transition-colors hover:bg-[var(--bg-soft)] hover:text-[color:var(--text-strong)]"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -1895,7 +1652,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
             className="fixed inset-0"
             onClick={() => setShowFiltersModal(false)}
           />
-          <div className="relative z-10 w-full max-w-lg rounded-t-3xl border-t border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 shadow-2xl animate-in slide-in-from-bottom duration-200 space-y-4">
+          <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl border-t border-[var(--border-strong)] bg-[var(--bg-panel)] p-5 pb-8 shadow-2xl animate-in slide-in-from-bottom duration-200 space-y-4">
             <div className="mx-auto h-1 w-12 rounded-full bg-[var(--border-strong)] mb-2" />
             <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
               <div>
@@ -1909,6 +1666,19 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
               >
                 <X size={16} />
               </button>
+            </div>
+
+            {/* Month Filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-[color:var(--text-secondary)]">
+                Month
+              </label>
+              <input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value || getCurrentMonth())}
+                className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] px-3 py-2 text-xs text-[color:var(--text-strong)] focus:border-amber-500 focus:outline-none"
+              />
             </div>
 
             {/* Date Range */}
@@ -1949,7 +1719,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                   onClick={() => setSelectedProduct("all")}
                   className={`rounded-xl px-3 py-1 text-xs font-semibold ${
                     selectedProduct === "all"
-                      ? "bg-amber-600 text-white"
+                      ? "bg-amber-600 !text-white"
                       : "border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
                   }`}
                 >
@@ -1962,7 +1732,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                     onClick={() => setSelectedProduct(opt)}
                     className={`rounded-xl px-3 py-1 text-xs font-semibold ${
                       selectedProduct === opt
-                        ? "bg-amber-600 text-white"
+                        ? "bg-amber-600 !text-white"
                         : "border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
                     }`}
                   >
@@ -1983,7 +1753,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                   onClick={() => setSelectedShift("all")}
                   className={`rounded-xl px-3 py-1 text-xs font-semibold ${
                     selectedShift === "all"
-                      ? "bg-amber-600 text-white"
+                      ? "bg-amber-600 !text-white"
                       : "border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
                   }`}
                 >
@@ -1996,7 +1766,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                     onClick={() => setSelectedShift(sh)}
                     className={`rounded-xl px-3 py-1 text-xs font-semibold ${
                       selectedShift === sh
-                        ? "bg-amber-600 text-white"
+                        ? "bg-amber-600 !text-white"
                         : "border border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
                     }`}
                   >
@@ -2023,7 +1793,7 @@ function DcdMobileView({ productOptions, onAddProductOption }) {
                     onClick={() => setProfitFilter(item.id)}
                     className={`rounded-xl border py-1.5 text-xs font-semibold ${
                       profitFilter === item.id
-                        ? "border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        ? "border-amber-600 bg-amber-600 !text-white"
                         : "border-[var(--border-color)] bg-[var(--bg-soft)] text-[color:var(--text-secondary)]"
                     }`}
                   >

@@ -12,7 +12,9 @@ import {
   Filter,
   Home,
   LayoutGrid,
+  Layers,
   MoreVertical,
+  Plus,
   Search,
   Sparkles,
   Trash2,
@@ -119,7 +121,7 @@ export default function CardSwipe() {
   const [bulkSaving, setBulkSaving] = useState(false)
   const [bulkDefaults, setBulkDefaults] = useState(defaultBulkDefaults())
   const [bulkRows, setBulkRows] = useState([defaultBulkRow()])
-  const [mobileTimeframe, setMobileTimeframe] = useState("month")
+  const [mobileSelectedMetric, setMobileSelectedMetric] = useState("monthProfit")
   const [showMobileTimeDropdown, setShowMobileTimeDropdown] = useState(false)
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false)
   const [mobileActionItem, setMobileActionItem] = useState(null)
@@ -292,25 +294,18 @@ export default function CardSwipe() {
     { key: "dsmCharges", label: "DSM Charges", value: formatCurrency(summary.dsmCharges), tone: "rose" },
   ]
   const visibleSummaryCards = summaryCards.filter((card) => canManagerShowCard(card.key))
-
-  const mobileHeroAmount = useMemo(() => {
-    const today = getToday()
-    const weekStart = new Date()
-    weekStart.setDate(weekStart.getDate() - 7)
-
-    const timeframeEntries = entries.filter((entry) => {
-      const entryDate = entry.date ? new Date(entry.date) : null
-      if (!entryDate || Number.isNaN(entryDate.getTime())) return false
-      if (mobileTimeframe === "today") return String(entry.date).slice(0, 10) === today
-      if (mobileTimeframe === "week") return entryDate >= weekStart && entryDate <= new Date()
-      if (mobileTimeframe === "all") return true
-      return String(entry.date).slice(0, 7) === getCurrentMonth()
-    })
-
-    const total = getSummary(timeframeEntries).totalAmount
-    const labels = { today: "Today", week: "This Week", month: "This Month", all: "All Time" }
-    return { label: labels[mobileTimeframe], value: formatCurrency(total) }
-  }, [entries, mobileTimeframe])
+  const mobilePrimaryKeys = new Set(["monthProfit", "cashProfit", "onlineProfit", "totalCharges"])
+  const mobileMetricCards = ["monthProfit", "onlineProfit", "totalCharges", "cashProfit"]
+    .map((key) => visibleSummaryCards.find((card) => card.key === key))
+    .filter(Boolean)
+  const mobileAdditionalSummaryCards = [
+    { key: "netAmount", label: "Net Amount", value: formatCurrency(summary.net), tone: "blue" },
+    ...visibleSummaryCards.filter((card) => !mobilePrimaryKeys.has(card.key)),
+  ]
+  const mobileHeroAmount = mobileMetricCards.find((card) => card.key === mobileSelectedMetric) || mobileMetricCards[0] || {
+    label: "Card Swipe",
+    value: formatCurrency(0),
+  }
 
   const buildCardSwipeAiPayload = () => {
     const machineTotals = filteredEntries.reduce((totals, entry) => {
@@ -954,69 +949,74 @@ export default function CardSwipe() {
       </div>
 
       <section className="mb-24 space-y-3 sm:hidden">
-        <div className="lg:hidden mb-2">
-  <div className="flex items-center gap-4 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm">
-
-
-    <div className="min-w-0">
-      <h1 className="text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
-        Card Swipe
-      </h1>
-    </div>
-
-    <div className="ml-auto h-1.5 w-20 rounded-full bg-blue-400" />
-  </div>
-</div>
-        <div className="relative overflow-visible rounded-[28px] bg-blue-600 px-5 pb-5 pt-4 text-white shadow-lg shadow-blue-600/20">
-          <div className="relative z-20 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-blue-100">{mobileHeroAmount.label}</p>
-              <p className="mt-1 text-[34px] font-black leading-none">{mobileHeroAmount.value}</p>
-              <p className="mt-2 text-xs font-semibold text-blue-100">{filteredEntries.length} filtered entries</p>
+        <div className="mb-2">
+          <div className="flex min-h-[52px] items-center gap-2.5 rounded-[17px] border border-blue-100 bg-gradient-to-r from-[var(--bg-panel)] to-blue-50/70 px-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-sm shadow-blue-700/20">
+              <CreditCard size={16} strokeWidth={2.3} />
             </div>
-            <div className="relative z-30">
-              <button
-                type="button"
-                onClick={() => setShowMobileTimeDropdown((current) => !current)}
-                className="inline-flex items-center gap-1 rounded-xl bg-white/15 px-3 py-2 text-xs font-bold"
-              >
-                {mobileHeroAmount.label}
-                <ChevronDown size={15} />
-              </button>
-              {showMobileTimeDropdown ? (
-                <div className="absolute right-0 top-11 z-[70] w-32 overflow-hidden rounded-xl border border-white/25 bg-blue-950 py-1 text-white shadow-2xl shadow-blue-950/40">
-                  {[["today", "Today"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]].map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => {
-                        setMobileTimeframe(value)
-                        setShowMobileTimeDropdown(false)
-                      }}
-                      className="w-full px-3 py-2 text-left text-xs font-bold transition-colors hover:bg-blue-800"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+            <div className="min-w-0">
+              <h1 className="truncate text-[16px] font-black leading-tight tracking-[-0.02em] text-[color:var(--text-strong)]">Card Swipe</h1>
+              <p className="mt-0.5 truncate text-[8px] font-semibold tracking-wide text-[color:var(--text-secondary)]">Card payment register</p>
             </div>
-          </div>
-          <CreditCard className="pointer-events-none absolute -bottom-7 -right-5 z-0 h-32 w-32 text-white/10" strokeWidth={1.2} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
-            <p className="text-[11px] font-bold text-[color:var(--text-secondary)]">Total Charges</p>
-            <p className="mt-1 text-base font-extrabold text-emerald-600">{formatCurrency(summary.totalCharges)}</p>
-          </div>
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-panel)] p-3 shadow-sm">
-            <p className="text-[11px] font-bold text-[color:var(--text-secondary)]">Net Amount</p>
-            <p className="mt-1 text-base font-extrabold text-blue-600">{formatCurrency(summary.net)}</p>
+            <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-blue-500 ring-4 ring-blue-500/10" />
           </div>
         </div>
+        <div className="relative z-20 mb-2">
+          <div className="relative min-h-[125px] overflow-hidden rounded-[24px] bg-gradient-to-br from-[#1745b8] via-[#2163e8] to-[#3984ff] px-5 pb-4 pt-5 text-white shadow-xl shadow-blue-900/10">
+            <div className="relative z-10 pr-28">
+              <p className="text-[14px] font-semibold !text-white">{mobileHeroAmount.label}</p>
+              <p className="mt-2 truncate text-[32px] font-black leading-none tracking-tight !text-white">{mobileHeroAmount.value}</p>
+              <p className="mt-2 text-[11px] font-semibold text-white/80">{filteredEntries.length} filtered entries</p>
+            </div>
+            <svg viewBox="0 0 360 120" preserveAspectRatio="none" className="pointer-events-none absolute bottom-0 left-0 h-[115px] w-full">
+              <defs>
+                <linearGradient id="mobileSwipeHeroGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#c3dcff" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#c3dcff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d="M0 92 C42 104 65 72 106 78 C145 84 150 99 188 84 C226 68 238 91 270 66 C304 40 316 59 360 28" fill="none" stroke="#b8d4ff" strokeOpacity="0.82" strokeWidth="3" strokeLinecap="round" />
+              <path d="M0 92 C42 104 65 72 106 78 C145 84 150 99 188 84 C226 68 238 91 270 66 C304 40 316 59 360 28 L360 120 L0 120 Z" fill="url(#mobileSwipeHeroGrad)" />
+              <circle cx="270" cy="66" r="5" fill="white" />
+            </svg>
+          </div>
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={showMobileTimeDropdown}
+            onClick={() => setShowMobileTimeDropdown((open) => !open)}
+            className="absolute right-4 top-4 z-30 inline-flex h-10 min-w-[138px] items-center justify-between gap-2 rounded-[14px] border border-white/20 bg-white/15 px-3 text-[13px] font-bold !text-white shadow-inner backdrop-blur-sm active:scale-[0.98]"
+          >
+            {mobileHeroAmount.label}
+            <ChevronDown size={16} className={`transition-transform ${showMobileTimeDropdown ? "rotate-180" : ""}`} />
+          </button>
+          {showMobileTimeDropdown ? (
+            <>
+              <button type="button" aria-label="Close metric options" onClick={() => setShowMobileTimeDropdown(false)} className="fixed inset-0 z-40 cursor-default" />
+              <div role="listbox" aria-label="Card swipe metric" className="absolute right-4 top-[62px] z-50 w-48 overflow-hidden rounded-[16px] border border-white/10 bg-[#102753] p-1.5 text-white shadow-2xl">
+                {mobileMetricCards.map((card) => (
+                  <button
+                    key={card.key}
+                    type="button"
+                    role="option"
+                    aria-selected={mobileSelectedMetric === card.key}
+                    onClick={() => { setMobileSelectedMetric(card.key); setShowMobileTimeDropdown(false) }}
+                    className={`flex min-h-11 w-full items-center rounded-xl px-3 text-left text-[13px] font-semibold transition-colors ${mobileSelectedMetric === card.key ? 'bg-blue-500 text-white' : 'text-white/90 hover:bg-white/10'}`}
+                  >
+                    {card.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </div>
 
-        <div className="flex gap-3">
+        {mobileAdditionalSummaryCards.length ? (
+          <div className="grid grid-cols-3 gap-2">
+            {mobileAdditionalSummaryCards.map((card) => <SummaryCard key={card.key} {...card} compact />)}
+          </div>
+        ) : null}
+        <div className="flex items-center gap-2.5">
           <label className="flex h-[45px] min-w-0 flex-1 items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 shadow-sm">
             <Search size={18} className="shrink-0 text-[color:var(--text-secondary)]" />
             <input
@@ -1028,12 +1028,16 @@ export default function CardSwipe() {
           </label>
           <button
             type="button"
-            onClick={() => setShowMobileFilterModal(true)}
-            className="inline-flex h-[45px] items-center gap-2 rounded-[20px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-4 text-sm font-bold text-blue-600 shadow-sm"
+            onClick={clearFilters}
+            className="inline-flex h-[45px] shrink-0 items-center justify-center rounded-[20px] border border-blue-100 bg-[var(--bg-panel)] px-4 text-sm font-bold text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
           >
-            <Filter size={18} />
-            Filter
+            Clear
           </button>
+        </div>
+
+        <div className="flex items-center justify-between px-1 pt-1">
+          <h2 className="text-sm font-black text-[color:var(--text-strong)]">Swipe Entries</h2>
+          <span className="text-xs font-semibold text-[color:var(--text-secondary)]">{filteredEntries.length} entries</span>
         </div>
 
         {filteredEntries.length === 0 ? (
@@ -1047,7 +1051,7 @@ export default function CardSwipe() {
             tabIndex={0}
             onClick={() => setMobileDetailItem(entry)}
             onKeyDown={(event) => event.key === "Enter" && setMobileDetailItem(entry)}
-            className="flex h-[62px] cursor-pointer items-center justify-between gap-2 rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 shadow-sm active:scale-[0.985]"
+            className="flex min-h-[72px] cursor-pointer items-center justify-between gap-2 rounded-[22px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-3 py-2 shadow-sm active:scale-[0.985]"
           >
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
@@ -1061,7 +1065,10 @@ export default function CardSwipe() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <p className="text-sm font-extrabold text-blue-600">{formatCurrency(entry.amount)}</p>
+              <div className="min-w-0 text-right">
+                <p className="text-sm font-extrabold text-blue-600">{formatCurrency(entry.amount)}</p>
+                <p className="mt-0.5 text-[10px] font-bold text-emerald-600">Charges: {formatCurrency(entry.charges)}</p>
+              </div>
               <button
                 type="button"
                 aria-label="Entry actions"
@@ -1226,7 +1233,7 @@ export default function CardSwipe() {
             >
               Cancel
             </button>
-            <button onClick={handleGenerate} className="rounded-xl bg-green-600 px-4 py-2 text-white">
+            <button onClick={handleGenerate} className="rounded-xl bg-blue-600 px-4 py-2 font-semibold !text-white shadow-sm transition-colors hover:bg-blue-700">
               Download
             </button>
           </div>
@@ -1369,22 +1376,70 @@ export default function CardSwipe() {
       ) : null}
 
       {entryModePrompt ? (
-        <ConfirmDialog
-          title="Add Card Swipe Entry"
-          description="Choose whether you want to save one entry or add multiple card swipe entries together."
-          actionLabel="Single Entry"
-          secondaryLabel="Multiple Entry"
-          variant="primary"
-          onCancel={() => setEntryModePrompt(false)}
-          onConfirm={() => {
-            setEntryModePrompt(false)
-            openCreateModal()
-          }}
-          onSecondaryAction={() => {
-            setEntryModePrompt(false)
-            openBulkModal()
-          }}
-        />
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/35 p-4 backdrop-blur-sm"
+          onClick={() => setEntryModePrompt(false)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="card-swipe-entry-mode-title"
+            aria-describedby="card-swipe-entry-mode-description"
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-[430px] rounded-[28px] border border-[var(--border-color)] bg-[var(--bg-panel)] px-5 py-6 text-center shadow-[0_28px_80px_rgba(15,23,42,0.24)] sm:px-7 sm:py-8"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-blue-500/10 text-blue-600">
+              <ChartNoAxesCombined size={27} strokeWidth={2.2} />
+            </div>
+
+            <h2 id="card-swipe-entry-mode-title" className="mt-4 text-[20px] font-black tracking-tight text-[color:var(--text-strong)]">
+              Choose Entry Mode
+            </h2>
+            <p id="card-swipe-entry-mode-description" className="mx-auto mt-2 max-w-[310px] text-[13px] leading-5 text-[color:var(--text-secondary)]">
+              Choose how you would like to record your card swipes.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setEntryModePrompt(false)
+                  openCreateModal()
+                }}
+                className="flex min-h-[170px] flex-col items-center justify-center rounded-[20px] border-2 border-blue-500/40 bg-blue-500/10 px-3 py-4 transition active:scale-[0.98]"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-blue-600 text-white shadow-md shadow-blue-600/20">
+                  <Plus size={25} stroke="white" strokeWidth={2.5} />
+                </span>
+                <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Single Entry</span>
+                <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add one card swipe at a time</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEntryModePrompt(false)
+                  openBulkModal()
+                }}
+                className="flex min-h-[170px] flex-col items-center justify-center rounded-[20px] border-2 border-indigo-500/25 bg-blue-500/5 px-3 py-4 transition active:scale-[0.98]"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-indigo-700 text-white shadow-md shadow-indigo-700/20">
+                  <Layers size={23} stroke="white" strokeWidth={2.2} />
+                </span>
+                <span className="mt-3 text-[15px] font-extrabold text-[color:var(--text-strong)]">Multiple Entry</span>
+                <span className="mt-1.5 max-w-[135px] text-[11px] leading-4 text-[color:var(--text-secondary)]">Add several card swipes together</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setEntryModePrompt(false)}
+              className="mt-5 min-h-10 px-6 text-[14px] font-semibold text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+            >
+              Cancel
+            </button>
+          </section>
+        </div>
       ) : null}
 
       {canManagerUse("addEntry") ? <MobileActionFab onClick={openEntryModePrompt} /> : null}
@@ -1392,7 +1447,7 @@ export default function CardSwipe() {
   )
 }
 
-function SummaryCard({ label, value, tone }) {
+function SummaryCard({ label, value, tone, compact = false }) {
   const tones = {
     blue: { panel: "border-blue-200/70 bg-blue-50/80", value: "text-blue-600" },
     amber: { panel: "border-amber-200/70 bg-amber-50/80", value: "text-amber-600" },
@@ -1408,9 +1463,9 @@ function SummaryCard({ label, value, tone }) {
   const current = tones[tone] || tones.blue
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-[0_16px_32px_rgba(16,24,20,0.05)] ${current.panel}`}>
-      <p className="font-semibold tracking-[0.18em] text-[color:var(--text-secondary)] text-[13px]">{label}</p>
-      <p className={`mt-3 text-2xl font-extrabold ${current.value}`}>{value}</p>
+    <div className={`rounded-2xl border shadow-[0_8px_20px_rgba(16,24,20,0.06)] ${compact ? "min-h-[64px] border-[var(--border-color)] bg-[var(--bg-panel)] p-2.5" : `p-4 ${current.panel}`}`}>
+      <p className={`font-semibold text-[color:var(--text-secondary)] ${compact ? "text-[10px] leading-tight" : "text-[13px] tracking-[0.18em]"}`}>{label}</p>
+      <p className={`font-extrabold ${compact ? "mt-1.5 whitespace-nowrap text-[clamp(10px,3vw,13px)] leading-tight" : "mt-3 text-2xl"} ${current.value}`}>{value}</p>
     </div>
   )
 }
